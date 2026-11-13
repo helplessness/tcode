@@ -78,6 +78,23 @@ export default function SettingsWorkspace(props: { initialSection?: SettingsSect
   const [defaultArtifact, setDefaultArtifact] = createSignal('');
   const [artifactSaving, setArtifactSaving] = createSignal(false);
   const [artifactEditable, setArtifactEditable] = createSignal(true);
+  type ArtifactCheck = { state: string; reason: string; tested_at?: string };
+  const [artifactChecks, setArtifactChecks] = createSignal(new Map<ArtifactEntry, ArtifactCheck>());
+  async function testArtifact(entry: ArtifactEntry) {
+    const setCheck = (check: ArtifactCheck) => setArtifactChecks(previous => new Map(previous).set(entry, check));
+    setCheck({ state: 'checking', reason: '' });
+    try {
+      const response = await fetch('/api/artifact-services/test', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ service_id: entry.service_id, url: entry.url, token_env: entry.token_env }),
+      });
+      if (!response.ok) throw new Error('test unavailable');
+      const check = await response.json();
+      if (artifactServices().includes(entry)) setCheck(check);
+    } catch {
+      if (artifactServices().includes(entry)) setCheck({ state: 'failed', reason: '无法测试，请检查登录权限或后端连接。' });
+    }
+  }
   const artifactConfigUrl = desktop ? '/api/desktop/services/config' : '/api/artifact-services/config';
   const updateArtifact = (index: number, patch: Partial<ArtifactEntry>) => {
     const old = artifactServices()[index];
@@ -394,6 +411,13 @@ export default function SettingsWorkspace(props: { initialSection?: SettingsSect
             <label>凭据环境变量名（可选，不是令牌本身）<input value={entry().token_env} onInput={e => updateArtifact(index, { token_env: e.currentTarget.value })} placeholder="ARTIFACT_STORE_TOKEN" /></label>
             <label>绑定的 MCP 名称（逗号分隔，可选）<input value={entry().targets} onInput={e => updateArtifact(index, { targets: e.currentTarget.value })} /></label>
             <label><input type="radio" name="default-artifact-service" checked={defaultArtifact() === entry().service_id && !!entry().service_id} onChange={() => setDefaultArtifact(entry().service_id)} />默认文件服务</label>
+            <button type="button" class="btn" disabled={!entry().service_id || !entry().url || artifactChecks().get(entry())?.state === 'checking'} onClick={() => void testArtifact(entry())}>测试连接</button>
+            <p role="status">
+              <span aria-hidden="true" style={{ color: artifactChecks().get(entry())?.state === 'connected' ? 'var(--tcode-success)' : artifactChecks().get(entry())?.state === 'failed' ? 'var(--tcode-danger)' : 'var(--tcode-text-muted)' }}>●</span>
+              {' '}{({ connected: '连接正常', reachable: '可达 · 认证未验证', failed: '测试失败', checking: '测试中' } as Record<string, string>)[artifactChecks().get(entry())?.state || ''] || '未验证'}
+              <Show when={artifactChecks().get(entry())?.tested_at}>{time => <> · <time dateTime={time()}>{new Date(time()).toLocaleString()}</time></>}</Show>
+              <Show when={artifactChecks().get(entry())?.reason}>{reason => <> · {reason()}</>}</Show>
+            </p>
             <button class="btn" onClick={() => { if (defaultArtifact() === entry().service_id) setDefaultArtifact(''); setArtifactServices(items => items.filter((_, i) => i !== index)); }}>移除此配置（不删除远端文件）</button>
           </fieldset>}</Index>
         </div>

@@ -4,9 +4,11 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
+import httpx
 
 from .auth import require_current_user
 from .desktop_config import artifact_configuration
@@ -36,6 +38,59 @@ def load_artifact_services() -> None:
 
 def _can_edit(user) -> bool:
     return user.role in {'owner', 'admin'} and user.tenant_id == workdirs.default_tenant_id()
+
+
+@router.post('/test')
+async def test_service(request: Request):
+    if not _can_edit(require_current_user(request)):
+        raise HTTPException(403, '仅部署管理员可测试 Artifact 服务')
+    if request.headers.get('content-type', '').split(';')[0].strip().lower() != 'application/json':
+        raise HTTPException(415, '需要 JSON 请求')
+    from ..artifact_transport import _artifact_endpoint
+    from .desktop_config import remote_services_paused
+
+    def result(state, reason):
+        return {'state': state, 'reason': reason, 'tested_at': datetime.now(timezone.utc).isoformat()}
+
+    try:
+        payload = await request.json()
+    except ValueError:
+        raise HTTPException(400, '请求格式无效') from None
+    service_id = payload.get('service_id') if isinstance(payload, dict) else None
+    if not isinstance(service_id, str) or not service_id:
+        raise HTTPException(400, '请选择已保存的文件服务')
+    if remote_services_paused():
+        return result('failed', '远端服务已暂停。')
+    try:
+        settings = artifact_configuration({}, allow_loopback=os.environ.get('TCODE_DESKTOP_MANAGED') != '1' or os.environ.get('TCODE_DESKTOP_DEV_LOCAL_SERVICES') == '1')
+        entry = settings['artifact_services'].get(service_id)
+        if not entry or any(payload.get(field) != entry[field] for field in ('url', 'token_env')):
+            return result('unverified', '配置尚未生效，请保存并重启服务后再测试。')
+        mapped = os.environ.get('TMCP_ARTIFACT_SERVICES', '').strip() not in {'', '{}'}
+        _, url, headers = _artifact_endpoint(service_id if mapped else '')
+        if url != entry['url']:
+            return result('unverified', '配置尚未生效，请重启服务后再测试。')
+    except (ValueError, RuntimeError, TypeError):
+        return result('failed', '文件服务地址或凭据未配置，请检查服务配置和凭据环境变量。')
+    try:
+        async with httpx.AsyncClient(timeout=5, follow_redirects=False) as client:
+            response = await client.get(f'{url}/health', headers=headers)
+        if response.status_code in (401, 403):
+            return result('failed', '认证失败，请检查服务凭据与访问权限。')
+        if response.status_code != 200:
+            return result('failed', f'健康接口返回 HTTP {response.status_code}，请检查服务地址和状态。')
+        health = response.json()
+    except httpx.TimeoutException:
+        return result('failed', '连接超时，请检查后端网络和服务地址。')
+    except httpx.RequestError:
+        return result('failed', '无法连接文件服务，请检查地址、网络与 TLS 配置。')
+    except ValueError:
+        return result('failed', '健康接口没有返回有效 JSON。')
+    if not isinstance(health, dict) or health.get('status') != 'ok':
+        return result('failed', '健康接口未返回预期的 Artifact 服务状态。')
+    if health.get('mode') == 'restricted' and headers.get('X-Artifact-Token'):
+        return result('connected', '服务可达，认证通过。未测试文件传输或 MCP 绑定。')
+    return result('reachable', '健康检查通过，但未验证凭据、文件传输或 MCP 绑定。')
 
 
 async def artifact_service_status() -> list[dict]:
