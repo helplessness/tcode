@@ -204,14 +204,12 @@ from ._shared import (
     _confirm_workflow_auto_route as _confirm_workflow_auto_route,
     _delete_child_sessions as _delete_child_sessions,
     _ensure_delegated_agent_session as _ensure_delegated_agent_session,
-    _ensure_session_guidance_drain as _ensure_session_guidance_drain,
     _ensure_session_guidance_drain_v2 as _ensure_session_guidance_drain_v2,
     _frontend_outcome_validation_enabled as _frontend_outcome_validation_enabled,
     _get_or_create_subagent_runtime_agent as _get_or_create_subagent_runtime_agent,
     _guidance_owner_scope_from_session as _guidance_owner_scope_from_session,
     _guidance_store_workdir as _guidance_store_workdir,
     _human_review_config_path as _human_review_config_path,
-    _hydrate_session_guidance_queue as _hydrate_session_guidance_queue,
     _inject_workflow_declined_direct_instruction as _inject_workflow_declined_direct_instruction,
     _inject_workflow_discovery_instruction as _inject_workflow_discovery_instruction,
     _load_aggregated_human_review_queue as _load_aggregated_human_review_queue,
@@ -284,7 +282,6 @@ from .chat_setup import (
 )
 from .guidance_runtime import (
     guidance_runtime as guidance_runtime,
-    guidance_v2_enabled as guidance_v2_enabled,
 )
 from .issue_records import (
     _extract_submit_input_from_description as _extract_submit_input_from_description,
@@ -421,12 +418,7 @@ async def chat_status(session_id: str, request: Request):
     )
     if persisted is None and not runtime_matches:
         raise HTTPException(404, "Session not found")
-    session_owner = (
-        _session_owner_kwargs_from_session(persisted)
-        if persisted is not None
-        else _session_owner_kwargs(workspace_context, include_workspace=True)
-    )
-    if guidance_v2_enabled() and persisted is not None:
+    if persisted is not None:
         await _migrate_session_guidance_v2(persisted)
         if not ServerState.is_running(session_id):
             _ensure_session_guidance_drain_v2(session_id)
@@ -447,12 +439,6 @@ async def chat_status(session_id: str, request: Request):
             "guidance_worker_active": pending_total > 0,
             **counts,
         }
-    await _hydrate_session_guidance_queue(
-        session_id,
-        owner_kwargs=session_owner,
-    )
-    if not ServerState.is_running(session_id) and ServerState.pending_guidance_count(session_id) > 0:
-        _ensure_session_guidance_drain(session_id)
     return _chat_runtime_status_payload(session_id)
 
 

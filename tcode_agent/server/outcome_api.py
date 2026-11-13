@@ -30,8 +30,6 @@ from ..runtime.verification import effective_verification_settings, verification
 from ..workflow import WorkflowRunManager
 from ._shared import (
     _chat_runtime_status_payload,
-    _ensure_session_guidance_drain,
-    _persist_session_guidance_queue,
     _public_outcome_validation,
 )
 from .workspace_scope import (
@@ -42,7 +40,6 @@ from .workspace_scope import (
     _workspace_context_from_request,
 )
 from .chat_control_api import _guide_chat_v2
-from .guidance_runtime import guidance_v2_enabled
 from .schemas import ChatGuideRequest, OutcomeConfirmationRequest
 from .state import ServerState
 
@@ -180,21 +177,14 @@ async def _resolve_advisory_delivery(payload, persisted, target, workspace_conte
         snapshot = _outcome_confirmation_turn_snapshot(persisted, message_id)
         contract = dict(dict(snapshot.get("extra") or {}).get("outcome_contract") or {}) or None
         repair_message = "请修改上一份回答，保留已有可用结果，不重复已经成功的操作。用户的修改要求：\n" + feedback
-        if guidance_v2_enabled():
-            result = await _guide_chat_v2(
-                payload=ChatGuideRequest(session_id=session_id, message=repair_message, mode="queue",
-                    client_request_id=f"delivery-repair:{payload.client_request_id}",
-                    descendant_policy="preserve", outcome_contract=contract),
-                message=repair_message, persisted=persisted, runtime=ServerState.sessions.get(session_id),
-                session_owner=owner, session_workdir=persisted.workdir)
-            guidance = {"message": repair_message, "guidance_id": result.get("guidance_id"),
-                        "mode": "queue", "guidance_status": result.get("guidance_status")}
-        else:
-            item = ServerState.enqueue_guidance(session_id, message=repair_message,
-                outcome_contract=contract, interrupt=False, source="outcome_confirmation")
-            await _persist_session_guidance_queue(session_id, owner_kwargs=owner)
-            _ensure_session_guidance_drain(session_id)
-            guidance = {"message": repair_message, "guidance_id": item.get("id"), "mode": "queue"}
+        result = await _guide_chat_v2(
+            payload=ChatGuideRequest(session_id=session_id, message=repair_message, mode="queue",
+                client_request_id=f"delivery-repair:{payload.client_request_id}",
+                descendant_policy="preserve", outcome_contract=contract),
+            message=repair_message, persisted=persisted, runtime=ServerState.sessions.get(session_id),
+            session_owner=owner)
+        guidance = {"message": repair_message, "guidance_id": result.get("guidance_id"),
+                    "mode": "queue", "guidance_status": result.get("guidance_status")}
 
     decided_at = datetime.now(timezone.utc).timestamp()
     state = "accepted" if payload.decision == "accept" else "modification_requested"
@@ -469,53 +459,28 @@ async def confirm_outcome_result(
                 runtime = ServerState.sessions.get(session_id)
                 if not _runtime_session_matches_context(runtime, workspace_context):
                     runtime = None
-                session_workdir = str(
-                    getattr(persisted, "workdir", "")
-                    or await _resolve_session_workdir(session_id, workspace_context)
-                ).strip()
-                if guidance_v2_enabled():
-                    guidance_result = await _guide_chat_v2(
-                        payload=ChatGuideRequest(
-                            session_id=session_id,
-                            message=repair_message,
-                            mode="queue",
-                            client_request_id=repair_request_id,
-                            descendant_policy="preserve",
-                            outcome_contract=raw_contract,
-                        ),
+                guidance_result = await _guide_chat_v2(
+                    payload=ChatGuideRequest(
+                        session_id=session_id,
                         message=repair_message,
-                        persisted=persisted,
-                        runtime=runtime,
-                        session_owner=session_owner,
-                        session_workdir=session_workdir,
-                    )
-                    repair_guidance = {
-                        "message": repair_message,
-                        "guidance_id": guidance_result.get("guidance_id"),
-                        "sequence": guidance_result.get("sequence"),
-                        "mode": guidance_result.get("accepted_mode") or "queue",
-                        "target_turn_id": guidance_result.get("target_turn_id"),
-                        "guidance_status": guidance_result.get("guidance_status"),
-                    }
-                else:
-                    item = ServerState.enqueue_guidance(
-                        session_id,
-                        message=repair_message,
+                        mode="queue",
+                        client_request_id=repair_request_id,
+                        descendant_policy="preserve",
                         outcome_contract=raw_contract,
-                        interrupt=False,
-                        source="outcome_confirmation",
-                    )
-                    await _persist_session_guidance_queue(
-                        session_id,
-                        owner_kwargs=session_owner,
-                    )
-                    _ensure_session_guidance_drain(session_id)
-                    repair_guidance = {
-                        "message": repair_message,
-                        "guidance_id": item.get("id"),
-                        "mode": "queue",
-                        "guidance_status": "pending",
-                    }
+                    ),
+                    message=repair_message,
+                    persisted=persisted,
+                    runtime=runtime,
+                    session_owner=session_owner,
+                )
+                repair_guidance = {
+                    "message": repair_message,
+                    "guidance_id": guidance_result.get("guidance_id"),
+                    "sequence": guidance_result.get("sequence"),
+                    "mode": guidance_result.get("accepted_mode") or "queue",
+                    "target_turn_id": guidance_result.get("target_turn_id"),
+                    "guidance_status": guidance_result.get("guidance_status"),
+                }
                 confirmation_state = "modification_requested"
 
         decided_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")

@@ -508,10 +508,8 @@ async def run_agent(agent_id: str, payload: RunAgentInput, request: Request):
             # AG-UI client owns the foreground run. Resume its durable queue as
             # soon as that run releases the shared coordinator claim.
             from ._shared import _ensure_session_guidance_drain_v2
-            from .guidance_runtime import guidance_v2_enabled
 
-            if guidance_v2_enabled():
-                _ensure_session_guidance_drain_v2(payload.thread_id)
+            _ensure_session_guidance_drain_v2(payload.thread_id)
 
     async def cancel_disconnected() -> None:
         await run_coordinator.cancel(

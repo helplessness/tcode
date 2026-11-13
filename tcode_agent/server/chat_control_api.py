@@ -58,17 +58,12 @@ from ._shared import (
     _cancel_runtime_subtree_for_interrupt_guidance,
     _chat_runtime_status_payload,
     _direct_session_turn_active,
-    _ensure_session_guidance_drain,
     _ensure_session_guidance_drain_v2,
     _guidance_store_workdir,
-    _hydrate_session_guidance_queue,
     _list_descendant_sessions_recursive,
     _merge_resource_context,
     _migrate_session_guidance_v2,
-    _normalize_guidance_items,
     _notify_parent_sessions_of_subagent_interrupt,
-    _persist_session_guidance_queue,
-    _update_guidance_v2_projection,
     _workflow_background_task_active,
 )
 from .workspace_scope import (
@@ -79,10 +74,10 @@ from .workspace_scope import (
     _workspace_context_from_request,
 )
 from .auth import auth_required, require_current_user
-from .guidance_runtime import guidance_runtime, guidance_v2_enabled
+from .guidance_runtime import guidance_runtime
 from .input_limits import ChatInputLimitError, validate_chat_message
 from .schemas import ChatGuideRequest, PermissionReplyRequest, QuestionReplyRequest
-from .state import GuidanceQueueFull, ServerState
+from .state import ServerState
 
 router = APIRouter()
 
@@ -120,19 +115,6 @@ async def cancel_chat(
     # order left the model free to start more tools while the HTTP request spent
     # several seconds walking the collaboration tree.
     ServerState.mark_session_cancelled(session_id)
-    if clear_guidance and persisted is not None:
-        owner_scope = OwnerScope(
-            tenant_id=str(getattr(persisted, "tenant_id", "") or "").strip(),
-            user_id=str(getattr(persisted, "user_id", "") or "").strip(),
-            workspace_id=str(getattr(persisted, "workspace_id", "") or "").strip(),
-        )
-        guidance_workdir = _guidance_store_workdir()
-        await asyncio.to_thread(
-            GuidanceSQLiteStore.cancel_all_for_session,
-            session_id=session_id,
-            owner=owner_scope,
-            workdir=guidance_workdir,
-        )
     await ServerState.cancel_session(session_id, clear_guidance=clear_guidance)
     cancelled_team_task_details: dict[str, dict[str, Any]] = {}
     cancelled_worker_task = cancel_worker_task(session_id)
@@ -158,11 +140,6 @@ async def cancel_chat(
         clear_guidance=clear_guidance,
         owner_kwargs=session_owner,
     )
-    if clear_guidance:
-        await _persist_session_guidance_queue(
-            session_id,
-            owner_kwargs=session_owner,
-        )
 
     extra: dict[str, Any] = {}
     if (
@@ -197,8 +174,9 @@ async def _guide_chat_v2(
     persisted: Session,
     runtime: Optional[dict[str, Any]],
     session_owner: dict[str, str],
-    session_workdir: str,
+    start_if_idle: bool = True,
 ) -> dict[str, Any]:
+    await _migrate_session_guidance_v2(persisted)
     guidance_workdir = _guidance_store_workdir()
     owner_scope = OwnerScope(
         tenant_id=str(getattr(persisted, "tenant_id", "") or "").strip(),
@@ -265,43 +243,65 @@ async def _guide_chat_v2(
         or ((runtime or {}).get("phase") if isinstance(runtime, dict) else "")
         or ("running" if ServerState.is_running(persisted.id) else "idle")
     )
+    # The UI is already running while the native Harness is still registering
+    # its turn. Never silently convert an explicit native steer into a new turn.
+    native_steer = accepted_request_mode is GuidanceMode.STEER and runtime_guidance_mode == "in_turn"
+    preparation_task = ServerState.get_turn_task(persisted.id)
+    deadline = asyncio.get_running_loop().time() + 6.0
     try:
-        item, duplicate = await asyncio.to_thread(
-            GuidanceSQLiteStore.accept,
-            session_id=persisted.id,
-            owner=owner_scope,
-            client_request_id=client_request_id,
-            target_turn_id=str(payload.target_turn_id or ""),
-            mode=accepted_request_mode,
-            message=message,
-            file_refs=list(payload.file_refs or []),
-            output_format=(
-                dict(payload.output_format)
-                if isinstance(payload.output_format, dict)
-                else None
-            ),
-            outcome_contract=(
-                dict(payload.outcome_contract)
-                if isinstance(payload.outcome_contract, dict)
-                else None
-            ),
-            contract_revision=None,
-            apply_policy=str(payload.apply_policy or "next_safe_point"),
-            descendant_policy=descendant_policy,
-            supersedes_guidance_id=str(payload.supersedes_guidance_id or ""),
-            received_phase=received_phase,
-            workdir=guidance_workdir,
-            runtime_id=guidance_runtime_id,
-            model_id=guidance_model_id,
-            harness_switch_version=int(harness_state.get("switch_version") or 0),
-            source_run_id=source_run_id,
-            allow_unbound_steer=restart_turn_steer,
-            initial_effect=initial_effect,
-        )
+        while True:
+            try:
+                item, duplicate = await asyncio.to_thread(
+                    GuidanceSQLiteStore.accept,
+                    session_id=persisted.id,
+                    owner=owner_scope,
+                    client_request_id=client_request_id,
+                    target_turn_id=str(payload.target_turn_id or ""),
+                    mode=accepted_request_mode,
+                    message=message,
+                    file_refs=list(payload.file_refs or []),
+                    output_format=(
+                        dict(payload.output_format)
+                        if isinstance(payload.output_format, dict)
+                        else None
+                    ),
+                    outcome_contract=(
+                        dict(payload.outcome_contract)
+                        if isinstance(payload.outcome_contract, dict)
+                        else None
+                    ),
+                    contract_revision=None,
+                    apply_policy=str(payload.apply_policy or "next_safe_point"),
+                    descendant_policy=descendant_policy,
+                    supersedes_guidance_id=str(payload.supersedes_guidance_id or ""),
+                    received_phase=received_phase,
+                    workdir=guidance_workdir,
+                    runtime_id=guidance_runtime_id,
+                    model_id=guidance_model_id,
+                    harness_switch_version=int(harness_state.get("switch_version") or 0),
+                    source_run_id=source_run_id,
+                    allow_unbound_steer=restart_turn_steer,
+                    initial_effect=initial_effect,
+                    require_active_steer=native_steer,
+                )
+                break
+            except GuidanceStaleTurn:
+                if (
+                    not native_steer
+                    or payload.target_turn_id
+                    or (preparation_task is not None and ServerState.get_turn_task(persisted.id) is not preparation_task)
+                    or asyncio.get_running_loop().time() >= deadline
+                ):
+                    raise
+                preparation_task = ServerState.get_turn_task(persisted.id)
+                await asyncio.sleep(0.15)
     except GuidanceV2NotFound as exc:
         raise HTTPException(404, {"code": exc.code, "message": str(exc)}) from exc
     except GuidanceStaleTurn as exc:
-        raise HTTPException(409, {"code": exc.code, "message": str(exc)}) from exc
+        raise HTTPException(409, {
+            "code": exc.code,
+            "message": "当前回合还未就绪或已经结束，请稍后重试，或选择排队。",
+        }) from exc
     except GuidanceSupersedeConflict as exc:
         raise HTTPException(409, {"code": exc.code, "message": str(exc)}) from exc
     except GuidanceV2QueueFull as exc:
@@ -544,10 +544,11 @@ async def _guide_chat_v2(
             cancel_turn=_cancel_guided_turn,
             post_classify=_after_guidance_classified,
         )
-    if item.mode is GuidanceMode.QUEUE and not ServerState.is_running(item.session_id):
+    if start_if_idle and item.mode is GuidanceMode.QUEUE and not ServerState.is_running(item.session_id):
+        if not duplicate:
+            ServerState.clear_session_cancelled(item.session_id)
         _ensure_session_guidance_drain_v2(item.session_id)
 
-    await _update_guidance_v2_projection(persisted)
     counts = await asyncio.to_thread(
         GuidanceSQLiteStore.pending_counts,
         session_id=item.session_id,
@@ -666,259 +667,25 @@ async def guide_chat(payload: ChatGuideRequest, request: Request):
                 metadata=persisted_metadata,
             )
 
-    if guidance_v2_enabled():
-        if persisted is None:
-            raise HTTPException(
-                409,
-                {
-                    "code": "session_not_durable",
-                    "message": "Session must be persisted before accepting Guidance v2",
-                },
-            )
-        await _migrate_session_guidance_v2(persisted)
-        result = await _guide_chat_v2(
-            payload=payload,
-            message=message,
-            persisted=persisted,
-            runtime=runtime,
-            session_owner=session_owner,
-            session_workdir=session_workdir,
-        )
-        return JSONResponse(
-            result,
-            status_code=200 if result.get("status") == "duplicate_request" else 202,
-        )
-
-    await _hydrate_session_guidance_queue(
-        session_id,
-        owner_kwargs=session_owner,
-    )
-
-    active_agent = ServerState.agents.get(session_id)
-    active_contract = getattr(active_agent, "_active_outcome_contract", None)
-    if not isinstance(active_contract, OutcomeContract) and active_agent is not None:
-        raw_contract = dict(
-            getattr(active_agent, "_last_outcome_contract", {}) or {}
-        )
-        if raw_contract:
-            try:
-                active_contract = OutcomeContract.compile(
-                    str(raw_contract.get("goal") or message),
-                    supplied=raw_contract,
-                )
-            except Exception:
-                active_contract = None
-
-    from .auth import session_result_verification_settings
-    verification_settings = await session_result_verification_settings(persisted)
-    contract_revision = await OutcomeContractRevisionPlanner.plan(
-        active_contract if isinstance(active_contract, OutcomeContract) else None,
-        message,
-        provider=getattr(active_agent, "provider", None) if verification_settings["enabled"] and verification_settings["mode"] != "light" else None,
-        proposed_by="user",
-        usage_session=persisted,
-        conversation_context=(
-            list(getattr(active_agent, "messages", []) or [])[-8:]
-            if active_agent is not None
-            else []
-        ),
-    )
-    revision_payload = contract_revision.to_dict(include_contract=False)
-
-    if (
-        contract_revision.classification == "CANCEL"
-        and not contract_revision.needs_user_confirmation
-    ):
-        ServerState.clear_guidance_queue(session_id)
-        await _persist_session_guidance_queue(
-            session_id,
-            owner_kwargs=session_owner,
-        )
-        cancelled_subtree: dict[str, Any] = {}
-        if bool(payload.cancel_descendants):
-            cancelled_subtree = await _cancel_runtime_subtree_for_interrupt_guidance(
-                session_id,
-                clear_guidance=True,
-                owner_kwargs=session_owner,
-            )
-        await ServerState.cancel_session(session_id)
-        return {
-            "status": "cancelled",
-            "session_id": session_id,
-            "guidance_id": None,
-            "interrupt_requested": True,
-            "cancel_descendants_requested": bool(payload.cancel_descendants),
-            "contract_revision": revision_payload,
-            **cancelled_subtree,
-            **_chat_runtime_status_payload(session_id),
-        }
-
-    effective_outcome_contract = (
-        dict(payload.outcome_contract)
-        if isinstance(payload.outcome_contract, dict)
-        else None
-    )
-    applied_revision = (
-        contract_revision.revised_contract if contract_revision.can_apply else None
-    )
-    goal_replacement_applied = bool(
-        applied_revision is not None
-        and contract_revision.classification == "GOAL_REPLACEMENT"
-    )
-    # A confirmed goal replacement cannot safely wait behind work for the old
-    # goal. Stop that work at the existing cancellation boundary, then drain the
-    # new goal from the durable guidance queue.
-    effective_interrupt = bool(payload.interrupt or goal_replacement_applied)
-    effective_cancel_descendants = bool(
-        effective_interrupt
-        and (payload.cancel_descendants or goal_replacement_applied)
-    )
-    if applied_revision is not None:
-        revised_contract = applied_revision
-        if effective_outcome_contract is None or goal_replacement_applied:
-            effective_outcome_contract = revised_contract.to_dict()
-        if active_agent is not None and active_contract is not None:
-            superseded = dict(
-                getattr(active_agent, "_superseded_outcome_contracts", {}) or {}
-            )
-            superseded[
-                (active_contract.contract_id, active_contract.version)
-            ] = {
-                "contract_version": revised_contract.version,
-                "contract_id": revised_contract.contract_id,
-                "goal_id": revised_contract.goal_id,
-                "classification": contract_revision.classification,
-            }
-            active_agent._superseded_outcome_contracts = dict(
-                list(superseded.items())[-64:]
-            )
-            invalidate_superseded_message_verifications(
-                active_agent.messages,
-                contract_id=active_contract.contract_id,
-                contract_version=active_contract.version,
-                superseding_contract=revised_contract,
-            )
-
-        if persisted is not None:
-            persisted_messages = list(getattr(persisted, "messages", []) or [])
-            invalidate_superseded_message_verifications(
-                persisted_messages,
-                contract_id=contract_revision.base_contract_id,
-                contract_version=contract_revision.base_version,
-                superseding_contract=revised_contract,
-            )
-            persisted_metadata = dict(getattr(persisted, "metadata", {}) or {})
-            revision_history = list(
-                persisted_metadata.get("outcome_contract_revisions") or []
-            )
-            revision_history.append(
-                {
-                    **revision_payload,
-                    "revised_contract_id": revised_contract.contract_id,
-                }
-            )
-            persisted_metadata["outcome_contract_revisions"] = revision_history[-50:]
-            related_events: list[dict[str, Any]] = []
-            if goal_replacement_applied:
-                replacement_transition = {
-                    "old_goal": {
-                        "goal_id": str(active_contract.goal_id),
-                        "contract_id": contract_revision.base_contract_id,
-                        "contract_version": contract_revision.base_version,
-                        "status": "SUPERSEDED",
-                    },
-                    "new_goal": {
-                        "goal_id": revised_contract.goal_id,
-                        "contract_id": revised_contract.contract_id,
-                        "contract_version": revised_contract.version,
-                        "status": "ACTIVE",
-                    },
-                    "reason": contract_revision.reason,
-                    "confidence": contract_revision.confidence,
-                    "proposed_by": contract_revision.proposed_by,
-                    "reuse_policy": "candidate_unverified",
-                }
-                goal_lineage = list(
-                    persisted_metadata.get("outcome_goal_lineage") or []
-                )
-                goal_lineage.append(replacement_transition)
-                persisted_metadata["outcome_goal_lineage"] = goal_lineage[-50:]
-                persisted_metadata["active_outcome_goal"] = dict(
-                    replacement_transition["new_goal"]
-                )
-                event_digest = hashlib.sha256(
-                    json.dumps(
-                        replacement_transition,
-                        ensure_ascii=False,
-                        sort_keys=True,
-                        separators=(",", ":"),
-                    ).encode("utf-8")
-                ).hexdigest()
-                related_events.append(
-                    {
-                        "event_type": "goal.replaced",
-                        "payload": replacement_transition,
-                        "idempotency_key": f"goal-replaced:{event_digest}",
-                    }
-                )
-            await SessionManager.update(
-                session_id,
-                **session_owner,
-                messages=persisted_messages,
-                metadata=persisted_metadata,
-                related_events=related_events,
-            )
-
-    if effective_interrupt:
-        ServerState.clear_guidance_queue(session_id)
-
-    try:
-        item = ServerState.enqueue_guidance(
-            session_id,
-            message=message,
-            output_format=payload.output_format,
-            outcome_contract=effective_outcome_contract,
-            contract_revision=revision_payload,
-            interrupt=effective_interrupt,
-            source="user",
-            prepend=effective_interrupt,
-        )
-    except GuidanceQueueFull as exc:
+    if persisted is None:
         raise HTTPException(
-            status_code=429,
-            detail={"code": exc.code, "message": exc.detail},
-            headers={"Retry-After": "1"},
-        ) from exc
-    await _persist_session_guidance_queue(
-        session_id,
-        owner_kwargs=session_owner,
-    )
-
-    cancelled_subtree: dict[str, Any] = {}
-    if effective_cancel_descendants:
-        cancelled_subtree = await _cancel_runtime_subtree_for_interrupt_guidance(
-            session_id,
-            clear_guidance=True,
-            owner_kwargs=session_owner,
+            409,
+            {
+                "code": "session_not_durable",
+                "message": "Session must be persisted before accepting Guidance v2",
+            },
         )
-
-    if effective_interrupt:
-        await ServerState.cancel_session(session_id)
-
-    if not ServerState.is_running(session_id):
-        _ensure_session_guidance_drain(session_id)
-
-    return {
-        "status": "queued",
-        "session_id": session_id,
-        "guidance_id": item["id"],
-        "interrupt_requested": effective_interrupt,
-        "cancel_descendants_requested": effective_cancel_descendants,
-        "goal_replaced": goal_replacement_applied,
-        "contract_revision": revision_payload,
-        **cancelled_subtree,
-        **_chat_runtime_status_payload(session_id),
-    }
+    result = await _guide_chat_v2(
+        payload=payload,
+        message=message,
+        persisted=persisted,
+        runtime=runtime,
+        session_owner=session_owner,
+    )
+    return JSONResponse(
+        result,
+        status_code=200 if result.get("status") == "duplicate_request" else 202,
+    )
 
 
 @router.get("/api/chat/guidance/{session_id}")
@@ -928,65 +695,41 @@ async def chat_guidance_queue(session_id: str, request: Request):
         session_id,
         **_session_owner_kwargs(workspace_context),
     )
-    runtime = ServerState.sessions.get(session_id)
-    runtime_matches = isinstance(runtime, dict) and _runtime_session_matches_context(
-        runtime,
-        workspace_context,
-    )
-    if persisted is None and not runtime_matches:
+    if persisted is None:
         raise HTTPException(404, "Session not found")
-    session_owner = (
-        _session_owner_kwargs_from_session(persisted)
-        if persisted is not None
-        else _session_owner_kwargs(workspace_context, include_workspace=True)
+    await _migrate_session_guidance_v2(persisted)
+    owner_scope = OwnerScope(
+        tenant_id=str(getattr(persisted, "tenant_id", "") or ""),
+        user_id=str(getattr(persisted, "user_id", "") or ""),
+        workspace_id=str(getattr(persisted, "workspace_id", "") or ""),
     )
-    if guidance_v2_enabled():
-        if persisted is None:
-            raise HTTPException(404, "Session not found")
-        await _migrate_session_guidance_v2(persisted)
-        owner_scope = OwnerScope(
-            tenant_id=str(getattr(persisted, "tenant_id", "") or ""),
-            user_id=str(getattr(persisted, "user_id", "") or ""),
-            workspace_id=str(getattr(persisted, "workspace_id", "") or ""),
-        )
-        guidance_workdir = _guidance_store_workdir()
-        items = await asyncio.to_thread(
-            GuidanceSQLiteStore.list_for_session,
-            session_id=session_id,
-            owner=owner_scope,
-            workdir=guidance_workdir,
-            after_sequence=0,
-            limit=500,
-        )
-        counts = await asyncio.to_thread(
-            GuidanceSQLiteStore.pending_counts,
-            session_id=session_id,
-            owner=owner_scope,
-            workdir=guidance_workdir,
-        )
-        pending_total = int(counts.get("pending_steer_count", 0)) + int(
-            counts.get("pending_queue_count", 0)
-        )
-        return {
-            "status": "ok",
-            "session_id": session_id,
-            "items": [item.public_projection() for item in items],
-            **_chat_runtime_status_payload(session_id),
-            "pending_guidance_count": pending_total,
-            "pending_guidance_interrupt": bool(counts.get("pending_steer_count", 0)),
-            "guidance_worker_active": pending_total > 0,
-            **counts,
-        }
-    await _hydrate_session_guidance_queue(
-        session_id,
-        owner_kwargs=session_owner,
+    guidance_workdir = _guidance_store_workdir()
+    items = await asyncio.to_thread(
+        GuidanceSQLiteStore.list_for_session,
+        session_id=session_id,
+        owner=owner_scope,
+        workdir=guidance_workdir,
+        after_sequence=0,
+        limit=500,
+    )
+    counts = await asyncio.to_thread(
+        GuidanceSQLiteStore.pending_counts,
+        session_id=session_id,
+        owner=owner_scope,
+        workdir=guidance_workdir,
+    )
+    pending_total = int(counts.get("pending_steer_count", 0)) + int(
+        counts.get("pending_queue_count", 0)
     )
     return {
         "status": "ok",
-        "items": _normalize_guidance_items(
-            ServerState.list_guidance_queue(session_id)
-        ),
+        "session_id": session_id,
+        "items": [item.public_projection() for item in items],
         **_chat_runtime_status_payload(session_id),
+        "pending_guidance_count": pending_total,
+        "pending_guidance_interrupt": bool(counts.get("pending_steer_count", 0)),
+        "guidance_worker_active": pending_total > 0,
+        **counts,
     }
 
 
@@ -1000,7 +743,7 @@ async def runtime_capacity_status(request: Request):
     return {
         "status": "ok",
         "execution": ExecutionCapacityController.current().snapshot(),
-        "guidance": ServerState.guidance_queue_snapshot(),
+        "guidance": await asyncio.to_thread(GuidanceSQLiteStore.queue_snapshot, workdir=_guidance_store_workdir()),
         "telemetry": TelemetryGateway.snapshot(),
     }
 
@@ -1020,90 +763,56 @@ async def delete_chat_guidance(
         session_id,
         **_session_owner_kwargs(workspace_context),
     )
-    runtime = ServerState.sessions.get(session_id)
-    runtime_matches = isinstance(runtime, dict) and _runtime_session_matches_context(
-        runtime,
-        workspace_context,
-    )
-    if persisted is None and not runtime_matches:
+    if persisted is None:
         raise HTTPException(404, "Session not found")
-    session_owner = (
-        _session_owner_kwargs_from_session(persisted)
-        if persisted is not None
-        else _session_owner_kwargs(workspace_context, include_workspace=True)
+    await _migrate_session_guidance_v2(persisted)
+    owner_scope = OwnerScope(
+        tenant_id=str(getattr(persisted, "tenant_id", "") or ""),
+        user_id=str(getattr(persisted, "user_id", "") or ""),
+        workspace_id=str(getattr(persisted, "workspace_id", "") or ""),
     )
-
-    if guidance_v2_enabled():
-        if persisted is None:
-            raise HTTPException(404, "Session not found")
-        owner_scope = OwnerScope(
-            tenant_id=str(getattr(persisted, "tenant_id", "") or ""),
-            user_id=str(getattr(persisted, "user_id", "") or ""),
-            workspace_id=str(getattr(persisted, "workspace_id", "") or ""),
-        )
-        guidance_workdir = _guidance_store_workdir()
-        try:
-            cancelled = await asyncio.to_thread(
-                GuidanceSQLiteStore.cancel_pending,
-                guidance_id=normalized_guidance_id,
-                expected_version=None,
-                owner=owner_scope,
-                workdir=guidance_workdir,
-            )
-        except GuidanceV2NotFound as exc:
-            raise HTTPException(404, {"code": exc.code, "message": str(exc)}) from exc
-        except GuidanceV2NotCancellable as exc:
-            raise HTTPException(409, {"code": exc.code, "message": str(exc)}) from exc
-        await _update_guidance_v2_projection(persisted)
-        counts = await asyncio.to_thread(
-            GuidanceSQLiteStore.pending_counts,
+    guidance_workdir = _guidance_store_workdir()
+    try:
+        cancelled = await asyncio.to_thread(
+            GuidanceSQLiteStore.cancel_pending,
+            guidance_id=normalized_guidance_id,
+            expected_version=None,
             session_id=session_id,
             owner=owner_scope,
             workdir=guidance_workdir,
         )
-        items = await asyncio.to_thread(
-            GuidanceSQLiteStore.list_for_session,
-            session_id=session_id,
-            owner=owner_scope,
-            workdir=guidance_workdir,
-            after_sequence=0,
-            limit=500,
-        )
-        pending_total = int(counts.get("pending_steer_count", 0)) + int(
-            counts.get("pending_queue_count", 0)
-        )
-        return {
-            "status": "cancelled",
-            "session_id": session_id,
-            "guidance_id": cancelled.id,
-            "version": cancelled.version,
-            "items": [item.public_projection() for item in items],
-            **_chat_runtime_status_payload(session_id),
-            "pending_guidance_count": pending_total,
-            "pending_guidance_interrupt": bool(counts.get("pending_steer_count", 0)),
-            "guidance_worker_active": pending_total > 0,
-            **counts,
-        }
-
-    await _hydrate_session_guidance_queue(
-        session_id,
-        owner_kwargs=session_owner,
+    except GuidanceV2NotFound as exc:
+        raise HTTPException(404, {"code": exc.code, "message": str(exc)}) from exc
+    except GuidanceV2NotCancellable as exc:
+        raise HTTPException(409, {"code": exc.code, "message": str(exc)}) from exc
+    counts = await asyncio.to_thread(
+        GuidanceSQLiteStore.pending_counts,
+        session_id=session_id,
+        owner=owner_scope,
+        workdir=guidance_workdir,
     )
-    removed = ServerState.remove_guidance(session_id, normalized_guidance_id)
-    if removed is None:
-        raise HTTPException(404, "Guidance item not found")
-
-    await _persist_session_guidance_queue(
-        session_id,
-        owner_kwargs=session_owner,
+    items = await asyncio.to_thread(
+        GuidanceSQLiteStore.list_for_session,
+        session_id=session_id,
+        owner=owner_scope,
+        workdir=guidance_workdir,
+        after_sequence=0,
+        limit=500,
+    )
+    pending_total = int(counts.get("pending_steer_count", 0)) + int(
+        counts.get("pending_queue_count", 0)
     )
     return {
-        "status": "deleted",
-        "deleted_guidance_id": normalized_guidance_id,
-        "items": _normalize_guidance_items(
-            ServerState.list_guidance_queue(session_id)
-        ),
+        "status": "cancelled",
+        "session_id": session_id,
+        "guidance_id": cancelled.id,
+        "version": cancelled.version,
+        "items": [item.public_projection() for item in items],
         **_chat_runtime_status_payload(session_id),
+        "pending_guidance_count": pending_total,
+        "pending_guidance_interrupt": bool(counts.get("pending_steer_count", 0)),
+        "guidance_worker_active": pending_total > 0,
+        **counts,
     }
 
 

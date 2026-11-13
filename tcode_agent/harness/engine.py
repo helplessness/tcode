@@ -1282,7 +1282,8 @@ class AgentHarnessEngine:
             return OutcomeValidationResult(verdict="pass", validator="disabled")
 
         ledger = EvidenceLedger.from_messages(
-            self.agent.messages[turn_start_index:]
+            self.agent.messages[turn_start_index:],
+            turn_id=str(getattr(self, "_active_guidance_turn_id", "") or ""),
         )
         enforce_v2 = deterministic_verifier_enabled()
         if guard_is_enabled:
@@ -1380,6 +1381,8 @@ class AgentHarnessEngine:
                 "validation": payload,
                 "contract": contract.to_dict(),
                 "evidence": ledger.compact(max_entries=20),
+                **({"applied_user_guidance": list(ledger.applied_user_guidance)}
+                   if ledger.applied_user_guidance else {}),
                 "repair_attempt": repair_attempt,
             },
             metadata={"verdict": validation.verdict},
@@ -1453,9 +1456,12 @@ class AgentHarnessEngine:
         return proof_payload
 
     @staticmethod
-    def _outcome_repair_prompt(contract: Any, validation: Any) -> str:
+    def _outcome_repair_prompt(
+        contract: Any, validation: Any, *, applied_guidance: tuple[str, ...] = ()
+    ) -> str:
         payload = {
             "goal": contract.goal,
+            "applied_user_guidance": applied_guidance,
             "failed_criteria": validation.failed_criteria,
             "unsupported_claims": validation.unsupported_claims,
             "missing_deliverables": validation.missing_deliverables,
@@ -1469,7 +1475,9 @@ class AgentHarnessEngine:
         return (
             "[OUTCOME VALIDATION REPAIR]\n"
             "The candidate response is not yet an acceptable final deliverable. "
-            "Revise it to satisfy the original user request and the validation report. "
+            "Revise it to satisfy the current user request and the validation report. "
+            "Preserve working parts of the candidate, including applied user guidance. "
+            "If guidance conflicts with the original request, follow the latest applicable guidance. "
             "Do not describe progress as completion. Reuse existing tool evidence; call "
             "additional tools only when required evidence is genuinely missing. Return the "
             "actual requested deliverable, not a plan or an offer to continue. "
@@ -3415,6 +3423,25 @@ class AgentHarnessEngine:
             safe_point=safe_point,
         )
 
+    @staticmethod
+    def _guidance_tool_disposition(tool_call: Optional[ToolCall]) -> dict[str, str]:
+        if tool_call is None:
+            return {}
+        metadata = tool_call.metadata or {}
+        if metadata.get("detached"):
+            outcome = "background_continues"
+        elif metadata.get("interrupt_confirmed") is True:
+            outcome = "stop_confirmed"
+        elif tool_call.state is ToolState.INTERRUPTED:
+            outcome = "stop_unconfirmed"
+        else:
+            outcome = "returned"
+        return {
+            "tool": tool_call.tool_name,
+            "outcome": outcome,
+            "side_effects": str(metadata.get("side_effect_state") or ""),
+        }
+
     async def _apply_claimed_guidance(
         self,
         *,
@@ -3425,6 +3452,7 @@ class AgentHarnessEngine:
         contract: Any,
         pending_tool_calls: Optional[list[ToolCall]] = None,
         assistant_message_id: str = "",
+        previous_tool_call: Optional[ToolCall] = None,
     ) -> tuple[Any, list[Message]]:
         if not items:
             return contract, []
@@ -3455,6 +3483,10 @@ class AgentHarnessEngine:
             revised_contract = contract
             revised_plan = getattr(self.agent, "_active_outcome_plan", None)
             applied_revisions: list[dict[str, Any]] = []
+            handoff = {
+                "previous_tool": self._guidance_tool_disposition(previous_tool_call),
+                "skipped_tool_count": len(emitted),
+            }
             for item in applying:
                 if isinstance(item.outcome_contract, dict):
                     old_contract = revised_contract
@@ -3570,6 +3602,7 @@ class AgentHarnessEngine:
                     content=item.message,
                     id=self.agent._generate_id(),
                     metadata={
+                        "guidance_handoff": handoff,
                         "guidance": {
                             "id": item.id,
                             "sequence": item.sequence,
@@ -3629,6 +3662,7 @@ class AgentHarnessEngine:
         contract: Any,
         pending_tool_calls: Optional[list[ToolCall]] = None,
         assistant_message_id: str = "",
+        previous_tool_call: Optional[ToolCall] = None,
     ) -> tuple[Any, list[Message]]:
         items = await self._claim_pending_guidance(
             turn_id=turn_id,
@@ -3642,6 +3676,7 @@ class AgentHarnessEngine:
             contract=contract,
             pending_tool_calls=pending_tool_calls,
             assistant_message_id=assistant_message_id,
+            previous_tool_call=previous_tool_call,
         )
 
     def _close_interrupted_tool_runtime(
@@ -4678,6 +4713,20 @@ class AgentHarnessEngine:
             if not str(response_content or "").strip():
                 actions = [self._tool_public_action(tool_call) for tool_call in parsed_tool_calls]
                 response_content = "\n\n".join(actions)
+                from ..message_context import pending_guidance_handoff
+
+                handoffs = pending_guidance_handoff(self.agent.messages)
+                if handoffs:
+                    handoff = handoffs[-1].metadata["guidance_handoff"]
+                    outcome = handoff["previous_tool"].get("outcome")
+                    previous = {
+                        "stop_confirmed": "刚才的步骤已停止；已经发生的变更不会自动撤回。",
+                        "stop_unconfirmed": "我尝试停止了刚才的步骤，但还没确认它是否完全停下。",
+                        "background_continues": "我不再等待刚才的步骤，但它仍可能在后台运行。",
+                        "returned": "刚才的步骤已经返回，我会按你的新要求判断它的结果还能不能用。",
+                    }.get(outcome, "")
+                    skipped = "旧计划里尚未开始的步骤先不跑。" if handoff["skipped_tool_count"] else ""
+                    response_content = f"收到你的修改。{previous}{skipped}\n\n{response_content}"
         presentation = (
             "commentary"
             if parsed_tool_calls and str(response_content or "").strip()
@@ -5279,9 +5328,16 @@ class AgentHarnessEngine:
                     outcome_repair_attempts += 1
                     previous_outcome_candidate = assistant_msg.content or ""
                     report_repair_paths = self._local_report_repair_paths(turn_start_index)
+                    from ..message_context import applied_turn_guidance
+
                     repair_msg = Message(
                         role="user",
-                        content=self._outcome_repair_prompt(contract, validation) +
+                        content=self._outcome_repair_prompt(
+                            contract, validation,
+                            applied_guidance=applied_turn_guidance(
+                                self.agent.messages[turn_start_index:], turn_id,
+                            ),
+                        ) +
                             '\n仅修复验收指出的具体缺口，复用已有成功写入及完整读回证据；已成功文件不得为刷新记录而重写。若仅缺最终回复，直接修订回复；若仅缺最终版本读回，只 read 缺失文件，不重写。只有文件内容确有验收缺陷才使用正式 write 修正本轮已有本地文本报告，同一文件修复阶段最多写一次。总计仍最多四次工具调用，每次必要写入必须预留一次后续完整 read；写与读分批执行，必须实际读回成功后才能声称核验。涉及报告与复核记录时，按 write最终报告→read最终报告→write复核记录→read复核记录 顺序；复核记录依据刚读回的报告版本，之后不再改报告。额度不足时保留成功文件，明确未完成，不得以旧版本读回代替最终版本核验。禁止 Shell、网络、委派、新计算、新文件或外部写入；不输出伪工具调用文本。允许文件：' +
                             json.dumps({key: sorted(value) for key,value in report_repair_paths.items()},ensure_ascii=False),
                         id=self.agent._generate_id(),
@@ -5380,6 +5436,7 @@ class AgentHarnessEngine:
                     contract=contract,
                     pending_tool_calls=assistant_msg.tool_calls[tool_index:],
                     assistant_message_id=assistant_msg.id,
+                    previous_tool_call=assistant_msg.tool_calls[tool_index - 1] if tool_index else None,
                 )
                 if guidance_messages:
                     guidance_replan = True
@@ -5582,6 +5639,7 @@ class AgentHarnessEngine:
                         contract=contract,
                         pending_tool_calls=assistant_msg.tool_calls[tool_index + 1 :],
                         assistant_message_id=assistant_msg.id,
+                        previous_tool_call=tool_call,
                     )
                 else:
                     contract, guidance_messages = await self._apply_pending_guidance(
@@ -5592,6 +5650,7 @@ class AgentHarnessEngine:
                         contract=contract,
                         pending_tool_calls=assistant_msg.tool_calls[tool_index + 1 :],
                         assistant_message_id=assistant_msg.id,
+                        previous_tool_call=tool_call,
                     )
                 if guidance_messages:
                     guidance_replan = True

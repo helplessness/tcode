@@ -189,6 +189,7 @@ Parallel Commands:
                     "exitCode": managed.returncode,
                     "sandbox": True,
                     "sandbox_status": managed.status,
+                    "wait_timeout_seconds": spec.timeout_seconds,
                     "process_id": managed.process_id,
                     "sandbox_job_id": managed.sandbox_job_id,
                     "container_name": managed.sandbox_container_name,
@@ -336,6 +337,7 @@ Parallel Commands:
                 output=combined.text,
                 metadata={
                     "exitCode": proc.returncode,
+                    "execution_timeout_seconds": parsed.timeout or 120,
                     "outputOriginalChars": (
                         stdout_result.original_chars + stderr_result.original_chars
                     ),

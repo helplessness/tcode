@@ -52,7 +52,6 @@ from ._shared import (
     _delegated_session_lock,
     _ensure_delegated_agent_session,
     _ensure_delegated_team_session,
-    _ensure_session_guidance_drain,
     _ensure_session_guidance_drain_v2,
     _env_truthy,
     _frontend_outcome_validation_enabled,
@@ -106,7 +105,6 @@ from .delegation_routing import (
 from .delegation_routing import (
     pick_permission_denied_delegate as _pick_permission_denied_delegate,
 )
-from .guidance_runtime import guidance_v2_enabled
 from .input_limits import (
     ChatInputLimitError,
     validate_chat_frame,
@@ -2443,10 +2441,8 @@ async def websocket_chat(websocket: WebSocket):
                     ServerState.agents[session_id].set_question_handler(None)
                     ServerState.agents[session_id].set_agent_event_emitter(None)
                 release_turn_claim()
-                if session_id and guidance_v2_enabled():
+                if session_id:
                     _ensure_session_guidance_drain_v2(session_id)
-                elif session_id and ServerState.pending_guidance_count(session_id) > 0:
-                    _ensure_session_guidance_drain(session_id)
 
     except WebSocketDisconnect:
         transport.closed = True

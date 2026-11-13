@@ -121,11 +121,8 @@ class Manager:
             await service.close()
 
     async def start(self, owner: str) -> None:
-        from .guidance_runtime import guidance_v2_enabled
         from .agui_api import _workspace_path
         from .feishu_runtime import TCodeBackend
-        if not guidance_v2_enabled():
-            raise HTTPException(409, "部署管理员需启用 TCODE_STEER_V2_ENABLED=1 后再启动飞书接入")
         await self.stop(owner)
         data = self.get(owner)
         binding = Binding(tenant_id=data["tenant_id"], user_id=data["user_id"], workspace_id=data["workspace_id"])

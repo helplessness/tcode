@@ -2246,7 +2246,8 @@ export async function guideSession(
 
   const data = await resp.json().catch(() => ({}));
   if (!resp.ok) {
-    throw new Error(String(data?.detail || data?.error || '追加指导请求失败'));
+    const detail = typeof data?.detail === 'string' ? data.detail : data?.detail?.message;
+    throw new Error(String(detail || data?.error || '追加指导请求失败'));
   }
 
   const normalized = {

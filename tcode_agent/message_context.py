@@ -60,6 +60,41 @@ def latest_user_goal(messages: list[Any]) -> str:
     return ""
 
 
+def applied_turn_guidance(messages: list[Any], turn_id: str) -> tuple[str, ...]:
+    """Select only runtime-applied user steering for this exact turn."""
+    if not turn_id:
+        return ()
+    directives = []
+    for message in messages or []:
+        if getattr(message, "role", "") != "user":
+            continue
+        metadata = getattr(message, "metadata", {}) or {}
+        guidance = metadata.get("guidance")
+        if (
+            not metadata.get("internal")
+            and isinstance(guidance, dict)
+            and guidance.get("mode") == "steer"
+            and guidance.get("target_turn_id") == turn_id
+            and guidance.get("applied_safe_point")
+        ):
+            directives.append(str(getattr(message, "content", "") or ""))
+    return tuple(text.strip() for text in directives if text.strip())
+
+
+def pending_guidance_handoff(messages: list[Any]) -> list[Any]:
+    """Applied guidance that has not yet received a fresh model response."""
+    result = []
+    for message in reversed(messages):
+        metadata = getattr(message, "metadata", {}) or {}
+        if getattr(message, "role", "") == "assistant" and not metadata.get("superseded_by_guidance"):
+            break
+        if getattr(message, "role", "") == "user" and isinstance(metadata.get("guidance_handoff"), dict):
+            result.append(message)
+        elif is_real_user_message(message):
+            break
+    return list(reversed(result))
+
+
 def request_denied_tools(messages: list[Any]) -> list[str]:
     """Enforce explicit shell bans across repair turns, not tool/PDF text.
 

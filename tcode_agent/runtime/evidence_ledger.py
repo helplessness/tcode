@@ -20,6 +20,44 @@ def _evidence_tokens(value: Any) -> set[str]:
     }
 
 
+def _call_facts(tool_name: str, arguments: dict, metadata: dict) -> dict[str, Any]:
+    """Bounded, safe call facts; do not copy arbitrary tool arguments."""
+    from .telemetry import redact_telemetry_text
+
+    parameters: dict[str, Any] = {}
+    description = arguments.get("description")
+    if isinstance(description, str) and description.strip():
+        parameters["description"] = redact_telemetry_text(description, limit=240)
+    timeout = arguments.get("timeout")
+    if type(timeout) is int and timeout > 0:
+        parameters["requested_timeout_seconds"] = timeout
+    if type(arguments.get("wait")) is bool:
+        parameters["wait"] = arguments["wait"]
+
+    facts = {"call_parameters": parameters} if parameters else {}
+    if tool_name in {"bash", "exec"}:
+        execution = {}
+        for key in ("execution_timeout_seconds", "wait_timeout_seconds"):
+            value = metadata.get(key)
+            if type(value) is int and value > 0:
+                execution[key] = value
+        exit_code = metadata.get("exitCode", metadata.get("returncode"))
+        if type(exit_code) is int:
+            execution["exit_code"] = exit_code
+        status = metadata.get("sandbox_status") or metadata.get("status")
+        if status in ("completed", "failed", "running", "timed_out", "conflict", "terminated", "missing"):
+            execution["process_status"] = status
+        if metadata.get("backend") == "macos-seatbelt" and metadata.get("sandbox") is True:
+            execution["isolation"] = "macos-seatbelt"
+            if metadata.get("network") == "disabled":
+                execution["network"] = "disabled"
+            if isinstance(metadata.get("artifacts"), list):
+                execution["exported_artifact_count"] = len(metadata["artifacts"])
+        if execution:
+            facts["execution"] = execution
+    return facts
+
+
 @dataclass
 class EvidenceEntry:
     tool_name: str
@@ -38,6 +76,8 @@ class EvidenceEntry:
 @dataclass
 class EvidenceLedger:
     entries: list[EvidenceEntry] = field(default_factory=list)
+    # Requirements, not observations or evidence of completion.
+    applied_user_guidance: tuple[str, ...] = ()
 
     @classmethod
     def from_messages(
@@ -45,6 +85,7 @@ class EvidenceLedger:
         messages: list[Any],
         *,
         preview_chars: int = 1200,
+        turn_id: str = "",
     ) -> "EvidenceLedger":
         entries: list[EvidenceEntry] = []
         for message in messages or []:
@@ -89,6 +130,18 @@ class EvidenceLedger:
                 # Bind composition recovery to the same intended scene, not an
                 # unrelated successful read/style or another drawing.
                 arguments = getattr(tool_call, "arguments", {}) or {}
+                refs["call_order"] = len(entries) + 1
+                if (
+                    state_value in {"completed", "error", "interrupted"}
+                    and not metadata.get("execution_skipped")
+                    and isinstance(arguments, dict)
+                ):
+                    refs.update(_call_facts(tool_name, arguments, metadata))
+                execution = refs.get("execution") or {}
+                process_failed = (
+                    execution.get("exit_code") not in (None, 0)
+                    or execution.get("process_status") in {"failed", "timed_out", "conflict", "terminated", "missing"}
+                )
                 if tool_name == "canvas" and arguments.get("action") == "compose":
                     try:
                         scene = json.loads(arguments.get("scene_json", ""))
@@ -106,7 +159,7 @@ class EvidenceLedger:
                             if metadata.get("semantic_disposition")
                             == "superseded_neutral"
                             else "error"
-                            if error
+                            if error or process_failed
                             else (state_value or "completed")
                         ),
                         content_preview=content[:limit],
@@ -125,7 +178,9 @@ class EvidenceLedger:
                         references=refs,
                     )
                 )
-        return cls(entries=entries)
+        from ..message_context import applied_turn_guidance
+
+        return cls(entries=entries, applied_user_guidance=applied_turn_guidance(messages, turn_id))
 
     def has_tool_evidence(self) -> bool:
         return bool(self.entries)

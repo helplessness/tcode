@@ -452,6 +452,13 @@ class ToolDefinitionRouter:
 
     @staticmethod
     def _categories(goal: str) -> list[str]:
+        # An explicit ban on all tools is stronger than domain keywords,
+        # including negated mentions such as “不访问网络”.
+        if _contains_any(goal, (
+            "不要调用任何工具", "不要使用任何工具", "禁止调用任何工具",
+            "禁止使用任何工具", "do not use any tools", "do not call any tools",
+        )):
+            return ["text"]
         categories: list[str] = []
         has_code = _contains_any(goal, _CODE_TERMS)
         has_web = _contains_any(goal, _WEB_TERMS) or bool(_URL_RE.search(goal))

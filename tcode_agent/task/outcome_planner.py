@@ -66,6 +66,7 @@ _CLEAR_SIMPLE_CHAT = re.compile(
     re.IGNORECASE,
 )
 _LEVEL_RANK = {"V0": 0, "V1": 1, "V2": 2, "V3": 3}
+_RISK_RANK = {"low": 0, "medium": 1, "high": 2, "critical": 3}
 
 
 @dataclass(frozen=True, slots=True)
@@ -319,7 +320,15 @@ class OutcomeContractPlanner:
             "for simple conversational answers with no tools or persistent effects; V1 "
             "is a bounded format/read check; V2 is a multi-step, tool, artifact, research, "
             "or delegated deliverable; V3 is workflow, irreversible, external-write, or "
-            "high-consequence work. If acceptance details are missing, infer the smallest "
+            "high-consequence work. Classify risk independently of verification depth, based "
+            "on the concrete consequences of the requested actions, data and destination. "
+            "A tool name, shell capability, strict step ordering or the number of steps "
+            "is not in itself a high-risk effect. Bounded local inspection, offline tests "
+            "and commands that only print results normally require V2/tool evidence but "
+            "have low consequence. Keep high/critical for material effects such as "
+            "irreversible changes, sensitive data disclosure, or privileged/shared systems; "
+            "do not assume unknown or unbounded execution is safe. Require tool evidence "
+            "for actual execution requests. If acceptance details are missing, infer the smallest "
             "reasonable criterion instead of asking the user.\n\nUser request:\n"
             + str(user_message or "")[:24_000]
         )
@@ -388,8 +397,13 @@ class OutcomeContractPlanner:
             key=lambda item: _LEVEL_RANK[item],
         )
         proposed_risk = str(decision.get("risk_level") or "low").strip().lower()
-        if proposed_risk not in {"low", "medium", "high", "critical"}:
+        if proposed_risk not in _RISK_RANK:
             proposed_risk = "low"
+        # Verification depth and consequence are different: a workflow can need
+        # deeper verification without any irreversible action. Preserve the
+        # host's existing conservative floor for hazardous requests.
+        risk_floor = "high" if _HIGH_RISK_WORDS.search(user_message) else "low"
+        proposed_risk = max((proposed_risk, risk_floor), key=_RISK_RANK.__getitem__)
         if proposed_risk in {"high", "critical"}:
             level = "V3"
         requires_tool_evidence = bool(decision.get("requires_tool_evidence", False))
@@ -403,8 +417,6 @@ class OutcomeContractPlanner:
             requires_tool_evidence = False
         if requires_tool_evidence and _LEVEL_RANK[level] < 2:
             level = "V2"
-        if level == "V3" and proposed_risk == "low":
-            proposed_risk = "high"
 
         criteria = [
             str(item).strip()
@@ -462,6 +474,7 @@ class OutcomeContractPlanner:
                         "reason_code": reason_code,
                         "level": level,
                         "host_minimum_level": minimum_level,
+                        "host_risk_floor": risk_floor,
                     }
                 },
             },

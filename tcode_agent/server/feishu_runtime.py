@@ -1204,9 +1204,6 @@ _service: FeishuService | None = None
 async def check_config(path: str) -> FeishuConfig:
     from . import agui_api
     from .auth import require_current_user
-    from .guidance_runtime import guidance_v2_enabled
-    if not guidance_v2_enabled():
-        raise ValueError("Feishu requires TCODE_STEER_V2_ENABLED=1 for durable request deduplication")
     config = FeishuConfig.model_validate_json(Path(path).expanduser().read_text())
     if any(not re.fullmatch(r"ou_[A-Za-z0-9_-]+", key) for key in config.users):
         raise ValueError("Feishu users must be open_ids (ou_...)")

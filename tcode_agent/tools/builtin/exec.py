@@ -190,6 +190,7 @@ Set wait=true to block until completion (or timeout)."""
                             "container_name": managed.sandbox_container_name,
                             "status": managed.status,
                             "returncode": managed.returncode,
+                            "wait_timeout_seconds": spec.timeout_seconds,
                             **dict(managed.sandbox_metadata or {}),
                         },
                     )
@@ -313,6 +314,7 @@ Set wait=true to block until completion (or timeout)."""
                 "process_id": managed.process_id,
                 "status": managed.status,
                 "returncode": managed.returncode,
+                "wait_timeout_seconds": timeout,
             },
         )
 

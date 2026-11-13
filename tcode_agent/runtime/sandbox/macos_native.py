@@ -380,9 +380,10 @@ class MacOSNativeRuntime:
             proc.stdin.close()
             await proc.communicate()
             raise
-        proc.stdin.write((json.dumps({'argv': argv, 'cwd': str(cwd), 'root':str(root), 'env': env, 'timeout': min(120, max(1, spec.timeout_seconds))}) + '\n').encode())
+        execution_timeout = min(120, max(1, spec.timeout_seconds))
+        proc.stdin.write((json.dumps({'argv': argv, 'cwd': str(cwd), 'root':str(root), 'env': env, 'timeout': execution_timeout}) + '\n').encode())
         await proc.stdin.drain()
-        job = SandboxJob(identifier, '', '', command, metadata={'backend': 'macos-seatbelt', 'network': 'disabled', 'single_process': True, 'workspace_copy': str(work), **owner})
+        job = SandboxJob(identifier, '', '', command, metadata={'backend': 'macos-seatbelt', 'network': 'disabled', 'single_process': True, 'execution_timeout_seconds': execution_timeout, 'workspace_copy': str(work), **owner})
         state = {'job': job, 'proc': proc, 'stdout': bytearray(), 'stderr': bytearray(), 'exit_code': None,
                  'work': work, 'workspace': workspace, 'hashes': hashes, 'spec': spec}
         async def drain(stream, output):

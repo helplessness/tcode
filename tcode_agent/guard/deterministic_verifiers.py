@@ -775,10 +775,13 @@ def _verifier_input_payload(
     *,
     workspace_root: Optional[str],
 ) -> dict[str, Any]:
+    contract_payload = contract.to_v2_dict()
+    if ledger.applied_user_guidance:
+        contract_payload["metadata"]["applied_user_guidance"] = list(ledger.applied_user_guidance)
     return {
         "candidate": str(candidate or ""),
         "criterion": asdict(criterion),
-        "contract": contract.to_v2_dict(),
+        "contract": contract_payload,
         "evidence": [entry.to_dict() for entry in ledger.entries[-20:]],
         "workspace_root": str(workspace_root) if workspace_root else None,
     }

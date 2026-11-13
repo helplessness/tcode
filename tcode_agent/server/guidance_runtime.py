@@ -34,15 +34,6 @@ CancelTurn = Callable[[GuidanceItem], Awaitable[None]]
 PostClassify = Callable[[GuidanceItem], Awaitable[Any]]
 
 
-def guidance_v2_enabled() -> bool:
-    return str(os.environ.get("TCODE_STEER_V2_ENABLED", "0") or "0").strip().lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }
-
-
 def _env_float(name: str, default: float, minimum: float, maximum: float) -> float:
     try:
         value = float(os.environ.get(name, default))

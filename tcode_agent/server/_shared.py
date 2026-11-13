@@ -517,7 +517,7 @@ def _normalize_guidance_items(raw: Any) -> list[dict[str, Any]]:
         contract_revision = item.get("contract_revision")
         normalized.append(
             {
-                "id": str(item.get("id", "") or str(uuid.uuid4())),
+                "id": str(item.get("id") or ""),
                 "message": message,
                 "output_format": output_format if isinstance(output_format, dict) else None,
                 "outcome_contract": outcome_contract
@@ -528,7 +528,7 @@ def _normalize_guidance_items(raw: Any) -> list[dict[str, Any]]:
                 else None,
                 "interrupt": bool(item.get("interrupt", False)),
                 "source": str(item.get("source", "user") or "user"),
-                "created_at": str(item.get("created_at", "") or datetime.utcnow().isoformat() + "Z"),
+                "created_at": str(item.get("created_at") or ""),
             }
         )
     return normalized
@@ -580,44 +580,21 @@ def _prepare_outcome_revision_confirmation(
     }
 
 
-async def _persist_session_guidance_queue(
-    session_id: str,
-    *,
-    owner_kwargs: Optional[dict[str, str]] = None,
-) -> None:
-    owner = dict(owner_kwargs or {})
-    session = await SessionManager.get(session_id, **owner)
-    if not session:
-        return
-    metadata = dict(getattr(session, "metadata", {}) or {})
-    queue = _normalize_guidance_items(ServerState.list_guidance_queue(session_id))
-    metadata[_GUIDANCE_QUEUE_METADATA_KEY] = queue
-    await SessionManager.update(session_id, **owner, metadata=metadata)
-
-
-async def _hydrate_session_guidance_queue(
-    session_id: str,
-    *,
-    owner_kwargs: Optional[dict[str, str]] = None,
-) -> int:
-    pending = ServerState.pending_guidance_count(session_id)
-    if pending:
-        return pending
-    session = await SessionManager.get(session_id, **dict(owner_kwargs or {}))
-    if not session:
-        return 0
-    metadata = dict(getattr(session, "metadata", {}) or {})
-    queue = _normalize_guidance_items(metadata.get(_GUIDANCE_QUEUE_METADATA_KEY))
-    if queue:
-        return ServerState.replace_guidance_queue(session_id, queue)
-    return 0
-
-
 def _guidance_owner_scope_from_session(session: Session) -> OwnerScope:
     return OwnerScope(
         tenant_id=str(getattr(session, "tenant_id", "") or "").strip(),
         user_id=str(getattr(session, "user_id", "") or "").strip(),
         workspace_id=str(getattr(session, "workspace_id", "") or "").strip(),
+    )
+
+
+async def _clear_session_guidance(session: Session) -> None:
+    await _migrate_session_guidance_v2(session)
+    await asyncio.to_thread(
+        GuidanceSQLiteStore.cancel_all_for_session,
+        session_id=session.id,
+        owner=_guidance_owner_scope_from_session(session),
+        workdir=_guidance_store_workdir(),
     )
 
 
@@ -634,10 +611,8 @@ def _guidance_store_workdir() -> str:
 
 
 def _bind_guidance_v2_to_agent(agent: Agent, session: Session) -> None:
-    from .guidance_runtime import guidance_runtime, guidance_v2_enabled
+    from .guidance_runtime import guidance_runtime
 
-    if not guidance_v2_enabled():
-        return
     owner_scope = _guidance_owner_scope_from_session(session)
     workdir = _guidance_store_workdir()
     owner_id = str(getattr(agent, "_guidance_owner_id", "") or "").strip()
@@ -650,53 +625,14 @@ def _bind_guidance_v2_to_agent(agent: Agent, session: Session) -> None:
     )
 
 
-async def _update_guidance_v2_projection(session: Session) -> None:
-    owner_scope = _guidance_owner_scope_from_session(session)
-    workdir = _guidance_store_workdir()
-    counts = await asyncio.to_thread(
-        GuidanceSQLiteStore.pending_counts,
-        session_id=session.id,
-        owner=owner_scope,
-        workdir=workdir,
-    )
-    items = await asyncio.to_thread(
-        GuidanceSQLiteStore.list_for_session,
-        session_id=session.id,
-        owner=owner_scope,
-        workdir=workdir,
-        after_sequence=0,
-        limit=500,
-    )
-    metadata = dict(getattr(session, "metadata", {}) or {})
-    current_projection = dict(metadata.get("guidance_v2") or {})
-    latest = items[-1] if items else None
-    metadata["guidance_v2"] = {
-        "schema_version": 2,
-        "legacy_migration_completed": bool(
-            current_projection.get("legacy_migration_completed")
-        ),
-        **counts,
-        "latest_sequence": int(latest.sequence if latest else 0),
-        "latest_status": latest.status.value if latest else "",
-        "updated_at": datetime.now().timestamp(),
-    }
-    metadata[_GUIDANCE_QUEUE_METADATA_KEY] = []
-    await SessionManager.update(
-        session.id,
-        **_session_owner_kwargs_from_session(session),
-        metadata=metadata,
-    )
-    session.metadata = metadata
-
-
 async def _migrate_session_guidance_v2(session: Session) -> int:
     """Idempotently import the legacy metadata queue into SQLite Guidance v2."""
 
     metadata = dict(getattr(session, "metadata", {}) or {})
-    projection = dict(metadata.get("guidance_v2") or {})
-    if bool(projection.get("legacy_migration_completed")):
+    legacy_items = metadata.get(_GUIDANCE_QUEUE_METADATA_KEY) or []
+    queue = _normalize_guidance_items(legacy_items)
+    if not queue:
         return 0
-    queue = _normalize_guidance_items(metadata.get(_GUIDANCE_QUEUE_METADATA_KEY))
     owner_scope = _guidance_owner_scope_from_session(session)
     workdir = _guidance_store_workdir()
     imported = 0
@@ -745,17 +681,17 @@ async def _migrate_session_guidance_v2(session: Session) -> int:
                 imported += 1
         except ValueError:
             continue
-    projection["schema_version"] = 2
-    projection["legacy_migration_completed"] = True
-    metadata["guidance_v2"] = projection
-    metadata[_GUIDANCE_QUEUE_METADATA_KEY] = []
-    await SessionManager.update(
-        session.id,
-        **_session_owner_kwargs_from_session(session),
-        metadata=metadata,
+    def finish_migration(current: Session) -> None:
+        metadata = dict(current.metadata or {})
+        metadata[_GUIDANCE_QUEUE_METADATA_KEY] = [
+            item for item in (metadata.get(_GUIDANCE_QUEUE_METADATA_KEY) or [])
+            if item not in legacy_items
+        ]
+        current.metadata = metadata
+
+    await SessionManager.mutate(
+        session.id, finish_migration, **_session_owner_kwargs_from_session(session)
     )
-    session.metadata = metadata
-    await _update_guidance_v2_projection(session)
     return imported
 
 
@@ -879,8 +815,6 @@ async def _cancel_descendant_sessions(
     cancelled_ids: list[str] = []
     for sub in descendants:
         await ServerState.cancel_session(sub.id, clear_guidance=clear_guidance)
-        if clear_guidance:
-            await _persist_session_guidance_queue(sub.id, owner_kwargs=owner)
         cancelled_ids.append(sub.id)
     return cancelled_ids
 
@@ -923,8 +857,6 @@ async def _cancel_runtime_subtree_for_interrupt_guidance(
 
     for sub in descendants:
         await ServerState.cancel_session(sub.id, clear_guidance=clear_guidance)
-        if clear_guidance:
-            await _persist_session_guidance_queue(sub.id, owner_kwargs=owner)
 
     return {
         "cancelled_descendant_session_ids": descendant_ids,
@@ -3202,35 +3134,30 @@ async def _notify_parent_sessions_of_subagent_interrupt(
             "不要再等待该子代理当前这轮结果，也不要假设它会继续返回。"
             "请基于当前上下文重新规划下一步；如果继续执行需要用户补充信息，请直接向用户提出一个简短澄清问题。"
         )
-        await _hydrate_session_guidance_queue(
-            replan_session_id,
-            owner_kwargs=owner,
-        )
-        try:
-            ServerState.enqueue_guidance(
-                replan_session_id,
-                message=guidance_message,
-                output_format=None,
-                interrupt=False,
-                source="subagent_interrupt",
-            )
-        except Exception as exc:
-            from .state import GuidanceQueueFull
+        from fastapi import HTTPException
+        from .chat_control_api import _guide_chat_v2
+        from .schemas import ChatGuideRequest
 
-            if not isinstance(exc, GuidanceQueueFull):
+        target = await SessionManager.get(replan_session_id, **owner)
+        if target is None:
+            return {"parent_notified_session_ids": notified_session_ids, "replan_queued": False}
+        try:
+            await _guide_chat_v2(
+                payload=ChatGuideRequest(session_id=target.id, message=guidance_message, mode="queue"),
+                message=guidance_message,
+                persisted=target,
+                runtime=ServerState.sessions.get(target.id),
+                session_owner=_session_owner_kwargs_from_session(target),
+            )
+        except HTTPException as exc:
+            if exc.status_code != 429:
                 raise
             return {
                 "parent_notified_session_ids": notified_session_ids,
                 "replan_session_id": replan_session_id,
                 "replan_queued": False,
-                "replan_rejected": exc.code,
+                "replan_rejected": "guidance.queue_full",
             }
-        await _persist_session_guidance_queue(
-            replan_session_id,
-            owner_kwargs=owner,
-        )
-        if not ServerState.is_running(replan_session_id):
-            _ensure_session_guidance_drain(replan_session_id)
         replan_queued = True
 
     return {
@@ -4936,8 +4863,6 @@ def _descendant_session_active(parent_session_id: str) -> bool:
             return True
         if _workflow_background_task_active(child_id):
             return True
-        if ServerState.pending_guidance_count(child_id) > 0:
-            return True
         if ServerState.get_guidance_task(child_id):
             return True
         worker = WorkerRegistry.get(child_id)
@@ -4977,7 +4902,7 @@ def _chat_runtime_status_payload(
         harness_running = False
     workflow_background_active = _workflow_background_task_active(session_id)
     child_session_active = _descendant_session_active(session_id)
-    pending_guidance = ServerState.peek_next_guidance(session_id)
+    guidance_counts = GuidanceSQLiteStore.active_counts(session_id=session_id, workdir=_guidance_store_workdir()).get(session_id, {})
     return {
         "session_id": session_id,
         "running": direct_running or harness_running or workflow_background_active or child_session_active,
@@ -4992,13 +4917,8 @@ def _chat_runtime_status_payload(
         "child_session_active": child_session_active,
         "question_request": ServerState.pending_question_request(session_id),
         "question_requests": ServerState.pending_question_requests(session_id),
-        "pending_guidance_count": ServerState.pending_guidance_count(session_id),
-        "pending_guidance_interrupt": bool(
-            pending_guidance.get("interrupt") if isinstance(pending_guidance, dict) else False
-        ),
-        "pending_guidance_source": str(
-            pending_guidance.get("source", "") if isinstance(pending_guidance, dict) else ""
-        ),
+        "pending_guidance_count": sum(guidance_counts.values()),
+        "pending_guidance_interrupt": bool(guidance_counts.get("steer")),
         "guidance_worker_active": bool(ServerState.get_guidance_task(session_id)),
     }
 
@@ -6154,52 +6074,6 @@ async def _run_session_turn_background(
     )
 
 
-async def _drain_session_guidance_queue(session_id: str) -> None:
-    lock = ServerState.get_session_lock(session_id)
-    try:
-        while True:
-            async with lock:
-                item = ServerState.pop_next_guidance(session_id)
-                if not item:
-                    break
-                await _persist_session_guidance_queue(session_id)
-                await _run_session_turn_background(
-                    session_id,
-                    str(item.get("message", "") or ""),
-                    output_format=(
-                        item.get("output_format")
-                        if isinstance(item.get("output_format"), dict)
-                        else None
-                    ),
-                    outcome_contract=(
-                        item.get("outcome_contract")
-                        if isinstance(item.get("outcome_contract"), dict)
-                        else None
-                    ),
-                    contract_revision=(
-                        item.get("contract_revision")
-                        if isinstance(item.get("contract_revision"), dict)
-                        else None
-                    ),
-                )
-    finally:
-        ServerState.set_guidance_task(session_id, None)
-        if ServerState.pending_guidance_count(session_id) > 0:
-            _ensure_session_guidance_drain(session_id)
-
-
-def _ensure_session_guidance_drain(session_id: str) -> bool:
-    if ServerState.get_guidance_task(session_id):
-        return False
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        return False
-    task = loop.create_task(_drain_session_guidance_queue(session_id))
-    ServerState.set_guidance_task(session_id, task)
-    return True
-
-
 async def _guidance_message_persisted(
     session_id: str,
     guidance_id: str,
@@ -6268,7 +6142,6 @@ async def _drain_session_guidance_v2(session_id: str) -> None:
                         lease_seconds=30,
                     )
                 if item is None:
-                    await _update_guidance_v2_projection(persisted)
                     return
 
                 if str(item.runtime_id or "tcode-native") == "tcode-native":
@@ -6368,7 +6241,6 @@ async def _drain_session_guidance_v2(session_id: str) -> None:
                             )
                         except Exception:
                             pass
-                    await _update_guidance_v2_projection(persisted)
                     continue
                 if not message_written:
                     await asyncio.to_thread(
@@ -6379,7 +6251,6 @@ async def _drain_session_guidance_v2(session_id: str) -> None:
                         owner=owner_scope,
                         workdir=workdir,
                     )
-                await _update_guidance_v2_projection(persisted)
     finally:
         ServerState.set_guidance_task(session_id, None)
         try:

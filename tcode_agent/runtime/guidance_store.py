@@ -272,6 +272,7 @@ class GuidanceSQLiteStore:
         harness_switch_version: int = 0,
         source_run_id: str = "",
         allow_unbound_steer: bool = False,
+        require_active_steer: bool = False,
     ) -> tuple[GuidanceItem, bool]:
         normalized_session_id = str(session_id or "").strip()
         normalized_request_id = str(client_request_id or "").strip()
@@ -360,6 +361,8 @@ class GuidanceSQLiteStore:
                         bound_turn_id = str(owner_row["turn_id"] or "")
                     elif allow_unbound_steer and str(source_run_id or "").strip():
                         bound_turn_id = str(source_run_id or "").strip()
+                    elif require_active_steer:
+                        raise GuidanceStaleTurn("target turn is not active")
                     else:
                         accepted_mode = GuidanceMode.QUEUE
                         bound_turn_id = ""
@@ -968,9 +971,12 @@ class GuidanceSQLiteStore:
         expected_version: Optional[int],
         owner: OwnerScope,
         workdir: str,
+        session_id: str = "",
     ) -> GuidanceItem:
         with cls._transaction(workdir) as conn:
             row = cls._owned_item(conn, guidance_id, owner)
+            if session_id and str(row["session_id"]) != session_id:
+                raise GuidanceNotFound("guidance not found in session")
             status = str(row["status"] or "")
             if status == "cancelled":
                 return cls._item_from_row(row)
@@ -1308,6 +1314,40 @@ class GuidanceSQLiteStore:
                 (session_id, turn_id, owner_id),
             )
             return bool(cursor.rowcount)
+
+    @classmethod
+    def active_counts(
+        cls, *, workdir: str, session_id: str = ""
+    ) -> dict[str, dict[str, int]]:
+        """Internal runtime projection; public APIs still authorize the session."""
+        SessionSQLiteStore.ensure_initialized(workdir, force_migration=False)
+        conn = SessionSQLiteStore._connect(workdir)
+        try:
+            rows = conn.execute(
+                "SELECT session_id, mode, COUNT(*) AS count FROM guidance_items "
+                "WHERE status IN (?, ?, ?, ?, ?)"
+                + (" AND session_id = ?" if session_id else "")
+                + " GROUP BY session_id, mode",
+                (*_ACTIVE_STATUSES, *((session_id,) if session_id else ())),
+            )
+            counts: dict[str, dict[str, int]] = {}
+            for row in rows:
+                counts.setdefault(row["session_id"], {})[row["mode"]] = row["count"]
+            return counts
+        finally:
+            conn.close()
+
+    @classmethod
+    def queue_snapshot(cls, *, workdir: str) -> dict[str, Any]:
+        counts = cls.active_counts(workdir=workdir)
+        return {
+            "queued": sum(sum(modes.values()) for modes in counts.values()),
+            "sessions": len(counts),
+            "limits": {
+                "global": _bounded_int("TCODE_GUIDANCE_QUEUE_MAX_GLOBAL", 512, 1, 100000),
+                "per_session": _bounded_int("TCODE_GUIDANCE_QUEUE_MAX_PER_SESSION", 32, 1, 1024),
+            },
+        }
 
     @classmethod
     def pending_counts(

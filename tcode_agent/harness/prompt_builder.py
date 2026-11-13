@@ -2151,7 +2151,7 @@ class AgentPromptBuilder:
 
         from ..context.compression.contracts import Owner, Policy
         from ..context.compression.service import CompressionService
-        from ..message_context import consume_pending_side_chat_imports
+        from ..message_context import consume_pending_side_chat_imports, pending_guidance_handoff
         consume_pending_side_chat_imports(self.agent)
         compression_session = getattr(self.agent, "_existing_session", None)
         compression_policy = Policy.from_env().restricted(
@@ -2353,6 +2353,24 @@ class AgentPromptBuilder:
         side_chat_context = self._build_side_chat_context_section()
         if side_chat_context:
             system_content += "\n\n# Side Chat Context\n\n" + side_chat_context
+
+        handoffs = pending_guidance_handoff(self.agent.messages)
+        if handoffs:
+            facts = [msg.metadata["guidance_handoff"] for msg in handoffs]
+            system_content += (
+                "\n\n# Respond to the user's in-turn change\n"
+                "The latest user guidance changed the work in this same turn. "
+                "In the first public response, use 1–2 natural sentences in the user's language: "
+                "say what you understood changed, what happened to the step that was underway "
+                "(if known), and the concrete next step. If making a tool call, put those sentences "
+                "in the public text before the call. Don't substitute a status label or generic "
+                "tool announcement. Respect strict final-output formatting.\n"
+                "Use the runtime facts below and the tool history. 'returned' means it finished "
+                "returning, not necessarily succeeded; 'background_continues' means no longer waiting, "
+                "not cancelled; 'stop_unconfirmed' is not a confirmed stop. Never claim rollback or "
+                "invent a step or a result. Reuse results only where the new requirements still allow it.\n"
+                + json.dumps(facts, ensure_ascii=False)
+            )
 
         if system_content:
             messages_for_api.append(

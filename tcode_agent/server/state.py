@@ -5,7 +5,6 @@ import hashlib
 import os
 import re
 import shutil
-import threading
 import uuid
 from copy import deepcopy
 from datetime import datetime, timezone
@@ -19,16 +18,6 @@ from ..config.task_snapshot import TaskConfigSnapshotStore
 from ..providers import create_provider
 from ..providers.base import LLMProvider
 from .plugin_warmup import trigger_plugin_event_background
-
-
-class GuidanceQueueFull(RuntimeError):
-    """引导队列达到硬上限，调用方应明确返回“系统繁忙”。"""
-
-    code = "guidance.queue_full"
-
-    def __init__(self, detail: str = "引导消息队列已满，请稍后重试。") -> None:
-        self.detail = detail
-        super().__init__(detail)
 
 
 def _same_resolved_workdir(left: str, right: str) -> bool:
@@ -54,41 +43,11 @@ class ServerState:
     _workdir: str = None
     _running: Dict[str, bool] = {}
     session_locks: Dict[str, asyncio.Lock] = {}
-    guidance_queues: Dict[str, list[dict[str, Any]]] = {}
     guidance_tasks: Dict[str, asyncio.Task] = {}
     turn_tasks: Dict[str, asyncio.Task] = {}
     cancelled_session_ids: set[str] = set()
     active_chat_request_ids: Dict[str, str] = {}
     recent_chat_request_ids: Dict[str, list[str]] = {}
-    _guidance_lock = threading.RLock()
-    _guidance_rejected = 0
-    _guidance_dropped_on_hydration = 0
-
-    @staticmethod
-    def _guidance_limit(name: str, default: int) -> int:
-        try:
-            return max(1, int(os.environ.get(name, str(default)) or str(default)))
-        except Exception:
-            return default
-
-    @classmethod
-    def guidance_queue_snapshot(cls) -> dict[str, Any]:
-        with cls._guidance_lock:
-            return {
-                "queued": sum(len(queue) for queue in cls.guidance_queues.values()),
-                "sessions": sum(1 for queue in cls.guidance_queues.values() if queue),
-                "rejected": cls._guidance_rejected,
-                "dropped_on_hydration": cls._guidance_dropped_on_hydration,
-                "limits": {
-                    "global": cls._guidance_limit(
-                        "TCODE_GUIDANCE_QUEUE_MAX_GLOBAL", 512
-                    ),
-                    "per_session": cls._guidance_limit(
-                        "TCODE_GUIDANCE_QUEUE_MAX_PER_SESSION", 32
-                    ),
-                },
-            }
-
     @classmethod
     def get_workdir(cls) -> str:
         return cls._workdir or os.environ.get("TCODE_WORKDIR", os.getcwd())
@@ -381,140 +340,6 @@ class ServerState:
         return lock
 
     @classmethod
-    def enqueue_guidance(
-        cls,
-        session_id: str,
-        *,
-        message: str,
-        output_format: Optional[dict[str, Any]] = None,
-        outcome_contract: Optional[dict[str, Any]] = None,
-        contract_revision: Optional[dict[str, Any]] = None,
-        interrupt: bool = False,
-        source: str = "user",
-        prepend: bool = False,
-    ) -> dict[str, Any]:
-        item = {
-            "id": str(uuid.uuid4()),
-            "message": str(message or ""),
-            "output_format": output_format if isinstance(output_format, dict) else None,
-            "outcome_contract": outcome_contract
-            if isinstance(outcome_contract, dict)
-            else None,
-            "contract_revision": contract_revision
-            if isinstance(contract_revision, dict)
-            else None,
-            "interrupt": bool(interrupt),
-            "source": str(source or "user"),
-            "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        }
-        with cls._guidance_lock:
-            queue = cls.guidance_queues.setdefault(session_id, [])
-            total = sum(len(items) for items in cls.guidance_queues.values())
-            if (
-                len(queue)
-                >= cls._guidance_limit("TCODE_GUIDANCE_QUEUE_MAX_PER_SESSION", 32)
-                or total >= cls._guidance_limit("TCODE_GUIDANCE_QUEUE_MAX_GLOBAL", 512)
-            ):
-                cls._guidance_rejected += 1
-                from ..runtime.telemetry import TelemetryGateway
-
-                TelemetryGateway.emit(
-                    "guidance.rejected",
-                    {"code": GuidanceQueueFull.code},
-                    session_id=session_id,
-                )
-                raise GuidanceQueueFull()
-            if prepend:
-                queue.insert(0, item)
-            else:
-                queue.append(item)
-        return item
-
-    @classmethod
-    def replace_guidance_queue(
-        cls,
-        session_id: str,
-        items: list[dict[str, Any]],
-    ) -> int:
-        """恢复持久化队列时执行同样的硬上限，旧数据超限则保留最早消息。"""
-
-        with cls._guidance_lock:
-            current_total = sum(
-                len(queue)
-                for current_session_id, queue in cls.guidance_queues.items()
-                if current_session_id != session_id
-            )
-            session_limit = cls._guidance_limit(
-                "TCODE_GUIDANCE_QUEUE_MAX_PER_SESSION", 32
-            )
-            global_remaining = max(
-                0,
-                cls._guidance_limit("TCODE_GUIDANCE_QUEUE_MAX_GLOBAL", 512)
-                - current_total,
-            )
-            allowed = min(session_limit, global_remaining)
-            normalized = [dict(item) for item in list(items or [])[:allowed]]
-            dropped = max(0, len(items or []) - len(normalized))
-            if normalized:
-                cls.guidance_queues[session_id] = normalized
-            else:
-                cls.guidance_queues.pop(session_id, None)
-            cls._guidance_dropped_on_hydration += dropped
-            return len(normalized)
-
-    @classmethod
-    def pop_next_guidance(cls, session_id: str) -> Optional[dict[str, Any]]:
-        with cls._guidance_lock:
-            queue = cls.guidance_queues.get(session_id) or []
-            if not queue:
-                return None
-            item = queue.pop(0)
-            if not queue:
-                cls.guidance_queues.pop(session_id, None)
-            return item
-
-    @classmethod
-    def peek_next_guidance(cls, session_id: str) -> Optional[dict[str, Any]]:
-        with cls._guidance_lock:
-            queue = cls.guidance_queues.get(session_id) or []
-            if not queue:
-                return None
-            return dict(queue[0])
-
-    @classmethod
-    def pending_guidance_count(cls, session_id: str) -> int:
-        with cls._guidance_lock:
-            return len(cls.guidance_queues.get(session_id) or [])
-
-    @classmethod
-    def list_guidance_queue(cls, session_id: str) -> list[dict[str, Any]]:
-        with cls._guidance_lock:
-            return [dict(item) for item in cls.guidance_queues.get(session_id) or []]
-
-    @classmethod
-    def remove_guidance(cls, session_id: str, guidance_id: str) -> Optional[dict[str, Any]]:
-        normalized_id = str(guidance_id or "").strip()
-        if not normalized_id:
-            return None
-        with cls._guidance_lock:
-            queue = cls.guidance_queues.get(session_id) or []
-            for index, item in enumerate(queue):
-                if str(item.get("id", "") or "").strip() != normalized_id:
-                    continue
-                removed = queue.pop(index)
-                if queue:
-                    cls.guidance_queues[session_id] = queue
-                else:
-                    cls.guidance_queues.pop(session_id, None)
-                return removed
-            return None
-
-    @classmethod
-    def clear_guidance_queue(cls, session_id: str) -> None:
-        with cls._guidance_lock:
-            cls.guidance_queues.pop(session_id, None)
-
-    @classmethod
     def get_guidance_task(cls, session_id: str) -> Optional[asyncio.Task]:
         task = cls.guidance_tasks.get(session_id)
         if task and task.done():
@@ -645,8 +470,13 @@ class ServerState:
         if guidance_task and not guidance_task.done():
             guidance_task.cancel()
         if clear_guidance:
-            cls.clear_guidance_queue(session_id)
+            from ..session.manager import SessionManager
+            from ._shared import _clear_session_guidance
+
             cls.guidance_tasks.pop(session_id, None)
+            session = await SessionManager.get(session_id)
+            if session is not None:
+                await _clear_session_guidance(session)
 
     @classmethod
     async def cleanup_session(cls, session_id: str, cleanup_tmp_dir: bool = True):
@@ -705,7 +535,6 @@ class ServerState:
                     if task and hasattr(task, "done") and not task.done():
                         task.cancel()
             del cls.sessions[session_id]
-        cls.clear_guidance_queue(session_id)
         queued_task = cls.guidance_tasks.pop(session_id, None)
         if queued_task and not queued_task.done():
             queued_task.cancel()

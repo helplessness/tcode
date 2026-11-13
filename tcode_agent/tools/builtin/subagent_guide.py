@@ -390,39 +390,35 @@ Set run_if_idle=false to only queue guidance without starting an idle subagent."
 
         # Import server runtime helpers lazily to avoid making builtin tool
         # registration depend on the web server module graph.
+        from fastapi import HTTPException
         from ...server._shared import (
             _cancel_runtime_subtree_for_interrupt_guidance,
             _chat_runtime_status_payload,
-            _ensure_session_guidance_drain,
-            _hydrate_session_guidance_queue,
-            _persist_session_guidance_queue,
+            _clear_session_guidance,
+            _ensure_session_guidance_drain_v2,
         )
-        from ...server.state import GuidanceQueueFull, ServerState
+        from ...server.chat_control_api import _guide_chat_v2
+        from ...server.schemas import ChatGuideRequest
+        from ...server.state import ServerState
 
-        target_session_id = str(resolved.session.id)
-        await _hydrate_session_guidance_queue(target_session_id, owner_kwargs=owner)
-
+        target = resolved.session
+        target_session_id = str(target.id)
         cancelled_subtree: dict[str, Any] = {}
         if mode == "interrupt":
-            ServerState.clear_guidance_queue(target_session_id)
+            await _clear_session_guidance(target)
 
         try:
-            item = ServerState.enqueue_guidance(
-                target_session_id,
-                message=message,
-                output_format=parsed.output_format,
-                outcome_contract=parsed.outcome_contract,
-                interrupt=mode == "interrupt",
-                source=f"agent:{context.session_id}",
-                prepend=mode == "interrupt",
+            item = await _guide_chat_v2(
+                payload=ChatGuideRequest(
+                    session_id=target_session_id, message=message, mode="queue",
+                    output_format=parsed.output_format, outcome_contract=parsed.outcome_contract,
+                ),
+                message=message, persisted=target,
+                runtime=ServerState.sessions.get(target_session_id),
+                session_owner=owner, start_if_idle=False,
             )
-        except GuidanceQueueFull as exc:
-            return ToolResult(
-                title="Subagent guidance",
-                output="",
-                error=f"[{exc.code}] {exc.detail}",
-            )
-        await _persist_session_guidance_queue(target_session_id, owner_kwargs=owner)
+        except HTTPException as exc:
+            return ToolResult(title="Subagent guidance", output="", error=str(exc.detail))
 
         drain_after_current_turn = False
         turn_task = ServerState.get_turn_task(target_session_id)
@@ -430,7 +426,7 @@ Set run_if_idle=false to only queue guidance without starting an idle subagent."
             loop = asyncio.get_running_loop()
 
             def _drain_when_turn_finishes(_task: asyncio.Task) -> None:
-                loop.call_soon(_ensure_session_guidance_drain, target_session_id)
+                loop.call_soon(_ensure_session_guidance_drain_v2, target_session_id)
 
             turn_task.add_done_callback(_drain_when_turn_finishes)
             drain_after_current_turn = True
@@ -449,7 +445,8 @@ Set run_if_idle=false to only queue guidance without starting an idle subagent."
             and not drain_after_current_turn
             and not ServerState.is_running(target_session_id)
         ):
-            _ensure_session_guidance_drain(target_session_id)
+            ServerState.clear_session_cancelled(target_session_id)
+            _ensure_session_guidance_drain_v2(target_session_id)
 
         runtime = _chat_runtime_status_payload(target_session_id)
         pending_count = int(runtime.get("pending_guidance_count", 0) or 0)
@@ -466,7 +463,7 @@ Set run_if_idle=false to only queue guidance without starting an idle subagent."
             "target_agent_name": str(getattr(resolved.session, "agent_name", "") or ""),
             "matched_by": resolved.matched_by,
             "mode": mode,
-            "guidance_id": item["id"],
+            "guidance_id": item["guidance_id"],
             "pending_guidance_count": pending_count,
             "guidance_worker_active": bool(runtime.get("guidance_worker_active")),
             "drain_after_current_turn": drain_after_current_turn,

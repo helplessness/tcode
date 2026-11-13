@@ -33,6 +33,8 @@ TCODE_DESKTOP_PYTHON=/absolute/path/to/python ./scripts/start_desktop.sh
 
 启动优先使用 `.tcode-local/desktop.env`；可用 `TCODE_DESKTOP_ENV_FILE` 指定其他文件。保留对 `TCODE_ENV_FILE` 的显式开发配置兼容。没有桌面环境文件时复用现有模型/登录配置，但 MCP 路由始终使用独立桌面文件，不继承 Web 的本机 MCP 或 Runner。缺基础配置时按[配置指南](../docs/CONFIGURATION.md)初始化。
 
+追加指导统一使用持久化队列，不再读取 `TCODE_STEER_V2_ENABLED`。原生 Harness 的「追加」接入当前轮；「排队」仍明确启动下一轮。已有旧队列在读取时迁移。
+
 ### 独立测试实例
 
 已有桌面依赖、Python 环境和前端构建后，在项目根目录运行：

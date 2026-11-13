@@ -8,6 +8,8 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from ..session.manager import SessionManager
+from ..runtime.guidance_store import GuidanceSQLiteStore
+from ._shared import _guidance_store_workdir
 from ..team.registry import WorkerRegistry
 from . import workdirs as workdir_utils
 from .workspace_scope import (
@@ -37,11 +39,10 @@ def _kanban_cards_for_user(
     sessions = SessionManager.get_all_sync(
         **_session_owner_kwargs(workspace_context),
     )
+    pending = GuidanceSQLiteStore.active_counts(workdir=_guidance_store_workdir())
     running_session_ids = {
-        session_id
-        for session_id in sessions
-        if ServerState.is_running(session_id)
-        or ServerState.pending_guidance_count(session_id) > 0
+        session_id for session_id in sessions
+        if ServerState.is_running(session_id) or session_id in pending
     }
     cards = build_kanban_cards(
         sessions=sessions.values(),

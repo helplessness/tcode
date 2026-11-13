@@ -34,8 +34,7 @@ from ._shared import (
     _bootstrap_fixed_team_workers,
     _chat_runtime_status_payload,
     _collect_session_ancestor_ids,
-    _ensure_session_guidance_drain,
-    _hydrate_session_guidance_queue,
+    _ensure_session_guidance_drain_v2,
     _is_chat_session_busy,
     _is_internal_frontend_message,
     _list_descendant_sessions_recursive,
@@ -583,10 +582,6 @@ async def chat_with_subagent(payload: SubagentChatRequest, request: Request):
     if integrate_to_parent is None:
         integrate_to_parent = not bool(metadata.get("side_question"))
 
-    await _hydrate_session_guidance_queue(
-        sub_session.id,
-        owner_kwargs=sub_session_owner,
-    )
     try:
         result = await _run_subagent_turn_background(
             sub_session.id,
@@ -604,8 +599,7 @@ async def chat_with_subagent(payload: SubagentChatRequest, request: Request):
             **_chat_runtime_status_payload(sub_session.id),
         }
     finally:
-        if ServerState.pending_guidance_count(sub_session.id) > 0:
-            _ensure_session_guidance_drain(sub_session.id)
+        _ensure_session_guidance_drain_v2(sub_session.id)
 
 
 @router.post("/api/subagents/side-question")
@@ -719,10 +713,6 @@ async def ask_side_question(payload: SideQuestionRequest, request: Request):
         return {"status": "idle", "session_id": child_session.id, "parent_session_id": parent_session.id, "agent_name": agent_name, "running": False}
 
     child_owner = _session_owner_kwargs_from_session(child_session)
-    await _hydrate_session_guidance_queue(
-        child_session.id,
-        owner_kwargs=child_owner,
-    )
     try:
         result = await _run_subagent_turn_background(
             child_session.id,
@@ -741,8 +731,7 @@ async def ask_side_question(payload: SideQuestionRequest, request: Request):
             **_chat_runtime_status_payload(child_session.id),
         }
     finally:
-        if ServerState.pending_guidance_count(child_session.id) > 0:
-            _ensure_session_guidance_drain(child_session.id)
+        _ensure_session_guidance_drain_v2(child_session.id)
 
 
 @router.get("/api/team/{team_id}/workers")
@@ -839,10 +828,6 @@ async def team_chat(team_id: str, payload: TeamChatRequest, request: Request):
     if _is_chat_session_busy(sub_session.id):
         raise HTTPException(409, "Worker is already busy; use guidance to continue")
 
-    await _hydrate_session_guidance_queue(
-        sub_session.id,
-        owner_kwargs=session_owner,
-    )
     try:
         result = await _run_subagent_turn_background(
             sub_session.id,
@@ -862,5 +847,4 @@ async def team_chat(team_id: str, payload: TeamChatRequest, request: Request):
             **_chat_runtime_status_payload(sub_session.id),
         }
     finally:
-        if ServerState.pending_guidance_count(sub_session.id) > 0:
-            _ensure_session_guidance_drain(sub_session.id)
+        _ensure_session_guidance_drain_v2(sub_session.id)
