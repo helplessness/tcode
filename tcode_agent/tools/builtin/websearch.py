@@ -1,4 +1,4 @@
-"""WebSearch tool - Search via SearXNG."""
+"""WebSearch tool backed by SearXNG or Brave Search."""
 
 import os
 import re
@@ -9,6 +9,7 @@ import aiohttp
 
 from ..base import Tool, ToolContext, ParameterSchema
 from ...types import ToolResult
+from ... import websearch_settings
 
 """
 
@@ -18,6 +19,7 @@ docker run -it --rm -d -p 8888:8080 -v /srv/tcode/searxng/etc/:/etc/searxng/ -v 
 
 
 DEFAULT_SEARXNG_BASE = "http://127.0.0.1:8888"
+BRAVE_ENDPOINT = "https://api.search.brave.com/res/v1/web/search"
 DEFAULT_TIMEOUT = 30
 MAX_TIMEOUT = 60
 MAX_RESULTS = 20
@@ -64,10 +66,11 @@ class WebSearchTool(Tool):
 
     @property
     def description(self) -> str:
-        return """Search the web using configured SearXNG endpoint.
+        return """Search the web using the configured search provider.
 Returns ranked results with title, URL and snippet.
-If categories is omitted or set to auto, the tool will infer the primary category
-from the query and use a hybrid plan across general/videos/images/science/news.
+With SearXNG, if categories is omitted or set to auto, the tool infers the primary category
+from the query and uses a hybrid plan across general/videos/images/science/news.
+Brave supports general web search only; use auto or general.
 Use this when the task needs search engine retrieval by keywords."""
 
     @property
@@ -274,6 +277,7 @@ Use this when the task needs search engine retrieval by keywords."""
         headers: dict[str, str],
         timeout: int,
         page: int,
+        probe: bool = False,
     ) -> list[dict[str, Any]]:
         page_params = dict(params)
         page_params["pageno"] = page
@@ -283,19 +287,90 @@ Use this when the task needs search engine retrieval by keywords."""
                 params=page_params,
                 headers=headers,
                 timeout=aiohttp.ClientTimeout(total=timeout),
+                **({"allow_redirects": False} if probe else {}),
             ) as response:
+                if probe and response.status != 200:
+                    reason = {
+                        401: "SearXNG 拒绝访问，请检查实例的认证设置。",
+                        403: "SearXNG 拒绝搜索，请检查是否启用了 JSON 输出或访问限制。",
+                        429: "SearXNG 请求过于频繁，请稍后再试。",
+                    }.get(response.status, f"SearXNG 搜索返回 HTTP {response.status}。")
+                    raise RuntimeError(reason)
                 if not response.ok:
                     raise RuntimeError(f"SearXNG request failed: HTTP {response.status}")
                 payload = await response.json(content_type=None)
         except Exception as exc:
+            if probe:
+                if isinstance(exc, TimeoutError):
+                    raise RuntimeError("SearXNG 搜索请求超时。") from None
+                if isinstance(exc, ValueError):
+                    raise RuntimeError("SearXNG 未返回有效 JSON，请检查 JSON 输出设置。") from None
+                if not isinstance(exc, RuntimeError):
+                    raise RuntimeError("无法连接 SearXNG，请检查实例地址和后端网络。") from None
+                raise
             raise RuntimeError(str(exc)) from exc
 
+        if probe and (not isinstance(payload, dict) or not isinstance(payload.get("results"), list)):
+            raise RuntimeError("SearXNG 响应缺少有效的搜索结果列表。")
         if not isinstance(payload, dict):
             return []
         results = payload.get("results", [])
         if not isinstance(results, list):
             return []
         return [item for item in results if isinstance(item, dict)]
+
+    async def _search_brave(
+        self, parsed: WebSearchParameters, query: str, count: int, timeout: int, key: str
+    ) -> ToolResult:
+        def fail(message: str) -> ToolResult:
+            return ToolResult(title="websearch", output="", error=message)
+
+        if not key:
+            return fail("Brave Search requires TCODE_BRAVE_SEARCH_API_KEY.")
+        categories = re.split(r"[,，/|+\s]+", (parsed.categories or "auto").strip().lower())
+        if any(category not in {"", "auto", "general", "web", "综合"} for category in categories):
+            return fail("Brave Search only supports general web search; use auto or general.")
+        params = {"q": query, "count": count, "text_decorations": "false"}
+        language = (parsed.language or "auto").strip().lower()
+        if language not in {"", "auto", "all"}:
+            params["search_lang"] = {"zh-cn": "zh-hans", "zh-tw": "zh-hant"}.get(
+                language, language if language in {"zh-hans", "zh-hant"} else language.split("-")[0]
+            )
+        if parsed.time_range:
+            freshness = {"day": "pd", "week": "pw", "month": "pm", "year": "py"}
+            if parsed.time_range not in freshness:
+                return fail("Brave Search time_range must be day, week, month or year.")
+            params["freshness"] = freshness[parsed.time_range]
+        # ponytail: one ranked page per call; add pagination only if needed.
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    BRAVE_ENDPOINT, params=params,
+                    headers={"Accept": "application/json", "X-Subscription-Token": key},
+                    timeout=aiohttp.ClientTimeout(total=timeout), allow_redirects=False,
+                ) as response:
+                    if response.status in (401, 403):
+                        return fail("Brave Search authentication or access denied; check your key and plan.")
+                    if response.status == 429:
+                        return fail("Brave Search rate limit or quota exceeded.")
+                    if response.status != 200:
+                        return fail(f"Brave Search request failed: HTTP {response.status}.")
+                    payload = await response.json(content_type=None)
+        except TimeoutError:
+            return fail("Brave Search request timed out.")
+        except (aiohttp.ClientError, ValueError):
+            return fail("Brave Search connection failed or returned an invalid response.")
+
+        web = payload.get("web", {}) if isinstance(payload, dict) else None
+        items = web.get("results", []) if isinstance(web, dict) else None
+        if not isinstance(items, list):
+            return fail("Brave Search returned an invalid response.")
+        results = [
+            {"title": item.get("title"), "url": item["url"], "content": item.get("description")}
+            for item in items if isinstance(item, dict) and item.get("url")
+        ]
+        return self._format_results(query, count, results, len(results), count,
+                                    [("general", count)], "general", BRAVE_ENDPOINT, False)
 
     async def execute(self, args: dict[str, Any], context: ToolContext) -> ToolResult:
         parsed = WebSearchParameters(**args)
@@ -309,7 +384,16 @@ Use this when the task needs search engine retrieval by keywords."""
             min(MAX_CANDIDATES, int(parsed.candidate_count or max(count, DEFAULT_CANDIDATE_COUNT))),
         )
         timeout = max(1, min(MAX_TIMEOUT, int(parsed.timeout or DEFAULT_TIMEOUT)))
-        base_url = self._resolve_base_url(context)
+        try:
+            settings = websearch_settings.read_settings()
+        except (OSError, ValueError):
+            return ToolResult(title="websearch", output="", error="Cannot read web search settings.")
+        provider = websearch_settings.provider(settings)
+        if provider == "brave":
+            return await self._search_brave(parsed, query, count, timeout, websearch_settings.brave_key(settings))
+        if provider != "searxng":
+            return ToolResult(title="websearch", output="", error="Select searxng or brave in TCODE_WEBSEARCH_PROVIDER.")
+        base_url = (settings.get("searxng_url") or self._resolve_base_url(context)).rstrip("/")
         endpoint = urljoin(base_url + "/", "search")
         requested_categories = self._normalize_categories(parsed.categories)
         if requested_categories == ["auto"]:
@@ -377,13 +461,6 @@ Use this when the task needs search engine retrieval by keywords."""
                 error=f"SearXNG request error: {exc}",
             )
 
-        if not results:
-            return ToolResult(
-                title=f"Search: {query}",
-                output=f"No results for query: {query}",
-                metadata={"query": query, "count": 0, "endpoint": endpoint},
-            )
-
         query_tokens = self._tokenize_query(query)
         ranked = sorted(
             [
@@ -398,6 +475,19 @@ Use this when the task needs search engine retrieval by keywords."""
             reverse=True,
         )
 
+        return self._format_results(query, count, ranked, len(results), primary_candidate_count,
+                                    category_plan, primary_category, endpoint, True)
+
+    def _format_results(
+        self, query: str, count: int, ranked: list[dict[str, Any]], fetched_count: int,
+        primary_candidate_count: int, category_plan: list[tuple[str, int]],
+        primary_category: str, endpoint: str, reranked: bool,
+    ) -> ToolResult:
+        if not ranked:
+            return ToolResult(
+                title=f"Search: {query}", output=f"No results for query: {query}",
+                metadata={"query": query, "count": 0, "endpoint": endpoint},
+            )
         plan_text = ", ".join(f"{name}:{limit}" for name, limit in category_plan)
         lines = [
             f"Search results for: {query}",
@@ -430,9 +520,9 @@ Use this when the task needs search engine retrieval by keywords."""
                 "candidate_count": primary_candidate_count,
                 "category_plan": [{"category": name, "limit": limit} for name, limit in category_plan],
                 "primary_category": primary_category,
-                "fetched_count": len(results),
+                "fetched_count": fetched_count,
                 "endpoint": endpoint,
-                "reranked": True,
+                "reranked": reranked,
             },
         )
 

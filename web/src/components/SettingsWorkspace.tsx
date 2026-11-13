@@ -18,9 +18,11 @@ import { announcePreferenceChange, preferenceKeys, readBooleanPreference, readPr
 import { agentDisplayLabel } from './composer/executionLabels';
 import { canvasPreference, type CanvasStyle } from '../api/canvas';
 import DesktopModelSettings from './DesktopModelSettings';
+import WebModelSettings from './WebModelSettings';
 import FeishuSettings from './FeishuSettings';
+import WebSearchSettings from './WebSearchSettings';
 
-export type SettingsSection = 'general' | 'notifications' | 'models' | 'collaboration' | 'structure' | 'knowledge' | 'mcp' | 'desktop' | 'feishu';
+export type SettingsSection = 'general' | 'notifications' | 'models' | 'collaboration' | 'structure' | 'knowledge' | 'mcp' | 'desktop' | 'feishu' | 'websearch';
 type HeaderRow = { name: string; value: string };
 const sections: { id: SettingsSection; label: string; detail: string; group: '个人' | '集成' | '数据' }[] = [
   { id: 'general', label: '常规', detail: '界面与交互', group: '个人' },
@@ -30,6 +32,7 @@ const sections: { id: SettingsSection; label: string; detail: string; group: '�
   { id: 'structure', label: '三维结构', detail: 'Mol* 与 Agent 视图', group: '个人' },
   { id: 'knowledge', label: '本体知识', detail: '工作区知识源', group: '数据' },
   { id: 'mcp', label: 'MCP 服务', detail: '连接与远程工具', group: '集成' },
+  { id: 'websearch', label: '网页搜索', detail: 'SearXNG 与 Brave Search', group: '集成' },
   { id: 'feishu', label: '飞书接入', detail: '机器人与任务通知', group: '集成' },
   { id: 'desktop', label: '远端服务', detail: 'Artifact 文件服务与绑定', group: '集成' },
 ];
@@ -316,6 +319,11 @@ export default function SettingsWorkspace(props: { initialSection?: SettingsSect
       <Show when={section()==='notifications'}><div class="settings-page"><h2>通知</h2><div class="settings-section"><h3>任务提醒</h3><section class="settings-group"><Show when={desktop}>{toggle('系统通知','异步任务完成、失败或取消时发送桌面系统通知。',notify(),setNotify,false,'需要操作系统授予 TCode 通知权限，仅桌面端可用。')}</Show>{toggle('应用内提醒','在窗口右下角显示最多三条任务完成卡片。',inAppNotify(),setInAppNotify)}</section></div><button class="settings-save" onClick={saveNotifications}>保存更改</button></div></Show>
       <Show when={section()==='models'}><div class="settings-page"><h2>模型与执行</h2><p>设置当前任务和后续新任务的默认模型与运行方式。</p>
         <Show when={desktop}><DesktopModelSettings onChanged={()=>{void getModels(sessionStore.currentSessionId() || undefined, props.workspaceId).then(data=>{setModels(data.models);setSelectedModel(data.current_model);});}}/></Show>
+        <Show when={!desktop}><WebModelSettings onChanged={()=>{
+          void getModels(sessionStore.currentSessionId() || undefined, props.workspaceId)
+            .then(data => { setModels(data.models); setSelectedModel(data.current_model); announcePreferenceChange(); })
+            .catch(() => setStatus('模型列表刷新失败，请重新打开设置'));
+        }}/></Show>
         <div class="settings-section"><h3>模型</h3><section class="settings-group">
           <Show when={models().length}>{selectRow('默认文本模型','保存后立即切换当前任务，并写入当前工作区配置。',<select value={selectedModel()} disabled={busy()} onChange={event=>setSelectedModel(event.currentTarget.value)}><For each={models()}>{model=><option value={model.id}>{model.name}（{model.id}）</option>}</For></select>,'切换模型不会中断正在生成的回复，下一次发送开始使用新模型。')}</Show>
           {selectRow('默认推理强度','可在聊天输入框旁为单次任务覆盖。',<select value={reasoning()} onChange={event=>setReasoning(event.currentTarget.value as any)}><option value="minimal">最低</option><option value="low">低</option><option value="medium">中</option><option value="high">高</option></select>,'推理强度越高，复杂任务通常更稳，但响应时间和 token 消耗可能增加。')}
@@ -340,6 +348,7 @@ export default function SettingsWorkspace(props: { initialSection?: SettingsSect
         <button class="settings-save" disabled={busy() || !resultVerificationReady()} onClick={()=>void saveExecution()}>保存更改</button>
       </div></Show>
       <Show when={section()==='feishu'}><FeishuSettings workspaceId={props.workspaceId}/></Show>
+      <Show when={section()==='websearch'}><WebSearchSettings/></Show>
       <Show when={section()==='collaboration'}><div class="settings-page"><h2>协作与 Agent</h2><p>控制协作办公室的默认表现，以及多 Agent 任务的界面行为。</p>
         <div class="settings-section"><h3>协作办公室</h3><section class="settings-group">
           {toggle('默认播放办公室动画','进入协作办公室时播放人物与状态动画。',officeAnimations(),setOfficeAnimations,false,'只控制视觉动画，不会暂停 Agent 任务。')}

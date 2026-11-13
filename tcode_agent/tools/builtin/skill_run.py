@@ -79,7 +79,8 @@ class SkillRunTool(Tool):
         if not sandbox_session_enabled(context):
             return self._error(
                 parsed,
-                "skill_run requires sandbox mode",
+                "Executable skills require isolation. Use a supported desktop isolation backend "
+                "or configure the Linux sandbox and Sandbox Runner before running this action.",
                 sandbox_required=True,
             )
 

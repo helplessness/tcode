@@ -2,6 +2,7 @@
 """
 
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -61,8 +62,24 @@ def _persist_model_selection_for_workdir(
         local_config["model"] = normalized
         _save_tcode_config(local_config, workdir=target_workdir, prefer_local=True)
     else:
-        config["model"] = normalized
-        _save_tcode_config(config, workdir=target_workdir, prefer_local=False)
+        # Do not copy the instance Web overlay into the original file when
+        # the legacy selector saves a default. Desktop retains its old path.
+        from ..web_model_settings import PREFIX, read_settings, update_settings
+        try:
+            web_settings = {} if os.environ.get("TCODE_DESKTOP_MANAGED") == "1" else read_settings()
+        except (OSError, ValueError):
+            web_settings = {}
+        if web_settings and (provider_id.startswith(PREFIX) or web_settings.get("model")):
+            update_settings(lambda settings: settings.update(model=normalized))
+        elif not web_settings:
+            config["model"] = normalized
+            _save_tcode_config(config, workdir=target_workdir, prefer_local=False)
+        else:
+            from .config_files import _tcode_config_path_for_workdir
+            path = _tcode_config_path_for_workdir(target_workdir)
+            raw = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+            raw["model"] = normalized
+            _save_tcode_config(raw, workdir=target_workdir, prefer_local=False)
 
     ConfigManager.reload(target_workdir)
     return normalized

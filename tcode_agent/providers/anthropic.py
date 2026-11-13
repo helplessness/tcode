@@ -20,8 +20,11 @@ class AnthropicProvider(LLMProvider):
         model: Optional[str] = None,
         base_url: Optional[str] = None,
         timeout_seconds: Optional[float] = None,
+        http_client=None,
+        max_retries: Optional[int] = None,
+        use_env_key: bool = True,
     ):
-        super().__init__(api_key or os.environ.get("ANTHROPIC_API_KEY", ""))
+        super().__init__(api_key or (os.environ.get("ANTHROPIC_API_KEY", "") if use_env_key else ""))
         # Allow pointing the SDK at a custom Anthropic-compatible gateway
         # (local proxies, self-hosted relays). Without this the client always
         # targets api.anthropic.com.
@@ -31,6 +34,10 @@ class AnthropicProvider(LLMProvider):
         }
         if resolved_base_url:
             client_kwargs["base_url"] = resolved_base_url
+        if http_client is not None:
+            client_kwargs["http_client"] = http_client
+        if max_retries is not None:
+            client_kwargs["max_retries"] = max_retries
         if timeout_seconds:
             try:
                 client_kwargs["timeout"] = float(timeout_seconds)

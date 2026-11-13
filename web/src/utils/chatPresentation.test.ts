@@ -10,6 +10,19 @@ const message = (id: string, role: Message['role'], content: string): Message =>
 });
 
 describe('chat presentation', () => {
+  it('shows the full goal report as the result rather than the checkpoint summary', () => {
+    const report = '1. First option — measured\n2. Second option — supporting evidence\n3. Third option — not yet verified';
+    const request = {...message('goal', 'user', 'Internal goal continuation'), presentation: 'async_hidden_prompt' as const};
+    const checkpoint = {...message('checkpoint', 'assistant', ''), presentation: 'commentary' as const,
+      tool_calls: [{tool_name: 'goal_checkpoint', arguments: {state: 'complete'}, state: 'completed' as const}]};
+    const [turn] = presentChatTurns([
+      request, checkpoint, message('checkpoint-result', 'tool', 'One result was directly verified'),
+      message('report', 'assistant', report),
+    ], false);
+    expect(turn.result).toMatchObject({id: 'report', content: report});
+    expect(turn.processMessages.map(item => item.id)).toEqual(['checkpoint', 'checkpoint-result']);
+  });
+
   it('indexes instructions once and keeps terminal filters scoped to the turn', () => {
     const turns = presentChatTurns([
       {...message('first', 'user', '比对\n结构'), created_at: 1794355200},

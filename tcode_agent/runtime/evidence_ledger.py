@@ -78,6 +78,7 @@ class EvidenceLedger:
     entries: list[EvidenceEntry] = field(default_factory=list)
     # Requirements, not observations or evidence of completion.
     applied_user_guidance: tuple[str, ...] = ()
+    goal_claim_bindings: list[dict[str, str]] = field(default_factory=list)
 
     @classmethod
     def from_messages(
@@ -86,6 +87,7 @@ class EvidenceLedger:
         *,
         preview_chars: int = 1200,
         turn_id: str = "",
+        include_web_evidence: bool = False,
     ) -> "EvidenceLedger":
         entries: list[EvidenceEntry] = []
         for message in messages or []:
@@ -130,6 +132,12 @@ class EvidenceLedger:
                 # Bind composition recovery to the same intended scene, not an
                 # unrelated successful read/style or another drawing.
                 arguments = getattr(tool_call, "arguments", {}) or {}
+                if (include_web_evidence and tool_name == "webfetch" and isinstance(arguments, dict)
+                        and arguments.get("view") == "evidence" and not error and state_value == "completed"):
+                    # Keep bounded section excerpts together: a single section can
+                    # contain adjacent experiments with different substrates.
+                    limit = max(limit, 8500)
+                    refs["web_evidence_section"] = True
                 refs["call_order"] = len(entries) + 1
                 if (
                     state_value in {"completed", "error", "interrupted"}
@@ -228,6 +236,7 @@ class EvidenceLedger:
                 if isinstance(artifact, dict) and str(artifact.get("path") or "").strip():
                     expected_paths.add(str(artifact.get("path") or "").strip())
 
+        bound_ids = {row['call_id'] for row in self.goal_claim_bindings}
         ranked: list[tuple[float, int, EvidenceEntry]] = []
         for index, entry in enumerate(self.entries):
             serialized_refs = json.dumps(
@@ -250,6 +259,10 @@ class EvidenceLedger:
             path_match = 1.0 if entry.output_path in expected_paths else 0.0
             failure_weight = 0.15 if entry.status in {"error", "failed"} else 0.0
             score = contract_overlap * 0.55 + candidate_overlap * 0.2 + path_match + failure_weight
+            if entry.references.get("web_evidence_section") and candidate_overlap:
+                score += 0.25
+            if entry.call_id in bound_ids:
+                score += 10
             if score > 0 or not query_tokens:
                 ranked.append((score, index, entry))
 
@@ -263,10 +276,14 @@ class EvidenceLedger:
             ]
 
         entries: list[dict[str, Any]] = []
+        extended_sections = 0
         for score, _, entry in selected:
             payload = entry.to_dict()
             preview = str(payload.get("content_preview") or "")
             limit = max(preview_chars, 16_000) if entry.tool_name in {"intelligent_page", "canvas", "knowledge_search"} or entry.references.get("hypothesis_map") or entry.references.get("research_changes") else preview_chars
+            if entry.references.get("web_evidence_section") and extended_sections < 6:
+                limit = max(limit, 8500)
+                extended_sections += 1
             if len(preview) > limit:
                 payload["content_preview"] = (
                     preview[: max(0, limit - 24)] + " ...[truncated]"
@@ -281,4 +298,5 @@ class EvidenceLedger:
             "failed_count": sum(1 for entry in self.entries if entry.status == "error"),
             "truncated_count": sum(1 for entry in self.entries if entry.truncated),
             "entries": entries,
+            **({"goal_claim_bindings": self.goal_claim_bindings} if self.goal_claim_bindings else {}),
         }

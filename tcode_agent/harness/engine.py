@@ -2209,6 +2209,24 @@ class AgentHarnessEngine:
         tool_call.end_time = now
         return result
 
+    def _goal_checkpoint_chat_delivery(
+        self, report: Message, tool_call: ToolCall, result: ToolResult, *, user_message_id: str,
+    ) -> Message | None:
+        checkpoint = (result.metadata or {}).get('goal_checkpoint')
+        if (tool_call.tool_name != 'goal_checkpoint' or result.error
+                or not isinstance(checkpoint, dict) or checkpoint.get('state') != 'complete'
+                or not getattr(report, '_goal_checkpoint_prose', False)
+                or report.metadata.get('output_budget_partial')):
+            return None
+        final = Message(role='assistant', content=report.content,
+                        id=self.agent._generate_id(), parent_id=user_message_id,
+                        metadata={key: report.metadata.pop(key) for key in ('goal_evidence', 'goal_evidence_malformed')
+                                  if key in report.metadata})
+        final._goal_chat_candidate = True
+        # Keep the original tool call in history, but deliver its prose once.
+        report.content = ''
+        return final
+
     def _build_terminal_turn_response(self, result: ToolResult) -> str:
         """Public terminal message; diagnostic details stay in tool records."""
         metadata = dict(result.metadata or {})
@@ -4247,6 +4265,15 @@ class AgentHarnessEngine:
             ),
         )
 
+    def _goal_has_chat_deliverable(self, contract: OutcomeContract) -> bool:
+        from ..tools.builtin.goal_checkpoint import goal_checkpoint_active
+        return (
+            goal_checkpoint_active.get()
+            and not _workflow_stage_uses_its_own_validation(self.agent)
+            and all(not item.required or item.kind in {"message", "json"} for item in contract.deliverables)
+            and not any(item.required and item.expected_artifacts for item in contract.success_criteria)
+        )
+
     async def _finalize_turn(
         self,
         *,
@@ -4702,9 +4729,16 @@ class AgentHarnessEngine:
     async def _record_assistant_response(
         self, *, response_content: str, tool_calls: Any, model_response: Any,
         stream_message_id: str, streamed: bool, turn_id: str,
-        user_message_id: str, iteration: int,
+        user_message_id: str, iteration: int, goal_chat: bool = False,
     ) -> Message:
         """Project model output, advance usage counters and persist the message."""
+        goal_metadata = {}
+        if goal_chat:
+            from ..runtime.goal_evidence import split_goal_evidence
+            response_content, bindings, malformed = split_goal_evidence(response_content)
+            if bindings or malformed:
+                goal_metadata = {"goal_evidence": bindings, "goal_evidence_malformed": malformed}
+        has_prose = bool(str(response_content or '').strip())
         parsed_tool_calls = []
         if tool_calls:
             parsed_tool_calls = [
@@ -4765,6 +4799,7 @@ class AgentHarnessEngine:
                 else None
             ),
             metadata={
+                **goal_metadata,
                 "stream_epoch": int(
                     getattr(self.agent, "_guidance_stream_epoch", 0) or 0
                 ),
@@ -4782,6 +4817,10 @@ class AgentHarnessEngine:
         self.agent._prev_total_tokens = total_usage.total_tokens
 
         self.agent.messages.append(assistant_msg)
+        if goal_chat and has_prose and parsed_tool_calls and all(
+            call.tool_name == 'goal_checkpoint' for call in parsed_tool_calls
+        ):
+            assistant_msg._goal_checkpoint_prose = True
         await self._persist_turn_state(
             turn_id=turn_id,
             state="assistant_ready" if tool_calls else "finalizing",
@@ -5009,10 +5048,16 @@ class AgentHarnessEngine:
                 self.agent.messages.append(budget_notice)
                 tool_budget_notice_sent = True
             if iterations == max(1, max_iterations - 2):
+                chat_delivery = self._goal_has_chat_deliverable(contract)
+                delivery_notice = (
+                    '停止无关浏览和重复扫描，直接在聊天中交付已有证据支持的结论；不要仅为了保存聊天报告而调用命令或写文件。'
+                    if chat_delivery else
+                    '停止无关浏览和重复扫描，优先按用户要求用获准工具保存已有证据支持的交付物，然后汇报结果。'
+                )
                 budget_notice = Message(
                     role='user', id=self.agent._generate_id(), parent_id=user_msg.id,
                     content=(f'[TURN_BUDGET_BOUNDARY] 本回合只剩 {max_iterations - iterations + 1} 次模型调用（含本次），不会自动延长。'
-                             '停止无关浏览和重复扫描，优先按用户要求用获准工具保存已有证据支持的交付物，然后汇报结果。'
+                             + delivery_notice +
                              '证据不足的部分明确写为未知或未完成，不得编造引句、来源或成功。此提示不扩大权限或增加预算。'),
                     metadata={'internal': True, 'purpose': 'turn_budget_boundary'},
                 )
@@ -5092,7 +5137,8 @@ class AgentHarnessEngine:
                     delta=text,
                 )
 
-            stream_to_frontend = bool(
+            goal_chat = self._goal_has_chat_deliverable(contract)
+            stream_to_frontend = not goal_chat and bool(
                 getattr(self.agent, "_frontend_stream", False)
             ) and callable(getattr(self.agent, "_agent_event_emitter", None))
             if stream_to_frontend:
@@ -5243,6 +5289,7 @@ class AgentHarnessEngine:
                 turn_id=turn_id,
                 user_message_id=user_msg.id,
                 iteration=iterations,
+                goal_chat=goal_chat,
             )
             if output_budget_partial:
                 assistant_msg.metadata["output_budget_partial"] = True
@@ -5268,7 +5315,8 @@ class AgentHarnessEngine:
                 assistant_msg.content = await self.agent._ensure_structured_output(
                     assistant_msg.content
                 )
-                if not (assistant_msg.content or "").strip():
+                has_model_answer = bool((assistant_msg.content or "").strip())
+                if not has_model_answer:
                     fallback = self.agent._build_tool_summary_response()
                     if fallback:
                         assistant_msg.content = fallback
@@ -5309,6 +5357,10 @@ class AgentHarnessEngine:
                     self.agent._last_outcome_validation.update(validation.to_dict())
                 if (
                     not terminal_summary_mode
+                    # Chat goals get their independent acceptance in GoalModeService.
+                    # The generic repair is for existing file readback/writes and
+                    # can turn a real chat answer into a terminal fallback.
+                    and not self._goal_has_chat_deliverable(contract)
                     and validation.verdict == "repair"
                     and outcome_repair_attempts < contract.max_repair_attempts
                 ):
@@ -5419,6 +5471,11 @@ class AgentHarnessEngine:
                         await asyncio.sleep(0.05)
                         continue
                     await self._persist_completion_fence(turn_id=turn_id)
+                if (has_model_answer and not terminal_summary_mode
+                        and not output_budget_partial and completion_state in {"completed", "partial"}
+                        and self._goal_has_chat_deliverable(contract)):
+                    # Ephemeral host marker, never model-provided or reloaded from old turns.
+                    setattr(assistant_msg, "_goal_chat_candidate", True)
                 break
 
             print(f"\n🔧 第 {iterations} 轮工具调用:")
@@ -5766,7 +5823,9 @@ class AgentHarnessEngine:
                                 guidance_replan = True
                                 break
                             await self._persist_completion_fence(turn_id=turn_id)
-                    final_msg = Message(
+                    final_msg = self._goal_checkpoint_chat_delivery(
+                        assistant_msg, tool_call, result, user_message_id=user_msg.id,
+                    ) or Message(
                         role="assistant",
                         content=self._append_downloaded_pdf_paths(
                             self._build_terminal_turn_response(result),

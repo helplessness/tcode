@@ -45,6 +45,18 @@ if str(source_root) in sys.path:
 sys.path.append(str(source_root))
 
 
+def _configure_local_web():
+    os.environ.update({
+        "TCODE_ENV_FILE": os.devnull,
+        "TCODE_AUTH_REQUIRED": "0",
+        "TCODE_ENTERPRISE_MODE": "0",
+        "TCODE_SANDBOX_ENABLED": "false",
+        "TCODE_SANDBOX_REQUIRE_RUNNER": "false",
+        "TCODE_ASYNC_WATCHER_ENABLED": "0",
+        "TCODE_RESEARCH_ENABLED": "false",
+    })
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="TCode Agent Web Server",
@@ -57,6 +69,7 @@ Examples:
   TCODE_WORKDIR=/path/to/project %(prog)s
         """,
     )
+    parser.add_argument("--local", action="store_true", help="Loopback-only setup without deployment environment files")
     parser.add_argument(
         "--host", default="127.0.0.1", help="Host to bind to (default: 127.0.0.1)"
     )
@@ -72,6 +85,8 @@ Examples:
     )
 
     args = parser.parse_args()
+    if args.local and args.host not in {"127.0.0.1", "::1"}:
+        parser.error("--local only permits a loopback host")
 
     # Determine working directory with priority:
     # 1. --workdir argument
@@ -100,7 +115,10 @@ Examples:
 
     # Load optional routing/runtime env config even when launcher is started directly.
     env_file = os.environ.get("TCODE_ENV_FILE") or _default_env_file(workdir)
-    _load_env_file(env_file)
+    if args.local:
+        _configure_local_web()
+    else:
+        _load_env_file(env_file)
 
     from tcode_agent.server.app import run_server, create_static_dir, ServerState
 

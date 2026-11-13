@@ -71,9 +71,10 @@ describe('complete studio shell',()=>{
     expect(studioPageFromHash('#/protein-runs')).toBe('protein-runs');
     expect(studioPages.find(page=>page.id==='protein-runs')?.label).toBe('实验运行');
   });
-  it('shows MCP status and configuration on web while keeping desktop settings local',()=>{
+  it('exposes Web settings navigation without removing desktop settings or MCP',()=>{
     expect(studioNavigationPagesForSurface('web').map(page=>page.id)).toContain('mcp');
-    expect(studioNavigationPagesForSurface('web').map(page=>page.id)).not.toContain('settings');
+    expect(studioNavigationPagesForSurface('web').map(page=>page.id)).toContain('settings');
+    expect(isPageAvailableOnSurface('settings','web')).toBe(true);
     expect(studioNavigationPagesForSurface('desktop').map(page=>page.id)).toContain('mcp');
     expect(isPageAvailableOnSurface('mcp','web')).toBe(true);
     expect(isPageAvailableOnSurface('plugins','web')).toBe(true);

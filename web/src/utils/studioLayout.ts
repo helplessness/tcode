@@ -27,8 +27,7 @@ export type StudioSurface = 'web' | 'desktop';
 // Contextual pages remain deep-linkable and open as task tabs, but do not occupy fixed navigation.
 const contextualPageIds: StudioPage[] = ['console', 'sidechat', 'team', 'protein-runs'];
 export const studioNavigationPages = studioPages.filter(page => !contextualPageIds.includes(page.id));
-const desktopOnlyPageIds = new Set<StudioPage>(['settings']);
-export const isPageAvailableOnSurface = (page: StudioPage, surface: StudioSurface) => surface === 'desktop' || !desktopOnlyPageIds.has(page);
+export const isPageAvailableOnSurface = (page: StudioPage, _surface: StudioSurface) => isStudioPage(page);
 export const studioNavigationPagesForSurface = (surface: StudioSurface) => studioNavigationPages.filter(page => isPageAvailableOnSurface(page.id, surface));
 export const isCollaborationPage = (page: StudioPage) => ['subagents', 'team', 'sidechat'].includes(page);
 export const isStudioPage = (value: string): value is StudioPage => studioPages.some(page => page.id === value);

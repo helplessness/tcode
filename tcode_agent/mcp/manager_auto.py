@@ -1316,6 +1316,9 @@ class MCPManager(metaclass=WorkspaceRegistryMeta):
             await cls.initialize()
 
         if not cls._is_server_published(server_name):
+            if (server_name, tool_name) == ("job-protocol-mcp", "submit_job"):
+                raise RuntimeError("MCP server 'job-protocol-mcp' not found. Remote calculation was "
+                                   "not submitted. Configure Job Protocol and register the remote executor.")
             raise Exception(f"MCP server '{server_name}' not found")
 
         from .dynamic_headers import snapshot

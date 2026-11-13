@@ -53,7 +53,7 @@ npm --prefix desktop run dev:test
 
 客户端不启动 Sandbox Runner，也不要求 Docker。Job Protocol 随桌面后端打包并由桌面自动管理；实际计算服务和计算沙箱仍可部署在远端。
 
-- `.tcode-local/desktop-mcp.json`：首次启动自动写入托管的 `job-protocol-mcp` 地址，默认从 `127.0.0.1:10121` 启动；端口被占用时依次选择后续空闲端口并同步配置。用户已明确配置的远程 Job Protocol 不会被覆盖。可用 `TCODE_DESKTOP_MCP_CONFIG` 指定其他文件。
+- `.tcode-local/desktop-mcp.json`：首次启动不自动拉起未配置的 Job Protocol。需要本机托管时，在桌面启动环境设置 `TCODE_DESKTOP_MANAGED_JOB_PROTOCOL=1`，并准备可用的 Job Protocol 运行环境；已有托管或远程配置继续沿用。可用 `TCODE_DESKTOP_MCP_CONFIG` 指定其他文件。
 - `.tcode-local/desktop.env`：配置 `TCODE_DESKTOP_ARTIFACT_SERVICE_URL` 为远程文件服务地址，以及相应的 `TMCP_ARTIFACT_API_TOKEN`。模板为 `config/templates/desktop.env.example`，可继续引用本机 `local.env` 的模型和登录配置。
 - 修改后使用应用菜单“重启本地服务”。有未结束远程任务时不要切换服务器。桌面标题栏提供连接状态及重新检查按钮，不显示密钥。
 - 缺失或无效配置时仍可打开桌面、浏览本地内容；不启动任务提交 worker，不回退连接 Web 的 localhost 服务。文件服务缺失时明确阻断相关传输。

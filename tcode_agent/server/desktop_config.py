@@ -91,11 +91,14 @@ def artifact_configuration(entry: dict, *, allow_loopback: bool | None = None) -
             'artifact_target_services': routes}
 
 
-def prepare_services(project: Path, runtime: Path, *, managed_job_url: str = "") -> None:
+def desktop_mcp_config_path(project: Path) -> Path:
     config_root = Path(os.environ.get("TCODE_CONFIG_ROOT") or project / ".tcode-local").expanduser()
     source = Path(os.environ.get("TCODE_DESKTOP_MCP_CONFIG") or config_root / "desktop-mcp.json").expanduser()
-    if not source.is_absolute():
-        source = project / source
+    return source if source.is_absolute() else project / source
+
+
+def prepare_services(project: Path, runtime: Path, *, managed_job_url: str = "") -> None:
+    source = desktop_mcp_config_path(project)
     source.parent.mkdir(parents=True, exist_ok=True)
     template = {"$desktop": {"artifact_service_url": "", "managed_job_protocol": bool(managed_job_url)},
                 "job-protocol-mcp": {"url": managed_job_url, "transport": "streamable-http", "enabled": bool(managed_job_url),
@@ -139,19 +142,9 @@ def prepare_services(project: Path, runtime: Path, *, managed_job_url: str = "")
             temp_source.write_text(json.dumps(candidate, ensure_ascii=False, indent=2), encoding="utf-8")
             os.chmod(temp_source, 0o600)
             temp_source.replace(source)
-        elif desktop_managed and not managed_job_url and not remote_services_paused():
-            candidate["job-protocol-mcp"] = {
-                "url": "", "transport": "streamable-http", "enabled": False,
-                "connect_timeout": 10000, "timeout": 300000,
-            }
-            candidate["$desktop"] = {
-                **(desktop_entry if isinstance(desktop_entry, dict) else {}),
-                "managed_job_protocol": False,
-            }
-            temp_source = source.with_suffix(source.suffix + ".tmp")
-            temp_source.write_text(json.dumps(candidate, ensure_ascii=False, indent=2), encoding="utf-8")
-            os.chmod(temp_source, 0o600)
-            temp_source.replace(source)
+        elif (desktop_managed or legacy_local_job) and not managed_job_url:
+            # Do not publish a stale address or erase ownership needed on restart.
+            candidate.pop("job-protocol-mcp", None)
         for name, entry in candidate.items():
             if remote_services_paused():
                 continue

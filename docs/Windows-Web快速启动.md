@@ -24,7 +24,7 @@ Get-ChildItem .\config\templates -File | ForEach-Object {
 
 `[desktop]` 在这里仅用于安装已有的 MCP 客户端依赖，不会安装或启动 Electron。无需激活虚拟环境或修改 PowerShell 脚本执行策略。
 
-**聊天必填：**编辑 `.tcode-local/tcode.json`，把 `model` 中的 `your-model-id` 和 `provider.demo.models` 下的同名键都改成模型服务实际提供的 ID。在启动终端设置以下变量，替换示例值：
+可先启动 Web，再到 **设置 → 模型与执行 → Web 模型服务** 添加和测试模型，不必先改 JSON。若选择文件配置，编辑 `.tcode-local/tcode.json`，把 `model` 中的 `your-model-id` 和 `provider.demo.models` 下的同名键都改成模型服务实际提供的 ID，并在启动终端设置以下变量：
 
 ```powershell
 $env:TCODE_DEMO_BASE_URL = 'https://your-provider.example/v1'
@@ -43,16 +43,7 @@ $env:TCODE_WORKDIR = Join-Path $repo 'workdirs\windows-web'
 New-Item -ItemType Directory -Force $env:TCODE_WORKDIR | Out-Null
 $env:TCODE_CONFIG_ROOT = Join-Path $repo '.tcode-local'
 $env:TCODE_MCP_CONFIG = Join-Path $env:TCODE_CONFIG_ROOT 'mcp.json'
-# 此文件应保持不存在：最小启动不加载面向完整部署的环境模板。
-$env:TCODE_ENV_FILE = Join-Path $env:TCODE_WORKDIR 'no-runtime.env'
-$env:TCODE_AUTH_REQUIRED = '0'
-$env:TCODE_ENTERPRISE_MODE = '0'
-$env:TCODE_SANDBOX_ENABLED = 'false'
-$env:TCODE_SANDBOX_REQUIRE_RUNNER = 'false'
-$env:TCODE_ASYNC_WATCHER_ENABLED = '0'
-$env:TCODE_RESEARCH_ENABLED = 'false'
-
-& .\.venv\Scripts\tcode-server.exe --host 127.0.0.1 --port 8080 --workdir $env:TCODE_WORKDIR
+& .\.venv\Scripts\tcode-server.exe --local --host 127.0.0.1 --port 8080 --workdir $env:TCODE_WORKDIR
 ```
 
 打开 [Web 界面](http://127.0.0.1:8080)，选择或新建工作区，再发送一条普通消息。若页面未打开，在另一个 PowerShell 窗口运行 `Invoke-RestMethod http://127.0.0.1:8080/api/health`，先确认 Web 进程就绪。健康检查不会验证模型或 MCP。

@@ -54,6 +54,9 @@ def artifact_service(service_id: str = "", *, target_server: str = "",
         token = default_token
     if not isinstance(url, str):
         raise ValueError("Artifact service URL must be a string")
+    if not url.strip():
+        raise ValueError("Artifact file transfer is not configured. Set up an Artifact service "
+                         "and bind it to the remote tool or select a default service.")
     try:
         parsed = urlsplit(url)
         parsed.port

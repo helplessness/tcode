@@ -92,6 +92,14 @@ def create_provider(
     npm = str(provider_cfg.get("npm") or "").lower()
     options = _provider_options(provider_cfg)
     timeout_seconds = _provider_timeout_seconds(provider_cfg)
+    web_service = str(options.get("webModelService") or "")
+
+    def managed_options(base_url: str, protocol: str) -> dict:
+        from .web_model_transport import guarded_client, allow_local_models
+        from ..web_model_settings import service_credential
+        key = service_credential(provider_id, web_service, base_url, protocol)
+        return {"api_key": key, "use_env_key": False, "max_retries": 0,
+                "http_client": guarded_client(allow_loopback=allow_local_models())}
 
     def identified(provider: LLMProvider) -> LLMProvider:
         # Stable configured identity is security-relevant for sensitive tool
@@ -99,6 +107,8 @@ def create_provider(
         # names are not unique enough for authorization decisions.
         provider.provider_id = provider_id
         provider.model_ref = f"{provider_id}/{model_id}"
+        if web_service:
+            provider._web_managed = True
         return provider
 
     if provider_id.startswith("anthropic") or "anthropic" in npm:
@@ -107,10 +117,10 @@ def create_provider(
         api_key = resolve_option_value(options, "apiKey", "api_key")
         base_url = resolve_option_value(options, "baseURL", "base_url")
         return identified(AnthropicProvider(
-            api_key=api_key,
             model=model_id,
             base_url=base_url or None,
             timeout_seconds=timeout_seconds,
+            **(managed_options(base_url, "anthropic") if web_service else {"api_key": api_key}),
         ))
 
     # OpenAI-compatible providers (including local Ollama /v1 gateway)
@@ -123,12 +133,12 @@ def create_provider(
         if not api_mode and "openai-responses" in npm:
             api_mode = "responses"
         return identified(OpenAIProvider(
-            api_key=api_key,
             base_url=base_url,
             model=model_id,
             timeout_seconds=timeout_seconds,
             api_mode=api_mode or None,
             session_id=session_id,
+            **(managed_options(base_url, "openai_compatible") if web_service else {"api_key": api_key}),
         ))
 
     if provider_id.startswith("ollama") or "ollama" in npm:
@@ -151,6 +161,20 @@ def create_provider(
 
 def clone_provider(provider: LLMProvider) -> LLMProvider:
     """Clone provider for sub-agent use to avoid stream/session conflicts."""
+    if getattr(provider, "_web_managed", False):
+        from .web_model_transport import guarded_client, allow_local_models
+        options = dict(
+            api_key=provider._api_key, base_url=provider._base_url, model=provider._model,
+            timeout_seconds=provider._timeout_seconds, use_env_key=False, max_retries=0,
+            http_client=guarded_client(allow_loopback=allow_local_models()),
+        )
+        if hasattr(provider, "api_mode"):
+            options["api_mode"] = provider.api_mode
+        cloned = type(provider)(**options)
+        cloned._web_managed = True
+        cloned.provider_id = provider.provider_id
+        cloned.model_ref = provider.model_ref
+        return cloned
     provider_name = str(getattr(provider, "name", "") or "").strip().lower()
     class_name = type(provider).__name__.lower()
 

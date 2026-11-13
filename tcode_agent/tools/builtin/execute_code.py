@@ -87,6 +87,7 @@ for example:
 Important constraints:
 - Your code runs inside `async def`, so call helpers with `await`
 - Available helpers: `read`, `glob`, `grep`, `webfetch`, `websearch`, `session_search`, `memory_read`
+- Long documents: if webfetch reports a preview, use `await webfetch(document_id=..., view="evidence", query="keyword")` or view="sections". For sequential reading use next_offset with the same view and filters.
 - Available modules without importing: `json`, `re`, `math`, `statistics`, `collections`, `datetime`
 - Imports and `asyncio` are unavailable; no file writes, bash, `task`, or domain MCP submit
 - Prefer this for glue logic, not for high-cost execution or workflow submission
@@ -107,6 +108,13 @@ Important constraints:
 
         stdout_buffer = io.StringIO()
         tool_call_state = {"count": 0}
+        web_previews = {}
+
+        def with_web_previews(output: str) -> str:
+            # Keep continuation visible even when the script only prints a count
+            # or a later helper raises. Do not rely on the script echoing metadata.
+            notice = "\n".join(f"[webfetch: {item}]" for item in web_previews.values())
+            return f"{notice}\n\n{output}" if notice else output
 
         def _print(*values, sep: str = " ", end: str = "\n"):
             stdout_buffer.write(sep.join(str(v) for v in values) + end)
@@ -123,6 +131,8 @@ Important constraints:
             result = await tool.execute(tool_args, context)
             if result.error:
                 raise RuntimeError(f"{tool_id} failed: {result.error}")
+            if tool_id == "webfetch" and (notice := result.metadata.get("continuation_notice")):
+                web_previews[result.metadata.get("document_id") or tool_args.get("url")] = notice
             return {
                 "title": result.title,
                 "output": result.output,
@@ -145,8 +155,10 @@ Important constraints:
                 {"pattern": pattern, "path": path, "include": include},
             )
 
-        async def webfetch(url: str, format: str | None = "markdown"):
-            return await _call_tool("webfetch", {"url": url, "format": format})
+        async def webfetch(url: str = "", format: str | None = "markdown", *, view=None, section="", query="", offset=0, document_id=""):
+            return await _call_tool("webfetch", {"url": url, "format": format, "view": view,
+                                                 "section": section, "query": query, "offset": offset,
+                                                 "document_id": document_id})
 
         async def websearch(query: str, count: int | None = 5):
             return await _call_tool("websearch", {"query": query, "count": count})
@@ -208,7 +220,7 @@ Important constraints:
         except asyncio.TimeoutError:
             return ToolResult(
                 title="execute_code",
-                output=stdout_buffer.getvalue()[:_MAX_STDOUT_CHARS],
+                output=with_web_previews(stdout_buffer.getvalue())[:_MAX_STDOUT_CHARS],
                 error=f"execute_code timed out after {timeout_seconds}s",
             )
         except Exception as exc:
@@ -223,7 +235,7 @@ Important constraints:
                 )
             return ToolResult(
                 title="execute_code",
-                output=stdout_buffer.getvalue()[:_MAX_STDOUT_CHARS],
+                output=with_web_previews(stdout_buffer.getvalue())[:_MAX_STDOUT_CHARS],
                 error=error,
             )
 
@@ -233,6 +245,7 @@ Important constraints:
                 output = json.dumps(returned, ensure_ascii=False, indent=2)
             else:
                 output = str(returned)
+        output = with_web_previews(output)
         if len(output) > _MAX_STDOUT_CHARS:
             output = output[:_MAX_STDOUT_CHARS] + "\n...[truncated]..."
 

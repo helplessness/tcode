@@ -1547,7 +1547,7 @@ This tool is designed for Docker + gVisor browser sandboxes and does not control
                 output="",
                 error=(
                     "Browser tool requires sandbox mode. Set TCODE_SANDBOX_ENABLED=true "
-                    "on the Linux server and use a Playwright browser image."
+                    "on the Linux server and configure a Sandbox Runner with a Playwright browser image."
                 ),
                 metadata={"sandbox_required": True},
             )

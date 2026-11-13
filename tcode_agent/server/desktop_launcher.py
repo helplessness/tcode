@@ -17,6 +17,7 @@ import sys
 import threading
 import time
 from urllib.request import urlopen
+from urllib.parse import urlsplit
 
 GATE_COOKIE = "tcode_desktop_gate"
 
@@ -163,9 +164,22 @@ def start_managed_job_protocol(project: Path, runtime: Path) -> tuple[subprocess
 
 def start_optional_job_protocol(project: Path, runtime: Path) -> tuple[subprocess.Popen | None, str]:
     """Start the compute facade without making the desktop UI depend on it."""
-    from .desktop_config import remote_services_paused
+    from .desktop_config import desktop_mcp_config_path, remote_services_paused
     if remote_services_paused():
         return None, ''
+    try:
+        path = desktop_mcp_config_path(project)
+        config = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+        desktop = config.get("$desktop", {})
+        job = config.get("job-protocol-mcp", {})
+        managed = desktop.get("managed_job_protocol")
+        url = str(job.get("url") or "").strip()
+        legacy = managed is None and urlsplit(url).hostname in {"localhost", "127.0.0.1", "::1"}
+        opted_in = os.environ.get("TCODE_DESKTOP_MANAGED_JOB_PROTOCOL") == "1" and not url
+        if not (managed is True or legacy or opted_in):
+            return None, ""
+    except (OSError, ValueError, AttributeError):
+        return None, ""
     try:
         return start_managed_job_protocol(project, runtime)
     except Exception as exc:

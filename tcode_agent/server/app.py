@@ -463,6 +463,8 @@ async def health_check():
 
 
 app.include_router(catalog_api.router)
+from .web_model_api import router as web_model_router
+app.include_router(web_model_router)
 from .plugin_async_targets_api import router as plugin_async_targets_router
 app.include_router(plugin_async_targets_router)
 
@@ -956,6 +958,7 @@ def create_static_dir():
 
 def run_server(host: str = "127.0.0.1", port: int = 8080, reload: bool = False):
     create_static_dir()
+    os.environ["TCODE_WEB_MODEL_LOOPBACK"] = "1" if host in {"127.0.0.1", "::1"} else "0"
     uvicorn.run(
         "tcode_agent.server.app:app",
         host=host,

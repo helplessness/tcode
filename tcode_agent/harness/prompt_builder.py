@@ -505,6 +505,11 @@ class AgentPromptBuilder:
             }:
                 is_error = True
                 break
+        if tool_call_id and not scan.blocked and getattr(self.agent, '_goal_tool_routing_prompt', ''):
+            from ..runtime.goal_evidence import is_observed_record
+            from ..tools.builtin.goal_checkpoint import goal_checkpoint_active
+            if goal_checkpoint_active.get() and any(is_observed_record(call) for call in message.tool_calls or []):
+                content = f"[目标证据记录标识: {tool_call_id}]\n{content}"
         return ChatMessage(
             role="tool",
             content=content,
@@ -926,10 +931,16 @@ class AgentPromptBuilder:
             ),
         )
         retry_budget = max(4_000, int(max_input_chars * 0.65))
+        goal_anchor = self._missing_goal_anchor([])
+        if goal_anchor:
+            retry_budget -= len(goal_anchor[0].content)
+            if retry_budget <= 0:
+                raise RuntimeError("Active goal instructions exceed the context retry budget; cannot continue with partial instructions")
         degraded_messages = [
             degraded_system,
+            *goal_anchor,
             *self._trim_chat_messages_for_retry(
-                messages_for_api[-12:],
+                [message for message in messages_for_api[-12:] if message not in goal_anchor],
                 max_total_chars=retry_budget,
                 per_message_limit=min(self._retry_per_message_chars(), max(2_000, retry_budget // 4)),
             ),
@@ -945,6 +956,15 @@ class AgentPromptBuilder:
             "[LLM_INPUT_GUARD] Oversized input detected; this turn was retried in degraded mode without tools."
         )
         return response
+
+    def _missing_goal_anchor(self, messages: list[ChatMessage]) -> list[ChatMessage]:
+        from ..tools.builtin.goal_checkpoint import goal_checkpoint_active
+
+        goal = getattr(self.agent, "_goal_tool_routing_prompt", "") if goal_checkpoint_active.get() else ""
+        if not goal or any(message.role == "user" and message.content == goal for message in messages):
+            return []
+        # Keep the original user authority; never elevate the objective to a system instruction.
+        return [ChatMessage(role="user", content=goal)]
 
     def _trim_chat_messages_for_retry(
         self,
@@ -2514,6 +2534,7 @@ class AgentPromptBuilder:
             # A host-resolved, source-bound data capsule is pinned independently
             # of hot-history compression; it does not grant tool permissions.
             messages_for_api.append(ChatMessage(role="user", content=restoration_context))
+        goal_anchor_position = len(messages_for_api)
         for msg in context_assembly.messages:
             if msg.role == "user":
                 messages_for_api.append(self._user_chat_message_for_prompt(msg))
@@ -2595,6 +2616,7 @@ class AgentPromptBuilder:
                     )
                 )
 
+        messages_for_api[goal_anchor_position:goal_anchor_position] = self._missing_goal_anchor(messages_for_api)
         messages_for_api = self._normalize_tool_call_message_chain(messages_for_api)
         messages_for_api = self._expand_tool_model_images(messages_for_api)
         self.agent._dump_prompt_payload(messages_for_api=messages_for_api, tools=tools)

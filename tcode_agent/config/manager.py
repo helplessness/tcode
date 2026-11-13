@@ -251,15 +251,6 @@ class ConfigManager:
             return cls._config
 
         config_paths = cls._collect_config_paths(normalized_workdir)
-        if not config_paths:
-            cls._config = {}
-            cls._loaded = True
-            cls._config_path = None
-            cls._config_paths = []
-            cls._loaded_workdir = normalized_workdir
-            cls._loaded_config_root = normalized_config_root
-            return cls._config
-
         merged_config: dict[str, Any] = {}
         for config_path in config_paths:
             try:
@@ -270,13 +261,15 @@ class ConfigManager:
             except Exception as e:
                 print(f"Failed to load config {config_path}: {e}")
 
-        local_model = cls._load_local_model_override(normalized_workdir, config_paths)
+        from ..web_model_settings import apply_settings
+        apply_settings(merged_config)
+        local_model = cls._load_local_model_override(normalized_workdir, config_paths) if config_paths or merged_config else None
         if local_model:
             merged_config["model"] = local_model
 
         cls._config = merged_config
         cls._loaded = True
-        cls._config_path = config_paths[-1]
+        cls._config_path = config_paths[-1] if config_paths else None
         cls._config_paths = config_paths
         cls._loaded_workdir = normalized_workdir
         cls._loaded_config_root = normalized_config_root

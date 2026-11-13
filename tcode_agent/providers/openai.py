@@ -23,8 +23,11 @@ class OpenAIProvider(LLMProvider):
         timeout_seconds: Optional[float] = None,
         api_mode: Optional[str] = None,
         session_id: Optional[str] = None,
+        http_client=None,
+        max_retries: int = 1,
+        use_env_key: bool = True,
     ):
-        super().__init__(api_key or os.environ.get("OPENAI_API_KEY", ""))
+        super().__init__(api_key or (os.environ.get("OPENAI_API_KEY", "") if use_env_key else ""))
         self._base_url = base_url or os.environ.get("OPENAI_BASE_URL")
         self._model = model
         raw_timeout = timeout_seconds
@@ -44,7 +47,8 @@ class OpenAIProvider(LLMProvider):
             api_key=client_api_key,
             base_url=self._base_url,
             timeout=self._timeout_seconds,
-            max_retries=1,
+            max_retries=max_retries,
+            **({"http_client": http_client} if http_client is not None else {}),
             default_headers=opencode_go_headers(self._base_url, session_id),
         )
         self._image_inputs_supported: Optional[bool] = None

@@ -65,6 +65,7 @@ from ..mcp.manager_auto import MCPManager
 from ..plugins.api import router as plugins_router
 from .swarm_api import router as swarm_router
 from .mcp_config_api import router as mcp_config_router
+from .websearch_config_api import router as websearch_config_router
 from .research_api import router as research_router
 from .scheduled_tasks_api import router as scheduled_tasks_router
 from .protein_runs_api import router as protein_runs_router
@@ -366,6 +367,7 @@ async def state_lock_busy_response(request: Request, exc: StateLockBusy):
 app.include_router(plugins_router)
 app.include_router(swarm_router)
 app.include_router(mcp_config_router)
+app.include_router(websearch_config_router)
 app.include_router(research_router)
 app.include_router(scheduled_tasks_router)
 app.include_router(protein_runs_router)

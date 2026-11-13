@@ -97,6 +97,8 @@ source .venv/bin/activate
 
 #### 2. 填写新生成的配置
 
+如果想在网页配置模型，可以先按下面的「方式 A」启动，再打开 **设置 → 模型与执行 → Web 模型服务**。添加服务后可分别测试文本和图片能力，并选择默认模型。这样不需要先修改 JSON 或设置模型环境变量。已有部署也可继续用下面的文件配置；共享部署的网页配置须由实例管理员通过 HTTPS 操作。
+
 安装结束后，`.tcode-local/` 已有全部 13 份本机配置。若已安装依赖但配置目录还不存在，可单独运行 `./scripts/init_local_config.sh`。首次聊天只需编辑 `.tcode-local/tcode.json`：把 `model` 中的 `your-model-id` 与 `provider.demo.models` 下的同名键都换成服务商实际提供的模型 ID。模型服务应支持 OpenAI-compatible Chat Completions；要使用工具时还需支持工具调用。
 
 在当前终端填写模型地址与凭据（本地服务不要求密钥时可用 `local`）：
@@ -114,19 +116,19 @@ export TCODE_DEMO_API_KEY='replace-with-your-key'
 
 ```bash
 mkdir -p workdirs/local
-TCODE_ENV_FILE=/dev/null \
 TCODE_CONFIG_ROOT="$PWD/.tcode-local" \
 TCODE_MCP_CONFIG="$PWD/.tcode-local/mcp.json" \
-TCODE_AUTH_REQUIRED=0 TCODE_ENTERPRISE_MODE=0 \
-TCODE_SANDBOX_ENABLED=false TCODE_SANDBOX_REQUIRE_RUNNER=false \
-TCODE_ASYNC_WATCHER_ENABLED=0 TCODE_RESEARCH_ENABLED=false \
-tcode-server \
+tcode-server --local \
   --host 127.0.0.1 --port 8080 --workdir "$PWD/workdirs/local"
 ```
 
 打开 [Web 界面](http://127.0.0.1:8080)，先选择一个工作区（也可在侧栏新建），再创建会话并发送一条消息。命令中的 `workdirs/local` 是服务的运行数据目录，不是界面中的工作区名称。可用 [健康检查](http://127.0.0.1:8080/api/health) 检查后端。按 `Ctrl+C` 停止；重启时重新激活 `.venv`、设置模型环境变量并使用同一个运行数据目录，即可保留工作区和会话。桌面端和 Docker 的启动方式见[运行指南](docs/RUNNING.md)。
 
 ##### 方式 B：按本机配置启动服务
+
+已有部署继续使用原启动命令，不要加 `--local`。新装桌面不会自动启动未配置的 Job Protocol；已有托管配置继续启动，外部网关继续使用原地址。
+
+使用高级功能前先准备对应服务：Web 浏览器需要 Sandbox Runner 和 Playwright 镜像；隔离执行需要支持的桌面隔离后端或 Linux 沙箱；远程计算需要已启用的 Job Protocol 和已注册的执行端；远程文件传输还需要 Artifact 服务和工具绑定。缺少这些服务不妨碍基础聊天。
 
 依赖已安装且 `.tcode-local/local.env` 已按用途配置后，执行：
 
@@ -161,6 +163,23 @@ python scripts/dsh.py smoke \
 | 沙箱执行器不可用 | 本地体验不要求执行器；启用插件隔离时需按部署文档配置真实 runner |
 
 ## 需要哪些服务？
+
+### 网页搜索（可选）
+
+保存配置后，可在 **设置 → 网页搜索** 点击「测试连接」。测试只向当前已保存的服务发送一次固定查询，不会自动切换；Brave 可能消耗一次请求额度。通过后显示状态和测试时间，修改配置后需重新验证。
+
+基础聊天不需要搜索服务。内置 `websearch` 默认使用 SearXNG：部署或连接允许 JSON 搜索的实例，按需设置 `TCODE_SEARXNG_BASE_URL`（默认 `http://127.0.0.1:8888`）。地址必须从 TCode 后端可达。
+
+不想部署 SearXNG，可从 [Brave Search API](https://api-dashboard.search.brave.com/documentation/guides/authentication) 获取自己的 Key，再在启动后端的环境中设置：
+
+```bash
+export TCODE_WEBSEARCH_PROVIDER=brave
+export TCODE_BRAVE_SEARCH_API_KEY='replace-with-your-key'
+```
+
+重启后端后，原来的 `websearch` 会用 Brave 搜索普通网页，每次最多请求一页。专用图片、视频、新闻等分类仍用 SearXNG。切回 SearXNG 时将后端设为 `searxng` 或取消该变量。服务失败不会自动切换；选 Brave 后，搜索关键词会发送给 Brave。
+
+也可以在 Web 或桌面打开 **设置 → 网页搜索**。实例管理员选择 SearXNG 并填写实例地址，或选择 Brave 并填写 Key。保存后立即用于后续搜索，不修改已有环境文件；未保存过的字段继续使用启动配置。Key 保存在后端运行数据目录的私有设置文件，页面只显示是否已配置，留空保留原 Key。Web 与桌面使用不同运行目录时分别配置。不要提交真实凭据或将运行数据目录公开。
 
 **装好 TCode 后，第一次聊天只需配置一个可用的模型接口。** 不需要单独部署数据库、Redis、TMCP 或沙箱。首次初始化生成的 MCP 服务清单是空的，不会自动连接外部工具。
 
