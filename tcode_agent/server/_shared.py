@@ -716,6 +716,9 @@ def _request_has_valid_tracker_api_token(request: Request) -> bool:
 
 def _require_tracker_api_auth(request: Request, *, allow_user: bool = False) -> None:
     if not auth_required():
+        if (not allow_user and os.environ.get("TCODE_INTERNAL_JOB_PROTOCOL_URL")
+                and not _request_has_valid_tracker_api_token(request)):
+            raise HTTPException(401, "内置异步队列只接受受信任的后台请求")
         return
     if _request_has_valid_tracker_api_token(request):
         return

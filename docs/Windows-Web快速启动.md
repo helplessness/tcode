@@ -55,6 +55,7 @@ $env:TCODE_MCP_CONFIG = Join-Path $env:TCODE_CONFIG_ROOT 'mcp.json'
 ## 3. 可选：连接远程 MCP
 
 - **普通查询或文本工具：**在 **设置 → MCP 服务 → 添加 MCP** 填远程 MCP 地址及认证，按需选“直接调用”。也可以按 [MCP 配置与验证](../tcode_agent/MCP_QUICKSTART.md)编辑 `.tcode-local/mcp.json`。不需要 Job Protocol 或文件 SDK。
+- **单机内置 Job Protocol（Windows 实机待验收）：**正常启动（不加 `--local`），设置 `$env:TCODE_MANAGED_JOB_PROTOCOL = '1'` 后重启，可自动启动网关和 Bridge；存在外部网关时仍走外部。文件传输仍需要单独的 Artifact 服务。见[第三方异步 MCP 指南](服务隔离/第三方MCP插件接入与运行.md)。
 - **可恢复的异步任务：**需要已有的兼容 Job Protocol、Bridge Worker 与远端计算服务。按 [第三方异步 MCP 指南](服务隔离/第三方MCP插件接入与运行.md)将 [代理示例](../config/examples/mcp-async-broker.example.json)合并到 `.tcode-local/mcp.json`，填写实际服务地址和认证。Web 进程设置 `TCODE_ASYNC_EXECUTION_MODE=bridge`、`TCODE_ASYNC_WATCHER_ENABLED=1`、`TCODE_PLUGIN_JOB_PROTOCOL_URL`（不带 `/mcp` 的基址）和对应的 `TMCP_TARGET_REGISTRY_TOKEN`。仅启动 `tcode-server` **不会**自动启动 Bridge Worker、Job Protocol 或 Artifact 服务。
 - **Bridge Worker：**Web 和 Worker 设置同一个 `TCODE_TRACKER_API_TOKEN`；Worker 另设 `TCODE_TRACKER_API_BASE`（例如同机的 `http://127.0.0.1:8080`）和 `TCODE_BRIDGE_MCP_CONFIG`（含 Job Protocol 条目的清单绝对路径）。在另一个 PowerShell 窗口设置相同的工作目录和配置路径；确认 Worker 能发现该工作区，或显式设置 `TCODE_TRACKER_SCOPES=租户ID:用户ID:工作区ID`，再运行 `& .\.venv\Scripts\python.exe .\scripts\shared_tracker_bridge_worker.py`。
 

@@ -69,7 +69,9 @@ def _require_admin(request: Request) -> None:
 
 
 def _web_managed_server(name: str) -> bool:
-    return os.environ.get("TCODE_DESKTOP_MANAGED") != "1" and name.strip().lower() == "job-protocol-mcp"
+    return name.strip().lower() == "job-protocol-mcp" and (
+        os.environ.get("TCODE_DESKTOP_MANAGED") != "1" or bool(os.environ.get("TCODE_INTERNAL_JOB_PROTOCOL_URL"))
+    )
 
 
 def _public(name: str, entry: dict[str, Any]) -> dict[str, Any]:
@@ -110,7 +112,8 @@ async def _reload(workdir=None) -> None:
 @router.get("")
 async def list_mcp_config(request: Request):
     user = require_current_user(request)
-    config = _read()
+    from .managed_job_protocol import effective_config
+    config = effective_config(_read())
     return {
         "servers": [await _public_scoped(name, entry, request) for name, entry in sorted(config.items()) if not name.startswith("$") and isinstance(entry, dict)],
         "can_edit": not auth_required() or str(user.role or "").lower() in {"owner", "admin"},

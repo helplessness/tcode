@@ -455,8 +455,10 @@ def _simplified_submit_args(args: dict) -> tuple[Optional[dict], Optional[ToolRe
         elif not route_in_raw and route_in_nested:
             raw = nested
 
-    # Proper job-protocol submit_job payloads are handled by the normal MCP path.
     if "command" in raw:
+        if os.environ.get("TCODE_INTERNAL_JOB_PROTOCOL_URL"):
+            return None, ToolResult(title="异步提交", output="", error="内置 Job Protocol 不接受 command 字段，未执行任务。")
+        # Legacy external job-protocol payloads keep their existing path.
         return None, None
 
     work = dict(raw)

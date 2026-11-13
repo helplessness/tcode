@@ -65,7 +65,8 @@ def _replace_token_file(path: Path, token: str) -> None:
     )
     temporary_path = Path(temporary_name)
     try:
-        os.fchmod(descriptor, 0o600)
+        if hasattr(os, "fchmod"):
+            os.fchmod(descriptor, 0o600)
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
             handle.write(token + "\n")
             handle.flush()

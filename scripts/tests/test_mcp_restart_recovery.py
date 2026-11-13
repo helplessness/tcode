@@ -49,6 +49,25 @@ def test_pending_cancel_backoff_stays_bounded_after_long_outage(monkeypatch, tmp
     assert 0 < row["workspace"]["recovery"]["next_retry_at"] - time.time() <= 10
 
 
+def test_local_lost_receipt_remains_unresolved_after_restart(monkeypatch, tmp_path):
+    wd = str(tmp_path)
+    ref = {"job_id": "tcode-job-echo", "process_id": "tcode-job-echo", "broker": "tcode-local"}
+    SharedTracker.upsert_issue({"id": "echo", "identifier": "LOCAL-echo", "state": "In Progress",
+                                "workspace": {"job_ref": ref}}, workdir=wd)
+    query = AsyncMock(side_effect=[{**ref, "status": "running", "submission_state": "unknown"},
+                                  ConnectionError("broker temporarily offline")])
+    monkeypatch.setattr(remote_recovery, "call_job_tool", query)
+    for _ in range(2):
+        asyncio.run(remote_recovery.reconcile_task("echo", wd))
+        row = SharedTracker.get_task(task_id="echo", workdir=wd)
+        assert row["job_ref"] == ref
+        assert row["workspace"]["recovery"]["state"] == "submission_unknown"
+        assert "不会自动重新提交" in row["workspace"]["recovery"]["error"]
+        SharedTracker.patch_task(task_id="echo", workspace_patch={"recovery": {
+            **row["workspace"]["recovery"], "next_retry_at": 0}}, workdir=wd)
+    assert [call.args[1] for call in query.await_args_list] == ["get_job_status", "get_job_status"]
+
+
 @pytest.mark.parametrize("shutdown", [True, False])
 def test_shutdown_releases_plugin_without_deactivating_target(monkeypatch, tmp_path, shutdown):
     from tcode_agent.plugins import async_targets

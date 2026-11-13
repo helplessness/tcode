@@ -514,13 +514,9 @@ class MCPManager(metaclass=WorkspaceRegistryMeta):
 
         mcp_config_path = cls.resolve_mcp_config_path(workdir)
 
-        if not os.path.exists(mcp_config_path):
-            cls._initialized = True
-            return
-
         try:
-            with open(mcp_config_path, "r", encoding="utf-8") as f:
-                mcp_config = json.load(f)
+            from ..server.managed_job_protocol import effective_config, read_config
+            mcp_config = effective_config(read_config(mcp_config_path))
         except Exception:
             cls._initialized = True
             return
@@ -558,7 +554,8 @@ class MCPManager(metaclass=WorkspaceRegistryMeta):
             return
         source = cls.resolve_mcp_config_path(workdir)
         path = Path(source)
-        config = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+        from ..server.managed_job_protocol import effective_config
+        config = effective_config(json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {})
         if not isinstance(config, dict):
             raise ValueError("MCP 配置必须是对象")
         servers = {name: entry for name, entry in config.items()
@@ -1299,6 +1296,7 @@ class MCPManager(metaclass=WorkspaceRegistryMeta):
         *,
         progress_callback: Any = None,
         progress_token: Optional[str] = None,
+        _job_worker_token: str | None = None,
     ) -> Any:
         from ..runtime.async_resume import assert_submission_allowed
         assert_submission_allowed(server_name, tool_name)
@@ -1348,6 +1346,12 @@ class MCPManager(metaclass=WorkspaceRegistryMeta):
         }
         if client.extra_headers:
             headers.update(client.extra_headers)
+        if _job_worker_token is not None:
+            from ..server.managed_job_protocol import LOCAL_URL, WORKER_HEADER
+            if ((server_name, tool_name) != ("job-protocol-mcp", "submit_job")
+                    or not _job_worker_token or client.url != os.environ.get(LOCAL_URL)):
+                raise PermissionError("内置 Job Protocol 提交凭据只能用于本机后台派发")
+            headers[WORKER_HEADER] = _job_worker_token
 
         request_id = 1
         params: dict[str, Any] = {"name": tool_name, "arguments": arguments}
@@ -1370,6 +1374,7 @@ class MCPManager(metaclass=WorkspaceRegistryMeta):
                 json=request,
                 headers=headers,
                 timeout=aiohttp.ClientTimeout(total=timeout_ms / 1000),
+                **({"allow_redirects": False} if _job_worker_token is not None else {}),
             )
             if resp.status != 200:
                 error_text = await resp.text()

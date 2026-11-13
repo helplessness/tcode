@@ -50,6 +50,12 @@ async def cancel_remote_job(job_ref: dict[str, Any]) -> dict[str, Any]:
 
 async def call_job_tool(job_ref: dict[str, Any], tool: str) -> dict[str, Any]:
     from ..mcp.manager_auto import MCPManager, MCPSessionExpiredError
+    import os
+
+    local = bool(os.environ.get("TCODE_INTERNAL_JOB_PROTOCOL_URL"))
+    local_ref = job_ref.get("broker") == "tcode-local" or str(job_ref.get("job_id", "")).startswith("tcode-job-")
+    if local != local_ref:
+        raise ValueError("原任务所属的 Job Protocol 当前未启用；保留任务引用，未重新提交")
 
     scope = job_ref.get("request_scope") if isinstance(job_ref.get("request_scope"), dict) else {}
     # Scope may carry credentials, but cannot override the persisted job identity.

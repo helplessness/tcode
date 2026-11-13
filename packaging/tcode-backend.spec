@@ -34,22 +34,21 @@ datas += [
     for name in (
         "runtime_env.py",
         "tracker_scope.py",
-        "shared_tracker_bridge_worker.py",
         "shared_tracker_symphony_sidecar.py",
     )
 ]
 
-hiddenimports = collect_submodules("tcode_agent") + ["tmcp.funcdir.job_protocol_mcp"]
+hiddenimports = collect_submodules("tcode_agent")
 
 a = Analysis(
     [str(ROOT / "packaging" / "tcode_backend_entry.py")],
-    pathex=[str(ROOT), str(ROOT.parent)],
+    pathex=[str(ROOT)],
     binaries=[],
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
     runtime_hooks=[],
-    excludes=["pytest", "tkinter"],
+    excludes=["pytest", "tkinter", "tmcp"],
     noarchive=False,
 )
 pyz = PYZ(a.pure)

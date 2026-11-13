@@ -25,7 +25,13 @@ def main() -> None:
         if name not in SIDECARS:
             raise SystemExit(f"unsupported desktop sidecar: {name}")
         if name == "job-protocol-mcp":
-            runpy.run_module("tmcp.funcdir.job_protocol_mcp", run_name="__main__")
+            import asyncio
+            from tcode_agent.server.job_protocol import serve
+            asyncio.run(serve())
+            return
+        if name == "shared_tracker_bridge_worker.py":
+            from tcode_agent.runtime.bridge_worker import run
+            run()
             return
         runpy.run_path(str(resource_root() / "scripts" / name), run_name="__main__")
         return

@@ -17,6 +17,8 @@ files:
   - backend.cjs
   - native.cjs
   - recovery.cjs
+  - test-instance.cjs
+  - model-secrets.cjs
   - computer.cjs
   - browser.cjs
   - tray-panel.cjs

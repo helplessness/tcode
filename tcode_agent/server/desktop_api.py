@@ -71,7 +71,8 @@ def desktop_router(token: str) -> APIRouter:
         except (OSError, ValueError):
             config = {}
         job = config.get("job-protocol-mcp", {}) if isinstance(config, dict) else {}
-        job_url = str(job.get("url") or "")
+        managed = bool(os.environ.get("TCODE_INTERNAL_JOB_PROTOCOL_URL"))
+        job_url = "" if managed else str(job.get("url") or "")
         try:
             from ..artifact_transport import _artifact_service_url
             artifact_url = _artifact_service_url()
@@ -87,7 +88,7 @@ def desktop_router(token: str) -> APIRouter:
         except (ValueError, TypeError):
             artifact_state = 'invalid'
         return {"remote": state, "config_file": os.environ.get("TCODE_DESKTOP_MCP_CONFIG", ""),
-                "job_protocol": {"state": state, "url": job_url},
+                "job_protocol": {"state": state, "url": job_url, "managed": managed},
                 "artifact": {"state": artifact_state, "url": artifact_url},
                 "artifacts": artifacts,
                 "artifact_configured": artifact_configured,

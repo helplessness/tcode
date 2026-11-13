@@ -9,7 +9,6 @@ LOCK="$ROOT/build/.desktop-backend-build.lock"
 [ "$(uname -s)" = Darwin ] || { echo "macOS backend must be built on macOS" >&2; exit 1; }
 [ -x "$PYTHON" ] || { echo "Desktop Python not found: $PYTHON" >&2; exit 1; }
 [ -f "$ROOT/web/dist/desktop.html" ] || { echo "Build web/dist before packaging" >&2; exit 1; }
-[ -f "$ROOT/../tmcp/funcdir/job_protocol_mcp.py" ] || { echo "TMCP source not found beside TCode" >&2; exit 1; }
 mkdir -p "$ROOT/build"
 if ! mkdir "$LOCK" 2>/dev/null; then
     echo "Another desktop backend build is already running" >&2

@@ -2,6 +2,10 @@
 """TCode Agent Web Server Launcher"""
 
 import argparse
+from contextlib import ExitStack
+import json
+import logging
+import signal
 import sys
 import os
 from pathlib import Path
@@ -55,6 +59,61 @@ def _configure_local_web():
         "TCODE_ASYNC_WATCHER_ENABLED": "0",
         "TCODE_RESEARCH_ENABLED": "false",
     })
+
+
+def _configure_job_protocol(stack, args, workdir):
+    from ..mcp.manager_auto import MCPManager
+    from ..runtime.tracker_token import ensure_tracker_token
+    from .managed_job_protocol import (
+        async_enabled, bridge_worker_environment, configured_bridge_gateway, enabled_flag, external_entry,
+        has_gateway_address, loopback_web, managed_job_protocol, read_config, stop_child,
+    )
+    import subprocess
+
+    if args.local:
+        return False
+    try:
+        primary = MCPManager.resolve_mcp_config_path(workdir)
+        config = read_config(primary)
+        _, external = configured_bridge_gateway(workdir, primary)
+        external = external or external_entry()
+        if external:
+            # Keep existing Web and worker manifests authoritative. A URL-only
+            # deployment also needs a broker entry in the runtime overlay.
+            if not has_gateway_address(config.get("job-protocol-mcp")):
+                os.environ["TCODE_INTERNAL_EXTERNAL_JOB_PROTOCOL"] = json.dumps(external)
+            return
+        from ..mcp.executor_config import _resolve_candidate_path
+        executor_path = os.environ.get("TCODE_EXECUTOR_MCP_CONFIG")
+        executor_path = _resolve_candidate_path(executor_path, workdir=workdir) if executor_path else None
+        if not (enabled_flag() or async_enabled({**read_config(executor_path), **config})):
+            return
+        if not loopback_web(args.host) or args.reload or os.environ.get("WEB_CONCURRENCY", "1") != "1":
+            logging.warning("内置 Job Protocol 只用于单机 Web；请配置外部网关")
+            return
+        if (os.environ.get("TCODE_ASYNC_EXECUTION_MODE", "").lower() == "symphony"
+                or os.environ.get("TCODE_PROXY_SUBMIT_MODE", "").lower() == "symphony"
+                or os.environ.get("SYMPHONY_ROUTE_ON_MCP_TOOL", "").lower() == "true"):
+            logging.warning("保留现有 Symphony 路由；请配置外部 Job Protocol")
+            return
+        # Do not inherit an unrelated source checkout's executor configuration.
+        configs = [primary, executor_path]
+        with ExitStack() as started:
+            started.enter_context(managed_job_protocol(Path(workdir), configs=configs))
+            tracker_host = "[::1]" if args.host == "::1" else "127.0.0.1"
+            os.environ.update(TCODE_ASYNC_EXECUTION_MODE="bridge", TCODE_PROXY_SUBMIT_MODE="bridge",
+                              TCODE_ASYNC_WATCHER_ENABLED="1", TCODE_TRACKER_API_BASE=f"http://{tracker_host}:{args.port}")
+            ensure_tracker_token()
+            child = subprocess.Popen([sys.executable, "-m", "tcode_agent.runtime.bridge_worker"],
+                                     stdin=subprocess.PIPE, env=bridge_worker_environment())
+            started.callback(stop_child, child)
+            marker = Path(workdir) / ".tcode/job-protocol/web-bridge.pid"
+            marker.write_text(str(os.getpid()))
+            started.callback(marker.unlink, missing_ok=True)
+            stack.enter_context(started.pop_all())
+            return True
+    except (OSError, ValueError, RuntimeError):
+        logging.warning("内置 Job Protocol 无法启动；Web 仍可聊天，请检查异步配置", exc_info=True)
 
 
 def main():
@@ -120,7 +179,24 @@ Examples:
     else:
         _load_env_file(env_file)
 
-    from tcode_agent.server.app import run_server, create_static_dir, ServerState
+    with ExitStack() as stack:
+        managed = _configure_job_protocol(stack, args, workdir)
+        # Uvicorn re-raises SIGTERM after shutting down. Let Python unwind
+        # owned sidecars/locks rather than exiting before ExitStack can run.
+        previous = signal.signal(signal.SIGTERM, _exit_on_sigterm) if managed else None
+        try:
+            _run(args, workdir)
+        finally:
+            if previous is not None:
+                signal.signal(signal.SIGTERM, previous)
+
+
+def _exit_on_sigterm(signum, frame):
+    raise SystemExit(128 + signum)
+
+
+def _run(args, workdir):
+    from tcode_agent.server.app import run_server, create_static_dir
 
     # Create static directory
     static_dir = create_static_dir()

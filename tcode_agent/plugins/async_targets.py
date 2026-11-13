@@ -212,3 +212,14 @@ def approved_servers(workdir, owner):
     return {data.get('alias', data['server']).lower() if data.get('origin') == 'mcp-config' else data['server']
             for plugin, raw in rows if (data := json.loads(raw)).get('active')
             and (data.get('origin') == 'mcp-config' or PluginRegistry.get(plugin))}
+
+
+def approved_target_version(workdir, owner, server):
+    with store(workdir) as db:
+        rows = db.execute('SELECT plugin,data FROM bindings WHERE owner=?', (owner,)).fetchall()
+    for plugin, raw in rows:
+        state = json.loads(raw)
+        if (state.get('active') and state.get('server') == server
+                and (state.get('origin') == 'mcp-config' or PluginRegistry.get(plugin))):
+            return str(state.get('version') or '')
+    return ''

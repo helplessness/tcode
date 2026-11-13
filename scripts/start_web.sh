@@ -344,7 +344,12 @@ if should_start_symphony_sidecar; then
 fi
 
 if should_start_bridge_worker; then
-    start_background_worker "shared_tracker_bridge_worker" "$PROJECT_DIR/scripts/shared_tracker_bridge_worker.py"
+    # The launcher owns its Bridge when it started a local broker. External
+    # broker deployments retain the historical shell-owned worker.
+    marker="$WORKDIR_PATH/.tcode/job-protocol/web-bridge.pid"
+    if [ ! -f "$marker" ] || [ "$(<"$marker")" != "$SERVER_PID" ]; then
+        start_background_worker "shared_tracker_bridge_worker" "$PROJECT_DIR/scripts/shared_tracker_bridge_worker.py"
+    fi
 fi
 
 set +e

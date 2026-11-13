@@ -6,18 +6,19 @@ desktop service routing is isolated before importing the application.
 from __future__ import annotations
 
 import asyncio
+from contextlib import ExitStack
 import hmac
 from http.cookies import SimpleCookie
 import json
 import os
 from pathlib import Path
+import signal
 import socket
 import subprocess
 import sys
 import threading
 import time
 from urllib.request import urlopen
-from urllib.parse import urlsplit
 
 GATE_COOKIE = "tcode_desktop_gate"
 
@@ -131,7 +132,9 @@ def _available_port(start: int = 10121) -> int:
 
 
 def start_managed_job_protocol(project: Path, runtime: Path) -> tuple[subprocess.Popen, str]:
-    # Both local processes share a management credential, never exposed to LLMs.
+    """Compatibility for source deployments with a preexisting TMCP job store."""
+    if getattr(sys, "frozen", False) or not (project.parent / "tmcp/funcdir/job_protocol_mcp.py").is_file():
+        raise RuntimeError("旧 TMCP 任务需要连接原 Job Protocol")
     import secrets
     os.environ.setdefault('TMCP_TARGET_REGISTRY_TOKEN', secrets.token_urlsafe(32))
     port = _available_port(int(os.environ.get("TCODE_DESKTOP_JOB_PROTOCOL_PORT", "10121") or 10121))
@@ -141,11 +144,8 @@ def start_managed_job_protocol(project: Path, runtime: Path) -> tuple[subprocess
         TMCP_JOB_PROTOCOL_PORT=str(port),
         TMCP_JOB_DATA_ROOT=str(runtime / ".tcode/job-protocol"),
     )
-    if getattr(sys, "frozen", False):
-        command = [sys.executable, "--tcode-sidecar", "job-protocol-mcp"]
-    else:
-        command = [sys.executable, "-m", "tmcp.funcdir.job_protocol_mcp"]
-        environment["PYTHONPATH"] = os.pathsep.join(filter(None, (str(project.parent), environment.get("PYTHONPATH", ""))))
+    command = [sys.executable, "-m", "tmcp.funcdir.job_protocol_mcp"]
+    environment["PYTHONPATH"] = os.pathsep.join(filter(None, (str(project.parent), environment.get("PYTHONPATH", ""))))
     worker = subprocess.Popen(command, cwd=runtime, env=environment)
     health_url = f"http://127.0.0.1:{port}/health"
     deadline = time.monotonic() + 30
@@ -162,27 +162,40 @@ def start_managed_job_protocol(project: Path, runtime: Path) -> tuple[subprocess
     raise RuntimeError("随桌面端启动的 Job Protocol 在 30 秒内未就绪")
 
 
-def start_optional_job_protocol(project: Path, runtime: Path) -> tuple[subprocess.Popen | None, str]:
+def start_optional_job_protocol(project: Path, runtime: Path, stack: ExitStack) -> tuple[subprocess.Popen | None, str]:
     """Start the compute facade without making the desktop UI depend on it."""
     from .desktop_config import desktop_mcp_config_path, remote_services_paused
+    from .managed_job_protocol import async_enabled, enabled_flag, external_entry, managed_job_protocol, read_config
     if remote_services_paused():
         return None, ''
     try:
         path = desktop_mcp_config_path(project)
-        config = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+        config = read_config(path)
         desktop = config.get("$desktop", {})
         job = config.get("job-protocol-mcp", {})
         managed = desktop.get("managed_job_protocol")
-        url = str(job.get("url") or "").strip()
-        legacy = managed is None and urlsplit(url).hostname in {"localhost", "127.0.0.1", "::1"}
-        opted_in = os.environ.get("TCODE_DESKTOP_MANAGED_JOB_PROTOCOL") == "1" and not url
-        if not (managed is True or legacy or opted_in):
+        # A previous desktop may have persisted a generated loopback address.
+        # Only its explicit ownership marker makes that address non-external.
+        from urllib.parse import urlsplit
+        legacy_db = (runtime / ".tcode/job-protocol/jobs.sqlite3").exists()
+        owned_url = (managed is True or managed is None and legacy_db) and (
+            urlsplit(str(job.get("url") or "")).hostname in {"localhost", "127.0.0.1", "::1"}
+        )
+        external = external_entry({} if owned_url else config)
+        if external:
+            os.environ["TCODE_PLUGIN_JOB_PROTOCOL_URL"] = external["url"].removesuffix("/mcp").rstrip("/")
             return None, ""
-    except (OSError, ValueError, AttributeError):
+        opted_in = enabled_flag() or os.environ.get("TCODE_DESKTOP_MANAGED_JOB_PROTOCOL") == "1"
+        if managed is not True and not owned_url and not opted_in and not async_enabled(config):
+            return None, ""
+    except (OSError, ValueError, AttributeError, TypeError):
         return None, ""
     try:
-        return start_managed_job_protocol(project, runtime)
+        if legacy_db or owned_url and not getattr(sys, "frozen", False):
+            return start_managed_job_protocol(project, runtime)
+        return None, stack.enter_context(managed_job_protocol(runtime, configs=[path]))
     except Exception as exc:
+        os.environ["TCODE_INTERNAL_JOB_PROTOCOL_FAILED"] = "1"
         print(f"Job Protocol 不可用，桌面端将以降级模式继续启动：{exc}", file=sys.stderr)
         return None, ""
 
@@ -218,6 +231,11 @@ async def stop_local_processes():
 
 
 async def serve(token: str, project: Path, runtime: Path, computer: dict | None = None, browser: dict | None = None) -> None:
+    with ExitStack() as stack:
+        await _serve(token, project, runtime, computer, browser, stack)
+
+
+async def _serve(token, project, runtime, computer, browser, stack):
     import uvicorn
 
     # Keep the socket bound throughout startup; no check-then-bind race.
@@ -229,7 +247,7 @@ async def serve(token: str, project: Path, runtime: Path, computer: dict | None 
     from ..browser.desktop import configure_desktop_browser
     configure_desktop_browser(browser)
     os.environ["TCODE_COMPUTER_USE_ENABLED"] = "1" if computer and computer.get("enabled") is True else "0"
-    job_worker, job_url = start_optional_job_protocol(project, runtime)
+    job_worker, job_url = start_optional_job_protocol(project, runtime, stack)
     if job_url:
         os.environ['TCODE_PLUGIN_JOB_PROTOCOL_URL'] = job_url.removesuffix('/mcp')
     from .desktop_blender import start_optional_blender, stop_blender
@@ -267,7 +285,11 @@ async def serve(token: str, project: Path, runtime: Path, computer: dict | None 
                 if getattr(sys, "frozen", False)
                 else [sys.executable, str(project / "scripts" / name)]
             )
-            workers.append(subprocess.Popen(command, cwd=runtime))
+            kwargs = {}
+            if name == "shared_tracker_bridge_worker.py" and os.environ.get("TCODE_INTERNAL_JOB_PROTOCOL_URL"):
+                from .managed_job_protocol import bridge_worker_environment
+                kwargs = {"stdin": subprocess.PIPE, "env": bridge_worker_environment()}
+            workers.append(subprocess.Popen(command, cwd=runtime, **kwargs))
         with os.fdopen(3, "w", closefd=False) as ready:
             ready.write(json.dumps({"type": "ready", "protocol": 1, "port": port}) + "\n")
             ready.flush()
@@ -281,6 +303,8 @@ async def serve(token: str, project: Path, runtime: Path, computer: dict | None 
         await stop_local_processes()
         await asyncio.to_thread(stop_blender, blender_worker)
         for worker in workers:
+            if worker.stdin:
+                worker.stdin.close()
             if worker.poll() is None:
                 worker.terminate()
         for worker in workers:
@@ -307,7 +331,13 @@ def main():
     browser = payload.get("browser")
     if browser is not None and not isinstance(browser, dict):
         raise RuntimeError("Invalid desktop browser startup payload")
-    asyncio.run(serve(token, project, runtime, computer, browser))
+    # Uvicorn replays termination after shutdown. An installed handler lets
+    # the owned sidecars unwind while treating normal Electron quit as success.
+    previous = signal.signal(signal.SIGTERM, lambda *_: None)
+    try:
+        asyncio.run(serve(token, project, runtime, computer, browser))
+    finally:
+        signal.signal(signal.SIGTERM, previous)
 
 
 if __name__ == "__main__":

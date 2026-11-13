@@ -3,6 +3,7 @@
 Routes retain their original paths and are registered by app.py.
 """
 
+import os
 from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Request
@@ -227,6 +228,7 @@ async def get_tracker_task_events(request: Request, task_id: str):
 @router.post("/api/tracker/claim-next")
 async def claim_next_tracker_task(request: Request, payload: TrackerClaimNextRequest):
     _require_tracker_api_auth(request)
+    local_job_protocol = bool(os.environ.get("TCODE_INTERNAL_JOB_PROTOCOL_URL"))
     workspace_context, tracker_workdir = _tracker_request_scope(
         request,
         require_active=False,
@@ -259,6 +261,7 @@ async def claim_next_tracker_task(request: Request, payload: TrackerClaimNextReq
                 lease_seconds=max(10, int(payload.lease_seconds or 30)),
                 allowed_servers=list(payload.allowed_servers or []),
                 workdir=tracker_workdir,
+                local_job_protocol=local_job_protocol,
             )
             if candidate is None:
                 break

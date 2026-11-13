@@ -346,7 +346,9 @@ def build_job_protocol_submit_input(
     from .custom_targets import pinned_target
     from .dynamic_headers import snapshot
     business_args, call_context = snapshot(server_name, tool_args, context)
-    normalized_args = (copy.deepcopy(business_args) if pinned_target(context, server_name)
+    local_gateway = (bool(os.environ.get("TCODE_INTERNAL_JOB_PROTOCOL_URL"))
+                     and _choose_async_execution_channel(server_name, context) == "bridge")
+    normalized_args = (copy.deepcopy(business_args) if pinned_target(context, server_name) or local_gateway
                        else _normalize_routed_tool_args(business_args, tool_name))
     run_id = issue_id or f"local-{uuid.uuid4().hex[:10]}"
     identifier = issue_identifier or f"LOCAL-{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}"
@@ -406,7 +408,7 @@ def build_job_protocol_submit_input(
     else:
         routed_args.pop("workspace_root", None)
 
-    if server_name.startswith('plugin-'):
+    if server_name.startswith('plugin-') or local_gateway:
         # Identity belongs to the broker envelope, not third-party tool args.
         routed_args = copy.deepcopy(business_args)
         input_snapshot = copy.deepcopy(business_args)
@@ -426,7 +428,7 @@ def build_job_protocol_submit_input(
         except ValueError:
             return value
 
-    if not server_name.startswith('plugin-'):
+    if not server_name.startswith('plugin-') and not local_gateway:
         routed_args = _portable_value(routed_args)
     from .custom_targets import pinned_target
     if not pinned_target(context, server_name):
@@ -493,6 +495,23 @@ async def enqueue_symphony_local_issue(
     from ..runtime.async_resume import assert_submission_allowed
     assert_submission_allowed(server_name, tool_name)
     execution_channel = _choose_async_execution_channel(server_name, context)
+    target_version = ""
+    if execution_channel == "bridge" and os.environ.get("TCODE_INTERNAL_JOB_PROTOCOL_URL"):
+        claims = _context_workspace_claims(context)
+        if server_name.startswith("plugin-"):
+            from ..plugins.async_targets import approved_target_version
+            target_version = approved_target_version(
+                _context_control_workdir(context), f"{claims['tenant_id']}/{claims['user_id']}", server_name,
+            )
+        else:
+            from .manager_auto import MCPManager
+            from ._proxy import _extract_contract_payload
+            observed = await MCPManager.call_tool("job-protocol-mcp", "describe_target_tool", {
+                "input": {"target_server": server_name, "target_tool": tool_name, "detail": "compact", "fields": [], **claims},
+            })
+            target_version = str(_extract_contract_payload(observed).get("target_version") or "")
+        if not target_version:
+            raise ValueError("无法确认异步目标的获批版本，未入队")
     workdir_text = _context_control_workdir(context)
     tracker_workdir = workdir_text or str(
         os.environ.get("TCODE_WORKDIR", "") or ""
@@ -516,6 +535,8 @@ async def enqueue_symphony_local_issue(
     fingerprint_args = exact_fingerprint_arguments(tool_args) if pinned_target(context, server_name) else tool_args
     from .dynamic_headers import fingerprint_arguments, rules_for
     fingerprint_args = fingerprint_arguments(server_name, fingerprint_args, context, values_from=tool_args)
+    if target_version:
+        fingerprint_args = {"target_version": target_version, "arguments": fingerprint_args}
     if rules_for(server_name, context):
         from .dynamic_headers import ensure_broker_support
         await ensure_broker_support(server_name, tool_name, context)
@@ -658,6 +679,9 @@ async def enqueue_symphony_local_issue(
         else {}
     )
     submit_workspace.update(workspace_owner)
+    if execution_channel == "bridge" and os.environ.get("TCODE_INTERNAL_JOB_PROTOCOL_URL"):
+        submit_workspace["job_protocol_backend"] = "tcode-local"
+        submit_input["target_version"] = target_version
     from ..workspace.input_resources import input_file_contract
     file_contract = input_file_contract(context, server_name, tool_name)
     if file_contract is not None:

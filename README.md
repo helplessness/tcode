@@ -50,7 +50,7 @@ TCode 是一个可自托管的 AI 研究工作台，重点面向蛋白质研究�
 | Docker 与 Sandbox Runner | 按需 | Linux 使用容器隔离插件、容器执行能力时，按部署方式准备 Docker 和对应 Runner；Runner 可部署在独立主机。下文最小 Web 聊天体验不需要 Docker。选择 Docker 部署 Web 本身时也需要 Docker，但这与工具沙箱是两回事。 |
 | macOS 原生隔离 | 桌面本地隔离功能需要 | 已接入的桌面本地执行使用 macOS 原生隔离，不要求安装 Docker；启动时进行隔离自检。电脑控制等能力还需按提示授予系统权限。 |
 | 普通 MCP 服务 | 按需 | 使用对应工具时自行部署或连接已有服务；只连接远程 MCP 不要求本机安装 Docker，也不要求部署 TMCP。 |
-| 异步任务服务与执行端 | 按需 | 远程异步计算需要兼容的任务提交、状态查询和结果恢复服务及实际执行端。Windows Web 连接已有服务，Linux Web 可按接入文档部署；桌面可托管本地 Job Protocol，但不会自动部署远程计算工具。 |
+| 异步任务服务与执行端 | 按需 | 桌面和单机 Web 可以托管内置 Job Protocol，或继续用已有网关。真正执行计算的 MCP 服务仍需单独提供；Windows Web 的内置网关尚待实机验证。 |
 | Artifact 文件服务 | 按需 | 使用远程文件引用传输输入或取回产物时配置服务地址和认证。文本工具不需要；安装文件 SDK 不会自动部署文件服务。 |
 | 领域工具、GPU、模型权重 | 按需 | Boltz 等计算工具按各自要求部署在实际执行主机，不是基础 Web / 桌面启动依赖。 |
 | 扩展功能依赖 | 按需 | swarm、向量检索、Redis 相关 Python 依赖可用 `./scripts/install_tcode.sh --full` 安装；Redis 服务、检索模型及插件自身依赖仍需按所用功能另外准备。 |
@@ -126,7 +126,7 @@ tcode-server --local \
 
 ##### 方式 B：按本机配置启动服务
 
-已有部署继续使用原启动命令，不要加 `--local`。新装桌面不会自动启动未配置的 Job Protocol；已有托管配置继续启动，外部网关继续使用原地址。
+已有部署继续使用原启动命令，不要加 `--local`。桌面和单机 Web 启用通用异步 MCP 后重启，可自动启动内置 Job Protocol；已有外部网关优先，旧任务不会自动改投。启用方式见[第三方异步 MCP 指南](docs/服务隔离/第三方MCP插件接入与运行.md#1-先确认-tcode-侧的服务就绪)。
 
 使用高级功能前先准备对应服务：Web 浏览器需要 Sandbox Runner 和 Playwright 镜像；隔离执行需要支持的桌面隔离后端或 Linux 沙箱；远程计算需要已启用的 Job Protocol 和已注册的执行端；远程文件传输还需要 Artifact 服务和工具绑定。缺少这些服务不妨碍基础聊天。
 
@@ -191,7 +191,7 @@ export TCODE_BRAVE_SEARCH_API_KEY='replace-with-your-key'
 | Redis | 不需要；运行指导通知和 Swarm 消息传递默认不依赖 Redis。 | 按需配置部分通知或 Swarm 消息后端。Redis 不替代 SQLite，也不等于支持高可用部署。 |
 | FAISS 与 Embedding | 基础聊天不需要。 | 启用证据语义召回时安装本地 FAISS 并配置 Embedding；没有可用语义索引时，证据搜索仍可用关键词。 |
 | 普通 MCP | 不预连任何服务。 | 工具直接返回结果时加入 [MCP 配置](tcode_agent/MCP_QUICKSTART.md)，不需要 Job Protocol。 |
-| Job Protocol 与计算执行端 | 不随源码启动外部计算服务。 | 需要远程异步提交、状态查询、取消和结果恢复时，连接兼容任务服务与实际执行端。 |
+| Job Protocol 与计算执行端 | 基础聊天不启动网关或计算服务。 | 需要远程异步任务时，启用内置网关或连接外部兼容网关，并配置实际执行端。 |
 | Artifact 文件服务 | 基础聊天和纯文本工具不需要。 | 远程工具需要通过文件引用收发输入或产物时，配置 Artifact 地址和认证；安装 SDK 不会部署服务。 |
 | 领域工具与 Sandbox Runner | 基础聊天不需要。 | 领域工具（例如 Boltz）由实际执行端提供；需要隔离的工具须配置对应隔离后端，不应绕过隔离。 |
 

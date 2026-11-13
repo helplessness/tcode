@@ -1894,6 +1894,7 @@ class SharedTracker:
         lease_seconds: int,
         allowed_servers: list[str],
         workdir: Optional[str] = None,
+        local_job_protocol: bool = False,
     ) -> Optional[dict[str, Any]]:
         cls.ensure_initialized(workdir)
         normalized_channel = str(channel or "").strip().lower()
@@ -1920,6 +1921,12 @@ class SharedTracker:
                 )
                 # Expired executions are observed by recovery, never re-submitted.
                 params: list[Any] = [normalized_channel]
+                if normalized_channel == "bridge":
+                    sql += (
+                        "AND COALESCE(json_extract(submit_input_json, '$.workspace.job_protocol_backend'), '') "
+                        + ("= ? " if local_job_protocol else "<> ? ")
+                    )
+                    params.append("tcode-local")
                 if not allow_all:
                     placeholders = ",".join("?" for _ in allowed)
                     sql += f"AND LOWER(tool_server) IN ({placeholders}) "

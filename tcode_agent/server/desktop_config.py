@@ -98,10 +98,11 @@ def desktop_mcp_config_path(project: Path) -> Path:
 
 
 def prepare_services(project: Path, runtime: Path, *, managed_job_url: str = "") -> None:
+    from .managed_job_protocol import LOCAL_URL, effective_config, external_entry
     source = desktop_mcp_config_path(project)
     source.parent.mkdir(parents=True, exist_ok=True)
-    template = {"$desktop": {"artifact_service_url": "", "managed_job_protocol": bool(managed_job_url)},
-                "job-protocol-mcp": {"url": managed_job_url, "transport": "streamable-http", "enabled": bool(managed_job_url),
+    template = {"$desktop": {"artifact_service_url": "", "managed_job_protocol": False},
+                "job-protocol-mcp": {"url": "", "transport": "streamable-http", "enabled": False,
                                      "connect_timeout": 10000, "timeout": 300000}}
     try:
         with source.open("x", encoding="utf-8") as handle:
@@ -119,32 +120,21 @@ def prepare_services(project: Path, runtime: Path, *, managed_job_url: str = "")
         desktop_entry = candidate.get("$desktop", {})
         job_entry = candidate.get("job-protocol-mcp", {})
         desktop_managed = isinstance(desktop_entry, dict) and bool(desktop_entry.get("managed_job_protocol"))
-        # Legacy desktop files had a loopback URL but no ownership marker.
-        # Migrate those to the managed gateway; explicit false remains external.
-        legacy_local_job = (
-            isinstance(desktop_entry, dict) and "managed_job_protocol" not in desktop_entry
-            and isinstance(job_entry, dict)
+        # A desktop-owned legacy loopback URL is not a user-supplied endpoint.
+        owned_local_job = (
+            (desktop_managed or isinstance(desktop_entry, dict) and "managed_job_protocol" not in desktop_entry
+             and (runtime / ".tcode/job-protocol/jobs.sqlite3").exists()) and isinstance(job_entry, dict)
             and urlsplit(str(job_entry.get("url") or "")).hostname in {"127.0.0.1", "localhost", "::1"}
         )
-        use_managed_job = bool(managed_job_url) and (
-            not isinstance(job_entry, dict)
-            or not str(job_entry.get("url") or "").strip()
-            or desktop_managed
-            or legacy_local_job
-        )
-        if use_managed_job and not remote_services_paused():
-            candidate["job-protocol-mcp"] = {
-                "url": managed_job_url, "transport": "streamable-http", "enabled": True,
-                "connect_timeout": 10000, "timeout": 300000,
-            }
-            candidate["$desktop"] = {**(desktop_entry if isinstance(desktop_entry, dict) else {}), "managed_job_protocol": True}
-            temp_source = source.with_suffix(source.suffix + ".tmp")
-            temp_source.write_text(json.dumps(candidate, ensure_ascii=False, indent=2), encoding="utf-8")
-            os.chmod(temp_source, 0o600)
-            temp_source.replace(source)
-        elif (desktop_managed or legacy_local_job) and not managed_job_url:
-            # Do not publish a stale address or erase ownership needed on restart.
+        if owned_local_job or not (isinstance(job_entry, dict) and job_entry.get("url")):
             candidate.pop("job-protocol-mcp", None)
+        if managed_job_url:
+            if os.environ.get(LOCAL_URL):
+                candidate = effective_config(candidate)
+            else:  # Existing source-only TMCP store.
+                candidate["job-protocol-mcp"] = {"url": managed_job_url, "transport": "streamable-http", "timeout": 300000}
+        elif (external := external_entry(candidate)):
+            candidate["job-protocol-mcp"] = external
         for name, entry in candidate.items():
             if remote_services_paused():
                 continue
@@ -154,7 +144,9 @@ def prepare_services(project: Path, runtime: Path, *, managed_job_url: str = "")
                 raise ValueError("invalid server entry")
             if entry.get("enabled", True) is False:
                 continue
-            allow_managed = name == "job-protocol-mcp" and entry.get("url") == managed_job_url
+            allow_managed = name == "job-protocol-mcp" or (
+                bool(os.environ.get(LOCAL_URL)) and entry.get("invocation_mode") == "async"
+            )
             allow_managed = allow_managed or (
                 name == "blender-mcp" and bool(os.environ.get("TCODE_DESKTOP_BLENDER_MCP_URL"))
                 and entry.get("url") == os.environ["TCODE_DESKTOP_BLENDER_MCP_URL"]
@@ -163,6 +155,8 @@ def prepare_services(project: Path, runtime: Path, *, managed_job_url: str = "")
                 raise ValueError("desktop MCP requires remote HTTP endpoint")
             config[name] = entry
         state = "configured" if "job-protocol-mcp" in config else "unconfigured"
+        if state == "unconfigured" and os.environ.get("TCODE_INTERNAL_JOB_PROTOCOL_FAILED") == "1":
+            state = "disconnected"
     except (OSError, ValueError, TypeError):
         state, config = "invalid", {}
     target = runtime / ".tcode/desktop-mcp.effective.json"

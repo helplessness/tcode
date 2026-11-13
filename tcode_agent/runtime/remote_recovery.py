@@ -88,6 +88,11 @@ def needs_recovery(task: dict, now: float) -> bool:
     return task.get("status") in {"claimed", "running", "retrying"} and lease_expired(task.get("claim_expires_at"), now)
 
 
+def submission_unknown(now):
+    return {"state": "submission_unknown", "next_retry_at": now + 60,
+            "error": "未取得远端受理回执，提交状态待核对；不会自动重新提交。"}
+
+
 async def reconcile_task(task_id: str, workdir: str) -> None:
     task = SharedTracker.get_task(task_id=task_id, workdir=workdir)
     now = time.time()
@@ -121,6 +126,9 @@ async def reconcile_task(task_id: str, workdir: str) -> None:
                 observed = job_payload(await call_job_tool(job_ref, "get_job_status"))
                 if str(observed.get("job_id") or "") != str(job_ref["job_id"]) or (job_ref.get("process_id") and str(observed.get("process_id") or "") != str(job_ref["process_id"])):
                     raise ValueError("远程状态回执与任务不匹配")
+                if job_ref.get("broker") == "tcode-local" and observed.get("submission_state") == "unknown":
+                    recovery.update(submission_unknown(now))
+                    return
                 remote_status = str(observed.get("status") or "").lower()
                 status = {"done": "completed", "completed": "completed", "error": "failed", "failed": "failed", "timed_out": "failed", "terminated": "cancelled", "cancelled": "cancelled", "canceled": "cancelled"}.get(remote_status, "running")
                 if remote_status not in {"queued", "running", "pending", "processing", "completed", "done", "failed", "error", "timed_out", "terminated", "cancelled", "canceled"}:
@@ -174,7 +182,10 @@ async def reconcile_task(task_id: str, workdir: str) -> None:
         # User cancellation remains pending, but should not wait another full
         # minute to be picked up when a previously offline broker comes back.
         max_retry_delay = 10 if cancellation.get("state") == "pending" else 60
-        recovery.update(state="retry_wait", error="连接或结果保存未完成，后台将继续核对；不会重新提交计算。", next_retry_at=time.time() + min(max_retry_delay, 2 ** attempt))
+        if job_ref.get("broker") == "tcode-local" and recovery.get("state") == "submission_unknown":
+            recovery.update(submission_unknown(now))
+        else:
+            recovery.update(state="retry_wait", error="连接或结果保存未完成，后台将继续核对；不会重新提交计算。", next_retry_at=time.time() + min(max_retry_delay, 2 ** attempt))
         if status in {"completed", "failed"}:
             patch["transfer_state"] = "retry_wait"
     finally:

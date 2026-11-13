@@ -1269,11 +1269,20 @@ async def _collect_job_result(
 
         last_error = ""
         for job_id in candidates:
-            result = await MCPManager.call_tool(
-                "job-protocol-mcp",
-                "collect_job_result",
-                {"input": {"job_id": job_id}},
-            )
+            if job_id.startswith("tcode-job-"):
+                from .remote_cancel import call_job_tool
+                ref = issue.get("job_ref") or {}
+                if ref.get("job_id") != job_id:
+                    last_error = "missing original local Job Protocol reference"
+                    continue
+                result = await call_job_tool(ref, "collect_job_result")
+            else:
+                if os.environ.get("TCODE_INTERNAL_JOB_PROTOCOL_URL"):
+                    last_error = "original external Job Protocol not active"
+                    continue
+                result = await MCPManager.call_tool(
+                    "job-protocol-mcp", "collect_job_result", {"input": {"job_id": job_id}},
+                )
 
             if isinstance(result, dict):
                 if result.get("isError"):

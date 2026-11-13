@@ -8,7 +8,7 @@ CONTEXT = '_tcode_context'
 _FORBIDDEN = {'authorization', 'proxy-authorization', 'cookie', 'set-cookie', 'host',
               'content-length', 'content-type', 'accept', 'connection', 'transfer-encoding',
               'mcp-session-id', 'mcp-protocol-version', 'x-tmcp-service-token',
-              'x-job-protocol-token', 'x-target-registry-token', 'uid', 'x-openclaw-uid',
+              'x-job-protocol-token', 'x-target-registry-token', 'x-tcode-job-worker-token', 'uid', 'x-openclaw-uid',
               'x-api-key', 'api-key', 'x-auth-token', 'x-user-id', 'x-tenant-id'}
 
 
