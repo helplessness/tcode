@@ -20,7 +20,7 @@ catalog:
   # 需要跨 workspace 复用时再显式改为 true。
   inherit_parent_skills: false
 
-  # 是否加载用户主目录（例如 ~/.claude/skills）中的 Skill。
+  # 是否加载用户主目录（例如 ~/.tcode/skills、~/.claude/skills）中的 Skill。
   # 生产默认关闭，保证服务端 Skill catalog 可复现，并减少启动扫描成本。
   include_home_skills: false
 

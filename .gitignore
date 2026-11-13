@@ -104,6 +104,7 @@ tmp/
 upload/
 runs/
 vendor/
+# 运行数据及用户安装的技能默认忽略；仓库自带 .tcode/skills 文件显式追踪。
 .tcode/
 /.tcode-asset-history/
 /outputs/

@@ -5,7 +5,7 @@
 - Use relative paths like `src/main.py`, NOT `workdir/` prefix
 - Complete tasks efficiently - stop when done
 - 对远程论文或网页 PDF 下载：默认加载 `paper-literature-search` skill 做检索；检索统一使用 `paper-search-mcp`，下载统一使用 `paper-download-mcp`，不要直接选择底层文献数据源。只有统一下载 MCP 已穷尽内部 provider，仍返回 HTML/PDF viewer、JS 跳转、403/429、超时或无开放 PDF 后，才允许调用 `task` 并显式设置 `subagent_type="agent-browser"` 委派浏览器子代理作为最后兜底。主代理不得直接加载 `agent-browser` skill，也不得把 `webfetch`、直接 `curl` 或主代理直接调用 `browser` 当成默认下载器。
-- 对远程论文或网页 PDF 下载：只有当本地文件已经落地，且运行 `python3 .claude/skills/paper-literature-search/scripts/validate_downloaded_pdf.py <文件路径>` 返回 `ok=true` 时，才允许宣称“PDF 下载成功”。
+- 对远程论文或网页 PDF 下载：只有当本地文件已经落地，且运行 `python3 .tcode/skills/paper-literature-search/scripts/validate_downloaded_pdf.py <文件路径>` 返回 `ok=true` 时，才允许宣称“PDF 下载成功”。
 
 ## Async Domain MCP
 计算型 MCP 禁止直调；先加载对应 runner skill，再通过 `mcp_job-protocol-mcp_submit_job` 提交：

@@ -39,6 +39,7 @@ $env:TCODE_DEMO_API_KEY = '填写自己的密钥'
 
 ```powershell
 $repo = (Get-Location).Path
+$env:TCODE_PROJECT_ROOT = $repo
 $env:TCODE_WORKDIR = Join-Path $repo 'workdirs\windows-web'
 New-Item -ItemType Directory -Force $env:TCODE_WORKDIR | Out-Null
 $env:TCODE_CONFIG_ROOT = Join-Path $repo '.tcode-local'

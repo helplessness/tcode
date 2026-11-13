@@ -125,6 +125,7 @@ export TCODE_DEMO_API_KEY='replace-with-your-key'
 
 ```bash
 mkdir -p workdirs/local
+TCODE_PROJECT_ROOT="$PWD" \
 TCODE_CONFIG_ROOT="$PWD/.tcode-local" \
 TCODE_MCP_CONFIG="$PWD/.tcode-local/mcp.json" \
 tcode-server --local \
@@ -213,6 +214,8 @@ export TCODE_BRAVE_SEARCH_API_KEY='replace-with-your-key'
 - **在 TCode 里声明异步目标或扩展插件**：[TCode Plugin SDK](docs/plugin-sdk/README.md)。这是 TCode 侧的 SDK，不需要装到远端计算服务上。
 
 ## 进一步阅读
+
+源码仓库自带的产品技能在 [`.tcode/skills/`](.tcode/skills/)，不需要安装 Claude；`.claude/skills/` 仍可被 TCode 识别。技能提供用法和操作指导，不等于已连接相应的模型或 MCP 服务。沙箱挂载与新增项目技能的说明见[配置指南](docs/CONFIGURATION.md#产品技能与沙箱挂载)。
 
 - [文档目录](docs/README.md)：Windows Web、Linux Web、macOS 桌面与 Docker 的运行入口。
 - [配置指南](docs/CONFIGURATION.md)：必填项、公开模板和本机私有配置。

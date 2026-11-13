@@ -35,7 +35,7 @@ Python 依赖见 `tcode_agent/requirements-core.txt` 与 `tcode_agent/requiremen
 
 ## Anatomy 绘图技能
 
-`.claude/skills/anatomy/` 选择性捆绑 [Anatomy](https://github.com/wheresryan22/anatomy) 提交 `1482e8469b0a9e0d8cc18ea2740a01423d29ae80` 的几何工具和设计资料，MIT，`Copyright (c) 2026 Ryan`。完整声明在该目录 `LICENSE`，原版文件校验见 `upstream.json`。TCode 的技能入口和 `scripts/render.mjs` 为本地适配；原版几何文件保留。此引入独立于 `presentation/isometric.py` 的原有原创三维部件实现，不表示已接入上游完整网页、WebGL 或工程验证能力。
+`.tcode/skills/anatomy/` 选择性捆绑 [Anatomy](https://github.com/wheresryan22/anatomy) 提交 `1482e8469b0a9e0d8cc18ea2740a01423d29ae80` 的几何工具和设计资料，MIT，`Copyright (c) 2026 Ryan`。完整声明在该目录 `LICENSE`，原版文件校验见 `upstream.json`。TCode 的技能入口和 `scripts/render.mjs` 为本地适配；原版几何文件保留。此引入独立于 `presentation/isometric.py` 的原有原创三维部件实现，不表示已接入上游完整网页、WebGL 或工程验证能力。
 
 ## DOCX / PDF 技能
 

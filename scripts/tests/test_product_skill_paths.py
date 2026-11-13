@@ -33,10 +33,11 @@ def test_catalog_reads_product_and_legacy_skills(tmp_path, monkeypatch):
     SkillManager.clear()
     try:
         asyncio.run(SkillManager.load(workdir=str(workspace)))
-        for name in ("docx", "pdf"):
+        for name in ("anatomy", "boltz-runner", "paper-literature-search", "primer-design", "docx", "pdf"):
             manifest = PROJECT / ".tcode/skills" / name / "SKILL.md"
             skill = SkillManager.get(name)
             assert skill is not None and Path(skill.location) == manifest
+        assert SkillManager.get("boltz-runner").skill_id == "project/boltz-runner@1"
         assert Path(SkillManager.get("legacy-compat-fixture").location) == legacy
         for name in ("docx", "pdf"):
             assert "Version 2.0, January 2004" in (PROJECT / ".tcode/skills" / name / "LICENSE.txt").read_text()

@@ -74,7 +74,7 @@ compatibility:
   2. 当前主代理按上面的参数调用 `task`；不要调用 `skill(name="agent-browser")`，也不要自己调用 `browser`。
   3. 浏览器子代理使用原生 `browser` 工具打开页面、识别下载入口并把文件下载到指定目标路径，然后返回下载路径、最终 URL 与失败原因。
   4. 子代理返回后，当前主代理确认文件位于工作区；如需复制或重命名，整理到当前目录中的目标 `.pdf` 文件。
-  5. 当前主代理立刻运行：`python3 .claude/skills/paper-literature-search/scripts/validate_downloaded_pdf.py <当前目录中的 .pdf 文件路径>`。
+  5. 当前主代理立刻运行：`python3 .tcode/skills/paper-literature-search/scripts/validate_downloaded_pdf.py <当前目录中的 .pdf 文件路径>`。
   6. 仅当校验输出 `ok: true` 时，才返回实际下载结果（文件名、本地路径、文件大小、校验结果）。
 - 若站点需要登录、验证码或机构权限，必须明确告知用户这是站点访问限制，不要伪称“下载成功”。
 
@@ -92,7 +92,7 @@ compatibility:
 ## 推荐命令
 ```bash
 cd /path/to/tcode
-python3 .claude/skills/paper-literature-search/scripts/search_literature.py \
+python3 .tcode/skills/paper-literature-search/scripts/search_literature.py \
   --query "CRISPR Cas9" \
   --sources pubmed,crossref,openalex \
   --max-results 5 \
@@ -101,7 +101,7 @@ python3 .claude/skills/paper-literature-search/scripts/search_literature.py \
 
 ```bash
 cd /path/to/tcode
-python3 .claude/skills/paper-literature-search/scripts/search_literature.py \
+python3 .tcode/skills/paper-literature-search/scripts/search_literature.py \
   --query "protein language model enzyme engineering" \
   --sources pubmed,arxiv,semanticscholar,openalex \
   --start-year 2021 \
@@ -165,5 +165,5 @@ JSON 输出字段包括：
 - 不要只凭扩展名是 `.pdf`、URL 里带 `/pdf/`、或响应里出现 `%PDF` 就宣称文件有效；必须以校验脚本结果为准。
 
 ## 相关文件
-- `.claude/skills/paper-literature-search/scripts/search_literature.py`
-- `.claude/skills/paper-literature-search/scripts/validate_downloaded_pdf.py`
+- `.tcode/skills/paper-literature-search/scripts/search_literature.py`
+- `.tcode/skills/paper-literature-search/scripts/validate_downloaded_pdf.py`

@@ -27,10 +27,9 @@ datas = [
 datas += tree(WEB_DIST, "tcode_agent/server/static")
 datas += tree(ROOT / "plugins", "plugins", excluded={"__pycache__", ".cache", "tests"})
 datas += tree(ROOT / "config" / "templates", "config/templates")
-datas += tree(ROOT / ".claude" / "skills" / "anatomy", ".claude/skills/anatomy",
-              excluded={"__pycache__", "node_modules"})
 datas.append((str(ROOT / "THIRD_PARTY_NOTICES.md"), "."))
-for name in ("docx", "pdf"):
+# Only explicitly bundled product skills; never collect user-installed skills.
+for name in ("anatomy", "docx", "pdf"):
     datas += tree(ROOT / ".tcode" / "skills" / name, f".tcode/skills/{name}",
                   excluded={"__pycache__", "node_modules"})
 datas += [
