@@ -1,6 +1,6 @@
 """Exercise the real Streamable HTTP broker and durable echo recovery."""
 import asyncio
-from contextlib import asynccontextmanager, suppress
+from contextlib import ExitStack, asynccontextmanager, contextmanager, suppress
 import json
 import os
 from pathlib import Path
@@ -30,25 +30,45 @@ async def echo_server():
         return {"text": text}
 
     @server.tool
+    async def slow_echo(text: str) -> dict:
+        calls[text] = calls.get(text, 0) + 1
+        await asyncio.sleep(10)
+        return {"text": text}
+
+    @server.tool
     def submit_echo(request_id: str, tool: str, arguments: dict) -> dict:
         calls[request_id] = calls.get(request_id, 0) + 1
         remote.setdefault(request_id, {"status": "running", "text": arguments["text"]})
         if arguments["text"] == "lost echo receipt":
             raise RuntimeError("echo ran, but no job receipt was returned")
-        return {"job_id": request_id}
+        return {"job_id": "remote-" + request_id}
 
     @server.tool
     def echo_status(job_id: str) -> dict:
+        assert job_id.startswith("remote-")
+        job_id = job_id.removeprefix("remote-")
+        if remote[job_id].get("offline"):
+            remote[job_id]["outage_observed"] = True
+            raise RuntimeError("temporary status outage")
         remote[job_id]["polled"] = True
         return {"status": remote[job_id]["status"]}
 
     @server.tool
     def echo_result(job_id: str) -> dict:
-        return {"text": remote[job_id]["text"]}
+        assert job_id.startswith("remote-")
+        record = remote[job_id.removeprefix("remote-")]
+        if record.get("result_unavailable"):
+            raise RuntimeError("temporary result outage")
+        return {"text": record["text"]}
+
+    @server.tool
+    def lookup_echo(request_id: str) -> dict:
+        return {"job_id": "remote-" + request_id} if request_id in remote else {}
 
     @server.tool
     def cancel_echo(job_id: str) -> dict:
-        remote[job_id]["status"] = "cancelled"
+        assert job_id.startswith("remote-")
+        remote[job_id.removeprefix("remote-")]["status"] = "cancelled"
         return {"status": "cancelled"}
 
     with socket.socket() as sock:
@@ -66,7 +86,8 @@ async def echo_server():
                 await task
 
 
-def test_real_echo_and_remote_job_restart(tmp_path, monkeypatch):
+@pytest.mark.parametrize("launcher_kind", ["desktop", "web"])
+def test_real_echo_and_remote_job_restart(tmp_path, monkeypatch, launcher_kind):
     pytest.importorskip("fastmcp")
     from fastmcp import Client
     from fastmcp.client.transports import StreamableHttpTransport
@@ -76,6 +97,24 @@ def test_real_echo_and_remote_job_restart(tmp_path, monkeypatch):
     config = tmp_path / "mcp.json"
     scope = {"tenant_id": "test", "user_id": "alice", "workspace_id": "work"}
     name = "plugin-" + "a" * 32
+
+    @contextmanager
+    def start_gateway(config):
+        if launcher_kind == "web":
+            # The Web launcher uses this same managed service (the actual
+            # launcher + worker path is exercised in the Web Tracker test).
+            with managed_job_protocol(tmp_path, configs=[config]) as url:
+                yield url
+        else:
+            from tcode_agent.server.desktop_launcher import start_optional_job_protocol
+
+            with monkeypatch.context() as env, ExitStack() as stack:
+                env.setenv("TCODE_DESKTOP_MCP_CONFIG", str(config))
+                env.setenv("TCODE_DESKTOP_PAUSE_REMOTE_SERVICES", "0")
+                env.delenv("TCODE_PLUGIN_JOB_PROTOCOL_URL", raising=False)
+                worker, url = start_optional_job_protocol(tmp_path, tmp_path, stack)
+                assert worker is None and url
+                yield url
 
     async def call(client, tool, data):
         result = await client.call_tool(tool, {"input": data})
@@ -93,7 +132,7 @@ def test_real_echo_and_remote_job_restart(tmp_path, monkeypatch):
                                           "boltz-mcp": {"url": endpoint, "invocation_mode": "async"}}))
             data = {**scope, "run_id": "run-echo", "target_server": "simple-demo-mcp",
                     "target_tool": "echo_text", "arguments": {"text": "local echo"}}
-            with managed_job_protocol(tmp_path, configs=[config]) as url:
+            with start_gateway(config) as url:
                 with pytest.raises(BlockingIOError):
                     with managed_job_protocol(tmp_path, configs=[config]):
                         pytest.fail("started a second gateway for the same state")
@@ -114,6 +153,7 @@ def test_real_echo_and_remote_job_restart(tmp_path, monkeypatch):
                     assert (await http.get(url)).status_code == 401
                 async with client(url, worker=False) as mcp:
                     assert (await mcp.call_tool("submit_job", {"input": data}, raise_on_error=False)).is_error
+                    assert (await mcp.call_tool("lookup_job_submission", {"input": data}, raise_on_error=False)).is_error
                     assert "target_version" in await call(mcp, "describe_target_tool", data)
                 async with client(url) as mcp:
                     bad = await call(mcp, "describe_target_tool", {**data, "arguments": {}})
@@ -144,14 +184,48 @@ def test_real_echo_and_remote_job_restart(tmp_path, monkeypatch):
                             await asyncio.sleep(0.05)
                         while (await call(mcp, "get_job_status", lost)).get("submission_state") != "unknown":
                             await asyncio.sleep(0.05)
+                lookup_name = "plugin-" + "b" * 32
+                lookup_target = {**target, "server": lookup_name, "execution": {
+                    key: value for key, value in target["execution"].items() if key != "cancelTool"
+                } | {"lookupTool": "lookup_echo"}}
+                async with httpx.AsyncClient() as http:
+                    registered = await http.put(registry + "/" + lookup_name, headers=auth, json=lookup_target)
+                    assert registered.is_success, registered.text
+                lookup_data = {**base_data, "run_id": "recover-receipt", "target_server": lookup_name,
+                               "target_version": registered.json()["version"], "timeout_seconds": 3 * 86400,
+                               "arguments": {"text": "lost echo receipt"}}
+                async with client(url) as mcp:
+                    blocking = await call(mcp, "submit_job", {
+                        **data, "run_id": "interrupted-blocking", "target_tool": "slow_echo",
+                        "arguments": {"text": "blocking only once"},
+                    })
+                    await call(mcp, "submit_job", lookup_data)
+                    recovered_id = (await call(mcp, "lookup_job_submission", lookup_data))["job_id"]
+                    wrong_scope = await call(mcp, "lookup_job_submission", {**lookup_data, "user_id": "different"})
+                    assert wrong_scope == {"submission_state": "unknown"}
+                    async with asyncio.timeout(5):
+                        while recovered_id not in remote or not calls.get("blocking only once"):
+                            await asyncio.sleep(0.05)
                 async with httpx.AsyncClient() as http:
                     changed = await http.put(registry + "/" + name, headers=auth, json={**target, "url": new_endpoint})
                     assert changed.is_success and changed.json()["version"] != version
-            with managed_job_protocol(tmp_path, configs=[config]) as url:
+            with start_gateway(config) as url:
                 async with client(url) as mcp:
                     assert (await call(mcp, "collect_job_result", receipt))["target_result"]["text"] == "local echo"
+                    unknown = await call(mcp, "get_job_status", blocking)
+                    assert unknown["job_id"] == blocking["job_id"] and unknown["remote_outcome"] == "unknown"
+                    remote[remote_receipt["job_id"]]["offline"] = True
+                    assert (await mcp.call_tool("get_job_status", {"input": remote_receipt}, raise_on_error=False)).is_error
+                    remote[remote_receipt["job_id"]]["offline"] = False
                     assert (await call(mcp, "get_job_status", remote_receipt))["status"] == "running"
+                    recovered = await call(mcp, "lookup_job_submission", lookup_data)
+                    assert recovered["job_id"] == recovered_id
+                    remote[recovered_id]["status"] = "completed"
+                    assert (await call(mcp, "collect_job_result", recovered))["target_result"]["text"] == "lost echo receipt"
                     remote[remote_receipt["job_id"]]["status"] = "completed"
+                    remote[remote_receipt["job_id"]]["result_unavailable"] = True
+                    assert (await mcp.call_tool("collect_job_result", {"input": remote_receipt}, raise_on_error=False)).is_error
+                    remote[remote_receipt["job_id"]]["result_unavailable"] = False
                     assert (await call(mcp, "collect_job_result", remote_receipt))["target_result"]["text"] == "local echo"
                     cancelled = await call(mcp, "terminate_job", cancel_receipt)
                     assert cancellation_receipt(cancelled, cancel_receipt)["cancelled"]
@@ -162,10 +236,41 @@ def test_real_echo_and_remote_job_restart(tmp_path, monkeypatch):
                     assert (await call(mcp, "get_job_status", lost))["submission_state"] == "unknown"
                     wrong = await mcp.call_tool("get_job_status", {"input": {**remote_receipt, "job_token": "wrong"}}, raise_on_error=False)
                     assert wrong.is_error
-            assert calls == {"local echo": 1, remote_receipt["job_id"]: 1, cancel_receipt["job_id"]: 1, lost["job_id"]: 1}
+            assert calls == {"local echo": 1, "blocking only once": 1, remote_receipt["job_id"]: 1,
+                             cancel_receipt["job_id"]: 1, lost["job_id"]: 1, recovered_id: 1}
             assert not new_calls
 
     asyncio.run(check())
+
+
+def test_recovery_finds_lost_worker_receipt_without_submission(tmp_path, monkeypatch):
+    from unittest.mock import AsyncMock
+    from tcode_agent.runtime import remote_recovery
+    from tcode_agent.runtime.shared_tracker import SharedTracker
+
+    root = str(tmp_path)
+    approved = {"run_id": "original", "tenant_id": "tenant", "user_id": "user", "workspace_id": "workspace",
+                "workspace": {"job_protocol_backend": "tcode-local"}}
+    SharedTracker.upsert_issue({"id": "test", "identifier": "LOCAL-TEST", "state": "In Progress",
+        "title": "Recover a receipt", "workspace": {"execution_channel": "bridge", "local_submission": True},
+        "description": "submit_job.input: " + json.dumps(approved)}, workdir=root)
+    ref = {"job_id": "tcode-job-original", "process_id": "original", "job_token": "test-only", "broker": "tcode-local"}
+    lookup = AsyncMock(side_effect=[ConnectionError("offline"), ref])
+    poll = AsyncMock(return_value={**ref, "status": "completed", "target_result": {"text": "recovered"}})
+    monkeypatch.setattr(remote_recovery, "_lookup_local_submission", lookup)
+    monkeypatch.setattr(remote_recovery, "call_job_tool", poll)
+    asyncio.run(remote_recovery.reconcile_task("test", root))
+    task = SharedTracker.get_task(task_id="test", workdir=root)
+    assert task["workspace"]["recovery"]["state"] == "submission_unknown"
+    SharedTracker.patch_task(task_id="test", workspace_patch={"recovery": {
+        **task["workspace"]["recovery"], "next_retry_at": 0,
+    }}, workdir=root)
+    asyncio.run(remote_recovery.reconcile_task("test", root))
+    task = SharedTracker.get_task(task_id="test", workdir=root)
+    assert task["job_ref"]["job_id"] == ref["job_id"]
+    assert task["workspace"]["transfer_state"] == "ready"
+    assert lookup.await_args.args[0] == {key: value for key, value in approved.items() if key != "workspace"}
+    assert [entry.args[1] for entry in poll.await_args_list] == ["get_job_status", "collect_job_result"]
 
 
 def test_local_submit_keeps_third_party_arguments(tmp_path, monkeypatch):
@@ -174,12 +279,14 @@ def test_local_submit_keeps_third_party_arguments(tmp_path, monkeypatch):
 
     monkeypatch.setenv("TCODE_INTERNAL_JOB_PROTOCOL_URL", "http://127.0.0.1:10121/mcp")
     monkeypatch.setenv("TCODE_ASYNC_EXECUTION_MODE", "bridge")
+    monkeypatch.setenv("SYMPHONY_ROUTED_MCP_TIMEOUT_SECONDS", "259200")
     context = ToolContext(session_id="test", message_id="message", agent="test", abort=None,
                           extra={"workdir": str(tmp_path)})
     data = build_job_protocol_submit_input(server_name="echo-mcp", tool_name="echo_text",
         tool_args={"text": "plain echo"}, context=context, issue_id="echo", issue_identifier="LOCAL-ECHO",
         description="test", input_schema=None)
     assert data["arguments"] == {"text": "plain echo"}
+    assert data["timeout_seconds"] == 259200
 
 
 def test_agent_proxy_does_not_forward_empty_command(monkeypatch):
@@ -271,7 +378,7 @@ def test_single_web_launcher_runs_echo_through_tracker(tmp_path):
     pytest.importorskip("fastmcp")
 
     async def check():
-        async with echo_server() as (endpoint, calls, _):
+        async with echo_server() as (endpoint, calls, remote):
             config = tmp_path / "mcp.json"
             config.write_text(json.dumps({"simple-demo-mcp": {"url": endpoint, "invocation_mode": "async"}}))
             with socket.socket() as probe:
@@ -287,8 +394,20 @@ def test_single_web_launcher_runs_echo_through_tracker(tmp_path):
                        TCODE_CLI_SHOW_TOOL_INIT_LOGS="0")
             log = tmp_path / "web.log"
             with log.open("wb") as output:
-                web = await asyncio.create_subprocess_exec(sys.executable, "-m", "tcode_agent.server.launcher",
-                    "--port", str(port), "--workdir", str(tmp_path), cwd=root, env=env, stdout=output, stderr=output)
+                async def start_web():
+                    return await asyncio.create_subprocess_exec(sys.executable, "-m", "tcode_agent.server.launcher",
+                        "--port", str(port), "--workdir", str(tmp_path), cwd=root, env=env, stdout=output, stderr=output)
+
+                async def stop_web(process):
+                    if process.returncode is None:
+                        process.terminate()
+                        try:
+                            await asyncio.wait_for(process.wait(), 10)
+                        except asyncio.TimeoutError:
+                            process.kill()
+                            await process.wait()
+
+                web = await start_web()
                 try:
                     async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}",
                                                  headers={"X-Tracker-Token": "disposable-test-token"}) as http:
@@ -333,17 +452,60 @@ def test_single_web_launcher_runs_echo_through_tracker(tmp_path):
                         assert task["result_summary"].find("echo through Web Bridge") >= 0
                         assert calls == {"echo through Web Bridge": 1}
                         assert (await http.get("/api/tracker/tasks/old-echo")).json()["task"]["status"] == "queued"
+                        # The live Web worker dispatches a real remote job, then
+                        # a new Web process must recover it from the original store.
+                        from tcode_agent.server.job_protocol import JobProtocol
+                        name = "plugin-" + "e" * 32
+                        target = {"server": name, "owner": "test/alice", "plugin": "demo", "url": endpoint,
+                                  "execution": {"mode": "remote-job", "submitTool": "submit_echo",
+                                                "statusTool": "echo_status", "resultTool": "echo_result"},
+                                  "tools": [{"name": "echo_text", "inputSchema": {"type": "object"},
+                                             "output": {"contract": "json"}}]}
+                        target["version"] = _digest(target)[:24]
+                        store = JobProtocol(tmp_path / ".tcode/job-protocol")
+                        with store.db() as db:
+                            db.execute("INSERT INTO targets VALUES (?, ?, 1, ?)", (name, target["version"], json.dumps(target)))
+                        remote_payload = {**payload, "run_id": "restart-web", "target_server": name,
+                                          "target_version": target["version"], "tenant_id": "test", "user_id": "alice",
+                                          "arguments": {"text": "recovered via Web"}}
+                        queued = await http.post("/api/tracker/tasks", json={"task": {
+                            "id": "restart-web", "identifier": "LOCAL-RESTARTWEB", "title": "Remote echo",
+                            "kind": "symphony_local_issue", "state": "Todo", "execution_channel": "bridge",
+                            "description": "submit_job.input: " + json.dumps(remote_payload)}})
+                        assert queued.is_success, queued.text
+                        async with asyncio.timeout(15):
+                            while True:
+                                task = (await http.get("/api/tracker/tasks/restart-web")).json()["task"]
+                                job_id = (task.get("job_ref") or {}).get("job_id")
+                                if job_id and (remote.get(job_id) or {}).get("polled"):
+                                    break
+                                assert task["status"] != "failed", task
+                                await asyncio.sleep(0.2)
+                        remote[job_id]["offline"] = True
+                        async with asyncio.timeout(10):
+                            while not remote[job_id].get("outage_observed"):
+                                await asyncio.sleep(0.05)
+                        await stop_web(web)
+                        web = await start_web()
+                        remote[job_id].update(offline=False, status="completed")
+                        async with asyncio.timeout(45):
+                            while True:
+                                try:
+                                    response = await http.get("/api/tracker/tasks/restart-web")
+                                    task = response.json()["task"] if response.is_success else {}
+                                except httpx.TransportError:
+                                    task = {}
+                                if (task.get("workspace") or {}).get("transfer_state") == "ready":
+                                    break
+                                await asyncio.sleep(0.2)
+                        assert task["job_ref"]["job_id"] == job_id
+                        assert "recovered via Web" in task["result_summary"]
+                        assert calls == {"echo through Web Bridge": 1, job_id: 1}
                 except Exception as exc:
                     diagnostics = [line for line in log.read_text().splitlines() if "GET /api/tracker/tasks/" not in line]
                     raise AssertionError("\n".join(diagnostics)[-6000:]) from exc
                 finally:
-                    if web.returncode is None:
-                        web.terminate()
-                        try:
-                            await asyncio.wait_for(web.wait(), 10)
-                        except asyncio.TimeoutError:
-                            web.kill()
-                            await web.wait()
+                    await stop_web(web)
             assert not (tmp_path / ".tcode/job-protocol/web-bridge.pid").exists()
 
     asyncio.run(check())

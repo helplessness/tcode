@@ -217,7 +217,13 @@ def _coerce_timeout_seconds(value: Any, *, unit: str, default: int) -> int:
     except Exception:
         return default
     # Explicit zero disables the job's total waiting deadline, not connection checks.
-    return 0 if explicit_zero else max(60, min(parsed, 24 * 60 * 60))
+    if explicit_zero:
+        return 0
+    limit = 86400
+    if os.environ.get("TCODE_INTERNAL_JOB_PROTOCOL_URL"):
+        from ..server.job_protocol import MAX_JOB_SECONDS
+        limit = MAX_JOB_SECONDS
+    return max(60, min(parsed, limit))
 
 
 def _tool_timeout_from_mapping(

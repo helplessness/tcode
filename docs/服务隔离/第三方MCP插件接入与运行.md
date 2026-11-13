@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | [第三方 MCP 服务](../../examples/third_party_mcp/remote_server.py) | 计算主机 | 持久化提交和任务状态，执行任务，提供状态、结果和取消工具。示例只处理合成文件，不做分子计算。 |
 | [Artifact Python SDK](../../packages/artifact-sdk/README.md) | 第三方 MCP 的 Python 环境 | 下载输入文件引用、上传输出并返回引用。只传文本时可以不用。 |
-| [TCode 插件声明](../../examples/third_party_mcp/async-plugin/async-targets.json) | TCode 侧 | 将业务工具、远端四个任务方法、参数和文件字段声明给宿主。通过 [Plugin SDK](../plugin-sdk/README.md) 验证和分发。 |
+| [TCode 插件声明](../../examples/third_party_mcp/async-plugin/async-targets.json) | TCode 侧 | 声明业务工具、任务方法和可选文件字段；仅用 JSON 配置即可描述契约，不要求远端安装 SDK。 |
 | Job Protocol、后台执行与状态跟踪 | TCode 侧部署 | 接受宿主授权的提交，调用第三方 MCP，按原任务 ID 查询和回收。TCode 的最小聊天配置没有启用这条链路。 |
 | Artifact 服务 | 双方都能访问的位置 | 示例需要它处理文件。只安装 Artifact SDK 不会创建这个 HTTP 服务。 |
 
@@ -52,5 +52,25 @@ python examples/third_party_mcp/remote_server.py
 ## 4. 替换成自己的任务实现
 
 保留 [异步目标声明](../../examples/third_party_mcp/async-plugin/async-targets.json)和服务端接口的一致性。提交工具接收 `request_id`、业务工具名和参数，先持久化再返回 `job_id`；相同请求只认同一份参数，不能启动第二次计算。状态、结果、取消按原 `job_id` 操作，完成后应重复返回已保存的结果引用。若提交状态不明，用原请求标识核对，不把超时当作可以盲目重提的失败。
+
+使用 TCode 内置 Job Protocol 时，`submitTool`、`statusTool` 和 `resultTool` 必填，`cancelTool` 可选。若远端有按请求 ID 查受理记录的只读工具，可额外声明：
+
+```json
+{
+  "execution": {
+    "mode": "remote-job",
+    "submitTool": "submit_prediction",
+    "statusTool": "get_prediction_status",
+    "resultTool": "get_prediction_result",
+    "lookupTool": "lookup_prediction"
+  }
+}
+```
+
+`lookup_prediction(request_id)` 在相同鉴权范围内返回已有的 `{"job_id":"..."}`，尚未找到则返回空对象；不得创建任务。没有该工具且受理回执丢失时，TCode 显示「提交状态待核对」，不重放提交。已有远端 ID 时不需要再次查受理记录。
+
+桌面退出或 Web 后端重启后，使用原数据目录、工作区和任务绑定即可补查已受理任务。远端必须独立运行并保留任务与结果，保留时间应覆盖用户离线时间。Web 仅关闭页面时，常驻后端仍可回收结果。普通聊天任务等结果入库后应由用户点击「继续任务」，不会主动开启新一轮。
+
+内置网关的新任务允许配置最长 30 天的总期限（例如新目标配置 `tool_timeout_seconds` 中的 `259200` 为 72 小时），查询类请求仍用短超时。`blocking` 不具备远端恢复能力：没有指定正数等待期限的新任务，内置网关单次调用最多等待 72 小时，仍受代理和服务进程生命周期限制；断连后只报告「远端结果未知」，不会重复调用。旧任务和外部 Job Protocol 的期限策略不变。
 
 示例以 SQLite 演示持久任务 ID 和文件回传，不是生产计算队列。生产部署还要实现工作进程、并发和取消边界、资源配额、鉴权及日志；不要照搬示例的单进程实现来承载生产计算。

@@ -22,9 +22,10 @@
         "execution": {"type": "object", "required": ["mode"], "additionalProperties": false,
           "properties": {"mode": {"enum": ["blocking", "remote-job"]},
             "submitTool": {"$ref": "#/$defs/name"}, "statusTool": {"$ref": "#/$defs/name"},
-            "resultTool": {"$ref": "#/$defs/name"}, "cancelTool": {"$ref": "#/$defs/name"}},
+            "resultTool": {"$ref": "#/$defs/name"}, "cancelTool": {"$ref": "#/$defs/name"},
+            "lookupTool": {"$ref": "#/$defs/name"}},
           "if": {"properties": {"mode": {"const": "remote-job"}}},
-          "then": {"required": ["submitTool", "statusTool", "resultTool", "cancelTool"]}},
+          "then": {"required": ["submitTool", "statusTool", "resultTool"]}},
         "tools": {"type": "array", "minItems": 1, "maxItems": 100, "items": {
           "type": "object", "required": ["name", "inputSchema", "output"], "additionalProperties": false,
           "properties": {

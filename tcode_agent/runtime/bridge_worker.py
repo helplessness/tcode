@@ -486,7 +486,7 @@ async def _run_task(session: aiohttp.ClientSession, task: dict[str, Any]) -> Non
     if not task_id or not claim_token:
         return
 
-    if (task.get("job_ref") or {}).get("job_id") or (task.get("workspace") or {}).get("job_id"):
+    if (task.get("job_ref") or {}).get("job_id") or (task.get("workspace") or {}).get("job_id") or (task.get("workspace") or {}).get("local_submission"):
         # An existing remote execution is reconciled by the backend, never submitted again.
         return
 
@@ -574,6 +574,10 @@ async def _run_task(session: aiohttp.ClientSession, task: dict[str, Any]) -> Non
             if not _local_worker_token:
                 raise PermissionError("缺少内置 Job Protocol 后台派发凭据")
             submit_kwargs["_job_worker_token"] = _local_worker_token
+            # Record the lookup key before the first outbound submission.
+            await _heartbeat(session, task_id, claim_token, scope=scope, workspace_patch={
+                "local_submission": True,
+            })
         submit_started = True
         submit_raw = await MCPManager.call_tool(
             "job-protocol-mcp", "submit_job", {"input": submit_input}, **submit_kwargs
@@ -655,6 +659,13 @@ async def _run_task(session: aiohttp.ClientSession, task: dict[str, Any]) -> Non
                 },
             )
             status_data = _unwrap_mcp_response(status_raw)
+            if (submit_kwargs and not status_raw.get("isError")
+                    and status_data.get("remote_outcome") == "unknown"
+                    and status_data.get("job_id") == job_ref["job_id"]):
+                from .remote_recovery import remote_outcome_unknown
+                await _heartbeat(session, task_id, claim_token, status="running", scope=scope,
+                                 workspace_patch={"recovery": remote_outcome_unknown(time.time())})
+                return
             if (submit_kwargs and not status_raw.get("isError")
                     and status_data.get("submission_state") == "unknown"
                     and status_data.get("job_id") == job_ref["job_id"]

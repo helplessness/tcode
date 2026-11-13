@@ -1918,6 +1918,7 @@ class SharedTracker:
                     "AND status = 'queued' AND claim_owner = '' "
                     "AND COALESCE(json_extract(job_ref_json, '$.job_id'), '') = '' "
                     "AND COALESCE(json_extract(workspace_json, '$.job_id'), '') = '' "
+                    "AND json_extract(workspace_json, '$.local_submission') IS NULL "
                 )
                 # Expired executions are observed by recovery, never re-submitted.
                 params: list[Any] = [normalized_channel]

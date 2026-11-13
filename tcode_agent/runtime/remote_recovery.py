@@ -81,7 +81,7 @@ def needs_recovery(task: dict, now: float) -> bool:
     workspace = task.get("workspace") or {}
     if (workspace.get("cancellation") or {}).get("state") == "pending":
         return True
-    if task.get("status") == "queued" and ((task.get("job_ref") or {}).get("job_id") or workspace.get("job_id")):
+    if task.get("status") == "queued" and ((task.get("job_ref") or {}).get("job_id") or workspace.get("job_id") or workspace.get("local_submission")):
         return True
     if task.get("status") in {"completed", "failed"} and (task.get("job_ref") or {}).get("job_id") and workspace.get("transfer_state") != "ready":
         return True
@@ -91,6 +91,29 @@ def needs_recovery(task: dict, now: float) -> bool:
 def submission_unknown(now):
     return {"state": "submission_unknown", "next_retry_at": now + 60,
             "error": "未取得远端受理回执，提交状态待核对；不会自动重新提交。"}
+
+
+def remote_outcome_unknown(now):
+    return {"state": "remote_outcome_unknown", "next_retry_at": now + 60,
+            "error": "阻塞 MCP 连接已中断，远端结果未知；不会自动重新提交。"}
+
+
+async def _lookup_local_submission(key):
+    from ..mcp.manager_auto import MCPManager
+    from ..server.managed_job_protocol import LOCAL_URL, WORKER_TOKEN, bridge_worker_environment
+
+    if not isinstance(key, dict) or not key.get("run_id") or not os.environ.get(LOCAL_URL):
+        return {}
+    async with asyncio.timeout(30):
+        raw = await MCPManager.call_tool("job-protocol-mcp", "lookup_job_submission",
+            {"input": key}, _job_worker_token=bridge_worker_environment()[WORKER_TOKEN])
+    receipt = job_payload(raw)
+    if not all(receipt.get(field) for field in ("job_id", "process_id", "job_token")):
+        return {}
+    return {**{field: receipt[field] for field in ("job_id", "process_id", "job_token")},
+            "run_id": key["run_id"], "broker": "tcode-local", "request_scope": {
+                field: key[field] for field in ("tenant_id", "user_id", "workspace_id") if field in key
+            }}
 
 
 async def reconcile_task(task_id: str, workdir: str) -> None:
@@ -112,6 +135,16 @@ async def reconcile_task(task_id: str, workdir: str) -> None:
     diagnostic_error = ""
     interrupted = False
     try:
+        if not job_ref.get("job_id") and workspace.get("local_submission"):
+            approved = task.get("submit_input") or {}
+            key = {field: approved[field] for field in ("run_id", "tenant_id", "user_id", "workspace_id") if field in approved}
+            with registry_workspace(workdir):
+                if (approved.get("workspace") or {}).get("job_protocol_backend") == "tcode-local":
+                    job_ref = await _lookup_local_submission(key)
+            if job_ref:
+                SharedTracker.record_result(task_id=task_id, status=status, job_ref=job_ref,
+                    workspace_patch={key: job_ref[key] for key in ("job_id", "process_id")},
+                    workdir=workdir, source="recovery")
         if not job_ref.get("job_id"):
             recovery.update(state="submission_unknown", next_retry_at=now + 60)
             recovery.setdefault("error", "远程引用尚未落盘，需核对原提交；不会自动重新提交。")
@@ -128,6 +161,9 @@ async def reconcile_task(task_id: str, workdir: str) -> None:
                     raise ValueError("远程状态回执与任务不匹配")
                 if job_ref.get("broker") == "tcode-local" and observed.get("submission_state") == "unknown":
                     recovery.update(submission_unknown(now))
+                    return
+                if job_ref.get("broker") == "tcode-local" and observed.get("remote_outcome") == "unknown":
+                    recovery.update(remote_outcome_unknown(now))
                     return
                 remote_status = str(observed.get("status") or "").lower()
                 status = {"done": "completed", "completed": "completed", "error": "failed", "failed": "failed", "timed_out": "failed", "terminated": "cancelled", "cancelled": "cancelled", "canceled": "cancelled"}.get(remote_status, "running")
@@ -182,7 +218,9 @@ async def reconcile_task(task_id: str, workdir: str) -> None:
         # User cancellation remains pending, but should not wait another full
         # minute to be picked up when a previously offline broker comes back.
         max_retry_delay = 10 if cancellation.get("state") == "pending" else 60
-        if job_ref.get("broker") == "tcode-local" and recovery.get("state") == "submission_unknown":
+        if recovery.get("state") in {"submission_unknown", "remote_outcome_unknown"}:
+            recovery.update(remote_outcome_unknown(now) if recovery["state"] == "remote_outcome_unknown" else submission_unknown(now))
+        elif not job_ref.get("job_id"):
             recovery.update(submission_unknown(now))
         else:
             recovery.update(state="retry_wait", error="连接或结果保存未完成，后台将继续核对；不会重新提交计算。", next_retry_at=time.time() + min(max_retry_delay, 2 ** attempt))

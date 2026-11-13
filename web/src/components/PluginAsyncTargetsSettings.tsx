@@ -5,7 +5,7 @@ import DynamicHeadersEditor from './DynamicHeadersEditor';
 import type { DynamicHeaders } from '../api/capabilities';
 
 type Target = { plugin: string; target: string; server: string; active: boolean; version: string;
-  execution: { mode: 'blocking' | 'remote-job' }; tools: string[]; url: string; token_env: string;
+  execution: { mode: 'blocking' | 'remote-job'; cancelTool?: string }; tools: string[]; url: string; token_env: string;
   error?: string; declaration_files: string[]; dynamic_headers?: DynamicHeaders; has_draft?: boolean };
 type Catalog = { targets: Target[]; gateway_url: string; config_file: string; management_configured: boolean };
 
@@ -53,7 +53,7 @@ export default function PluginAsyncTargetsSettings(props: { workspaceId?: string
     return <><article class="settings-form plugin-target-card" aria-label={`${target.plugin}/${target.target}`}>
       <h4>{target.plugin} / {target.target} · {target.active ? '已启用' : '未启用'}</h4>
       <Show when={target.has_draft}><p role="status">本地草稿已保存，尚未应用；现有已启用配置与任务不变。</p></Show>
-      <p>{target.execution.mode === 'remote-job' ? '远端持久任务：支持恢复与远端取消' : '普通长调用：仅后台等待，不保证远端取消或断线恢复'}。工具：{target.tools.join('、')}</p>
+      <p>{target.execution.mode === 'remote-job' ? `远端持久任务：可按原任务 ID 恢复${target.execution.cancelTool ? '，支持远端取消' : ''}` : '普通长调用：仅后台等待，断连后结果可能未知'}。工具：{target.tools.join('、')}</p>
       <button type="button" onClick={() => setEditorOpen(true)}>配置连接</button>
       <Show when={target.error}><p role="alert">{target.error}</p></Show>
     </article>

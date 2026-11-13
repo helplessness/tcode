@@ -1153,6 +1153,8 @@ class MCPManager(metaclass=WorkspaceRegistryMeta):
             if not cls._is_server_published(client_name):
                 continue
             for tool in client.tools:
+                if (client_name, tool["name"]) == ("job-protocol-mcp", "lookup_job_submission"):
+                    continue  # Worker-only receipt lookup; never advertise it to models.
                 if not tool_is_visible_to_model(tool.get("_meta")):
                     continue
                 tool_name = f"mcp_{client_name}_{tool['name']}"
@@ -1348,7 +1350,7 @@ class MCPManager(metaclass=WorkspaceRegistryMeta):
             headers.update(client.extra_headers)
         if _job_worker_token is not None:
             from ..server.managed_job_protocol import LOCAL_URL, WORKER_HEADER
-            if ((server_name, tool_name) != ("job-protocol-mcp", "submit_job")
+            if (server_name != "job-protocol-mcp" or tool_name not in {"submit_job", "lookup_job_submission"}
                     or not _job_worker_token or client.url != os.environ.get(LOCAL_URL)):
                 raise PermissionError("内置 Job Protocol 提交凭据只能用于本机后台派发")
             headers[WORKER_HEADER] = _job_worker_token

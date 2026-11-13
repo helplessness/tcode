@@ -344,6 +344,7 @@ export default function SymphonyWorkspace(props: {active?: boolean; jobsOnly?: b
     return 'bg-[#30363d] text-[#c9d1d9]';
   };
   const issueStateLabel = (state?: string, issue?: SymphonyLocalIssue) => {
+    if (issue?.workspace?.recovery?.state === 'remote_outcome_unknown') return '连接中断 · 远端结果未知';
     if (issue?.workspace?.recovery?.state === 'submission_unknown') return '提交状态待核对';
     if (issue?.workspace?.transfer_state === 'retry_wait') return '计算完成 · 保存待重试';
     if (issue?.workspace?.transfer_state === 'downloading') return '计算完成 · 正在保存';

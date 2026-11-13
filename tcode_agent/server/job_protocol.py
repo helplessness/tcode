@@ -24,7 +24,10 @@ from ..mcp.dynamic_headers import context_schema, render, validate_rules
 from .managed_job_protocol import LOCAL_TOKEN, WORKER_HEADER, WORKER_TOKEN, configured_async_targets, read_config
 
 TERMINAL = {"completed", "failed", "cancelled", "timed_out"}
-METHODS = ("submitTool", "statusTool", "resultTool", "cancelTool")
+METHODS = ("submitTool", "statusTool", "resultTool")
+OPTIONAL_METHODS = ("cancelTool", "lookupTool")
+MAX_JOB_SECONDS = 30 * 86400
+DEFAULT_BLOCKING_WAIT_SECONDS = 72 * 3600
 IDENTIFIER = re.compile(r"[A-Za-z0-9_.-]{1,128}")
 
 
@@ -98,7 +101,7 @@ def _client(target, context=None, timeout=20):
         raise ValueError("异步调用上下文与已批准的 Header 规则不一致")
     if context is not None:
         headers.update(render(rules, supplied.get("values", {})))
-    return Client(StreamableHttpTransport(target["url"], headers=headers), timeout=timeout)
+    return Client(StreamableHttpTransport(target["url"], headers=headers), timeout=timeout, init_timeout=20)
 
 
 def _wire(data):
@@ -173,7 +176,9 @@ class JobProtocol:
         mode = execution.get("mode")
         if mode not in {"remote-job", "blocking"}:
             raise ValueError("不支持的执行方式")
-        methods = [execution.get(key, "") for key in METHODS] if mode == "remote-job" else []
+        methods = ([execution.get(key, "") for key in METHODS]
+                   + [execution[key] for key in OPTIONAL_METHODS if key in execution]
+                   if mode == "remote-job" else [])
         tools = target.get("tools")
         if not isinstance(tools, list) or not 1 <= len(tools) <= 100:
             raise ValueError("目标必须声明 1 至 100 个工具")
@@ -278,12 +283,22 @@ class JobProtocol:
     def receipt(job):
         return {key: job[key] for key in ("job_id", "process_id", "status", "submitted_at")}
 
-    async def submit(self, data):
-        scope = self.scope(data)
+    def submission_id(self, data):
         run_id = data.get("run_id")
         if not isinstance(run_id, str) or not IDENTIFIER.fullmatch(run_id) or "command" in data:
             raise ValueError("需要稳定的 run_id；内置网关不执行宿主命令")
-        job_id = "tcode-job-" + _digest([scope, run_id])[:32]
+        return "tcode-job-" + _digest([self.scope(data), run_id])[:32]
+
+    def lookup_submission(self, data):
+        with self.db() as db:
+            job = self.load(db, self.submission_id(data))
+        if not job:
+            return {"submission_state": "unknown"}
+        return {**self.receipt(job), "job_token": job["job_token"]}
+
+    async def submit(self, data):
+        scope = self.scope(data)
+        job_id = self.submission_id(data)
         arguments = _wire(data.get("arguments", {}))
         context = _wire(data.get("call_context", {}))
         digest = _digest([data.get("target_server"), data.get("target_tool"), arguments, context, data.get("target_version")])
@@ -303,7 +318,7 @@ class JobProtocol:
                 raise ValueError("工具参数未通过契约校验: " + _json(errors))
             _client(target, context)  # Check frozen context before any outbound execution.
             timeout = data.get("timeout_seconds") or 0
-            if type(timeout) not in {int, float} or not 0 <= timeout <= 86400:
+            if type(timeout) not in {int, float} or not 0 <= timeout <= MAX_JOB_SECONDS:
                 raise ValueError("无效的任务超时设置")
             with self.db() as db:
                 db.execute("BEGIN IMMEDIATE")
@@ -313,6 +328,8 @@ class JobProtocol:
                            "submitted_at": datetime.now(timezone.utc).isoformat(), "status": "queued",
                            "scope": scope, "digest": digest, "target": target, "tool": tool,
                            "arguments": arguments, "context": context, "timeout": timeout,
+                           "call_timeout": (20 if target["execution"]["mode"] == "remote-job"
+                                            else timeout or DEFAULT_BLOCKING_WAIT_SECONDS),
                            "deadline": time.time() + timeout if timeout else None}
                     self.save(db, job)
         self.schedule(job)
@@ -336,12 +353,14 @@ class JobProtocol:
         target, tool, args = job["target"], job["tool"], job["arguments"]
         execution = target["execution"]
         sent = False
+        persisted = False
         try:
             timeout = job["timeout"]
             if job["deadline"] and job["deadline"] <= time.time():
                 job.update(status="timed_out", error="发送前已超过任务期限")
             else:
-                async with _client(target, job["context"], timeout=timeout or 20) as client:
+                call_timeout = job.get("call_timeout", 20 if execution["mode"] == "remote-job" else timeout or 20)
+                async with _client(target, job["context"], timeout=call_timeout) as client:
                     if job["deadline"] and job["deadline"] <= time.time():
                         job.update(status="timed_out", error="发送前已超过任务期限")
                     else:
@@ -350,19 +369,21 @@ class JobProtocol:
                         # Persist the receipt before session teardown can fail or be cancelled.
                         with self.db() as db:
                             self.save(db, job)
+                        persisted = True
         except Exception:
             # A disconnect after sending is not proof of failure. Never resend.
             if not sent:
                 job.update(status="failed", error="远端连接失败，尚未发送任务")
-        with self.db() as db:
-            self.save(db, job)
+        if not persisted:
+            with self.db() as db:
+                self.save(db, job)
 
     async def _dispatch(self, client, job, tool, args, execution):
         if execution["mode"] == "remote-job":
             result = _unwrap(await client.call_tool(execution["submitTool"],
                 {"request_id": job["job_id"], "tool": tool["name"], "arguments": args}, raise_on_error=False))
             remote_id = result.get("job_id")
-            if not isinstance(remote_id, str) or not remote_id.strip() or len(remote_id) > 1024:
+            if not self.valid_remote_id(remote_id):
                 raise ValueError("远端未返回有效任务标识")
             job["remote_id"] = remote_id
         else:
@@ -373,6 +394,10 @@ class JobProtocol:
             else:
                 job.update(status="completed", result=result.structured_content or result.data or
                            {"content": [block.model_dump(mode="json") for block in result.content]})
+
+    @staticmethod
+    def valid_remote_id(value):
+        return isinstance(value, str) and bool(value.strip()) and len(value) <= 1024
 
     def authorized_job(self, data):
         identifier = data.get("job_id")
@@ -404,6 +429,7 @@ class JobProtocol:
 
     async def _query(self, job, action):
         identifier = job["job_id"]
+        execution = job["target"]["execution"]
         if job["status"] == "queued":
             if action == "cancel":
                 job["status"] = "cancelled"
@@ -413,12 +439,25 @@ class JobProtocol:
             self.schedule(job)
         if action == "cancel" and job["status"] in TERMINAL:
             return {**self.receipt(job), "terminated": False, "reason": "already_finished"}
+        orphaned = job["status"] == "running" and not job.get("remote_id") and identifier not in self.tasks
+        if orphaned and execution["mode"] == "remote-job" and execution.get("lookupTool"):
+            # Read-only receipt recovery. Never replay a third-party submit.
+            async with _client(job["target"], job["context"]) as client:
+                receipt = _unwrap(await client.call_tool(execution["lookupTool"],
+                    {"request_id": identifier}, raise_on_error=False))
+                if self.valid_remote_id(receipt.get("job_id")):
+                    job["remote_id"] = receipt["job_id"]
+                    with self.db() as db:
+                        self.save(db, job)
         if job.get("remote_id") and (job["status"] not in TERMINAL or action == "result" and "result" not in job):
-            execution = job["target"]["execution"]
             async with _client(job["target"], job["context"]) as client:
                 args = {"job_id": job["remote_id"]}
                 expired = job["deadline"] and time.time() >= job["deadline"]
-                method = execution["cancelTool"] if action == "cancel" or expired and job["status"] not in TERMINAL else execution["statusTool"]
+                if action == "cancel" and not execution.get("cancelTool"):
+                    raise ValueError("此远端服务未提供取消接口")
+                cancel = bool(execution.get("cancelTool") and
+                              (action == "cancel" or expired and job["status"] not in TERMINAL))
+                method = execution["cancelTool"] if cancel else execution["statusTool"]
                 result = _unwrap(await client.call_tool(method, args, raise_on_error=False))
                 status = result.get("status")
                 if status not in TERMINAL | {"queued", "running"}:
@@ -427,10 +466,12 @@ class JobProtocol:
                     with self.db() as db:
                         job = self.load(db, identifier)
                         if job["status"] not in TERMINAL:
-                            job["status"] = "timed_out" if expired and action != "cancel" and status == "cancelled" else status
+                            job["status"] = "timed_out" if cancel and expired and action != "cancel" and status == "cancelled" else status
                         self.save(db, job)
                 if action == "result" and job["status"] == "completed" and "result" not in job:
                     collected = _unwrap(await client.call_tool(execution["resultTool"], args, raise_on_error=False))
+                    if job["tool"]["output"]["contract"] == "artifact-bundle-v1" and not find_output_bundle(collected):
+                        raise ValueError("远端结果缺少声明的 Artifact bundle")
                     with self.db() as db:
                         job = self.load(db, identifier)
                         job.setdefault("result", collected)
@@ -449,8 +490,11 @@ class JobProtocol:
             return {**self.receipt(job), "validated": job["status"] == "completed",
                     "target_result": result or {"error": job.get("error", "")},
                     "output_bundle": bundle}
-        return {**self.receipt(job), **({"submission_state": "unknown"}
-                if job["status"] == "running" and not job.get("remote_id") and identifier not in self.tasks else {})}
+        receipt = self.receipt(job)
+        if orphaned and not job.get("remote_id"):
+            receipt.update({"remote_outcome": "unknown"} if execution["mode"] == "blocking"
+                           else {"submission_state": "unknown"})
+        return receipt
 
 
 def create_app(protocol, token, registry_token, host, worker_token):
@@ -514,16 +558,25 @@ def create_app(protocol, token, registry_token, host, worker_token):
         """Read or validate the contract of an enabled asynchronous target."""
         return await protocol.describe(_input(input, input_config, payload))
 
+    def require_worker():
+        supplied = get_http_headers().get(WORKER_HEADER, "")
+        if not worker_token or not hmac.compare_digest(supplied.encode(), worker_token.encode()):
+            raise PermissionError("此操作只允许内置 Job Protocol 的后台队列")
+
     @server.tool
     async def submit_job(input: dict) -> dict:
         """Submit an authorized asynchronous task with a stable run ID."""
-        supplied = get_http_headers().get(WORKER_HEADER, "")
-        if not worker_token or not hmac.compare_digest(supplied.encode(), worker_token.encode()):
-            raise PermissionError("内置 Job Protocol 只接受后台队列提交")
+        require_worker()
         try:
             return await protocol.submit(input)
         except ValueError as exc:
             return {"submission_state": "not_sent", "error": str(exc)}
+
+    @server.tool
+    async def lookup_job_submission(input: dict) -> dict:
+        """Read a previously recorded receipt without starting or scheduling a job."""
+        require_worker()
+        return protocol.lookup_submission(input)
 
     @server.tool
     async def get_job_status(input: dict) -> dict:
