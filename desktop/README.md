@@ -6,17 +6,11 @@
 
 macOS arm64 独立 Python 后端和未签名 DMG 已经可以构建，不依赖用户安装 Python、Node.js 或运行时 `PYTHONPATH`。当前 DMG 适合本机开发验收；对外分发仍需 Apple Developer ID 签名和公证。
 
-```bash
-npm --prefix desktop run build:backend:mac
-npm --prefix desktop run smoke:backend:mac
-npm --prefix desktop run package:mac
-```
-
 后端产物位于 `build/release/backend/`，DMG 位于 `desktop/release/`。当前完整流程、配置与发布边界见 [macOS 打包指南](../docs/gui/12-macos-dmg-packaging.md)。本页历史验证记录不是当前源码重打包证明。
 
 ## 打开方式
 
-在 `tcode/` 下运行：
+从干净副本首次登录、添加并测试模型、发送第一条消息，请按[根 README 的 macOS 快速开始](../README.md#macos启动桌面端)操作。设置好首次登录密码后，从项目根目录运行：
 
 ```bash
 ./scripts/init_local_config.sh  # 首次运行：一次补齐配置；已安装 Web 可跳过
@@ -32,6 +26,10 @@ TCODE_DESKTOP_PYTHON=/absolute/path/to/python ./scripts/start_desktop.sh
 ```
 
 启动优先使用 `.tcode-local/desktop.env`；可用 `TCODE_DESKTOP_ENV_FILE` 指定其他文件。保留对 `TCODE_ENV_FILE` 的显式开发配置兼容。没有桌面环境文件时复用现有模型/登录配置，但 MCP 路由始终使用独立桌面文件，不继承 Web 的本机 MCP 或 Runner。缺基础配置时按[配置指南](../docs/CONFIGURATION.md)初始化。
+
+### 电脑控制与隐私
+
+电脑控制每次启动默认关闭。关闭时，查看状态、重新检查权限或清理任务都不会启动 Cua 驱动，因此不会从该实例发送驱动遥测。只有显式打开窗口内的「允许 Computer Use」才会启动驱动；关掉会撤销授权并停止驱动。启用时 Cua 默认可能发送产品遥测，可按 [Cua 驱动版本说明](https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.35.2)确认版本，并用驱动自身的 `telemetry status` / `telemetry disable` 查询或关闭。启用开关不替代 macOS 系统权限或任务授权。
 
 追加指导统一使用持久化队列，不再读取 `TCODE_STEER_V2_ENABLED`。原生 Harness 的「追加」接入当前轮；「排队」仍明确启动下一轮。已有旧队列在读取时迁移。
 
@@ -102,11 +100,10 @@ logs/backend.log
 
 ```bash
 npm --prefix desktop test
-.desktop-venv/bin/python -m pytest tests/test_desktop_launcher.py
-npm --prefix desktop run smoke
+./scripts/start_desktop.sh --smoke-test
 ```
 
-smoke 使用单独的 `tmp/desktop-smoke` 数据目录，启动真实 Electron 和 Python，检查健康接口、未授权/跨域阻断、页面渲染、关闭隐藏和退出。截图保存到 `tmp/desktop-smoke/desktop.png`。需要 macOS 图形会话及有效本机配置，不提交截图中的账号信息。
+Node 测试使用仓库内公开的合成样本，不依赖根目录的私有 `tests/`。smoke 在 macOS 图形会话启动真实 Electron 和 Python，业务数据写入 `tmp/desktop-smoke/runtime/`，检查健康接口、未授权/跨域阻断、页面渲染、关闭隐藏和退出；截图在 `tmp/desktop-smoke/desktop.png`。默认只验证登录页或本地工作台，不请求模型；不要提交测试截图或其中的账号信息。
 
 ## 五步实施与当前边界
 

@@ -2,6 +2,7 @@ const { app, BrowserWindow, WebContentsView, Menu, Tray, nativeImage, dialog, sh
 const { spawn } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const { startBackend, isLocalNavigation, isExternalLink } = require('./backend.cjs');
 const { assertSender, downloadRoute, reloadDesktopPage, isResearchMapPopup } = require('./native.cjs');
 const { createRecoveryController } = require('./recovery.cjs');
@@ -30,7 +31,7 @@ if (smoke) app.setPath('userData', app.isPackaged
 const dataRoot = app.getPath('userData');
 const secrets = modelSecrets(dataRoot, safeStorage);
 let modelConfigPending = false;
-const runtimeRoot = testInstance ? path.join(dataRoot, 'runtime') : process.env.TCODE_DESKTOP_RUNTIME || path.join(dataRoot, 'runtime');
+const runtimeRoot = testInstance || smoke ? path.join(dataRoot, 'runtime') : process.env.TCODE_DESKTOP_RUNTIME || path.join(dataRoot, 'runtime');
 const logPath = path.join(dataRoot, 'logs/backend.log');
 const python = process.env.TCODE_DESKTOP_PYTHON || path.join(projectRoot, '.desktop-venv/bin/python');
 const backendExecutable = app.isPackaged
@@ -331,7 +332,7 @@ function installNativeHandlers() {
   ipcMain.handle('desktop:computer-enabled', async (event, enabled) => {
     assertSender(event, window, origin);
     if (!computer || typeof enabled !== 'boolean') throw new Error('无效的电脑控制开关');
-    computer.setEnabled(enabled);
+    await computer.setEnabled(enabled);
     return enabled ? computer.refreshPermissions(true) : computer.publicState();
   });
   ipcMain.handle('desktop:computer-grant', (event, grant) => {
@@ -541,7 +542,13 @@ if (!app.requestSingleInstanceLock()) {
     computer = new ComputerBroker({
       runtimeRoot,
       enabled: false,
-      driver: fs.existsSync(computerDriverPath) ? new McpDriverAdapter({ executable: computerDriverPath, hostBundleId: app.isPackaged ? 'com.tcode.desktop' : 'com.github.Electron' }) : null,
+      driver: fs.existsSync(computerDriverPath) ? new McpDriverAdapter({
+        executable: computerDriverPath,
+        hostBundleId: app.isPackaged ? 'com.tcode.desktop' : 'com.github.Electron',
+        // The SDK passes dylib paths to native dlopen, which cannot read inside ASAR.
+        ...(app.isPackaged ? { sdkLoader: () => import(pathToFileURL(path.join(process.resourcesPath,
+          'app.asar.unpacked', 'node_modules', '@trycua', 'cua-driver', 'dist', 'index.js')).href) } : {}),
+      }) : null,
       onStateChange: emitComputerState,
       onPermissionRequired: requestComputerPermissionGuidance,
       hostPermissions: () => ({ accessibility: systemPreferences.isTrustedAccessibilityClient(false),

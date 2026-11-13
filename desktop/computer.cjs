@@ -224,12 +224,23 @@ class McpDriverAdapter {
     this.stopping = false;
     this.lifecycleTail = Promise.resolve();
     this.lifecycleListener = () => {};
+    this.enabled = true;
+    this.enableRevision = 0;
     this.identity = null;
     this.activeCalls = new Map();
     this.callSequence = 0;
   }
 
   setLifecycleListener(listener) { this.lifecycleListener = typeof listener === 'function' ? listener : () => {}; }
+  setEnabled(enabled) {
+    if (enabled === this.enabled) return;
+    this.enabled = enabled;
+    this.enableRevision += 1;
+  }
+
+  #requireEnabled(revision) {
+    if (!this.enabled || revision !== this.enableRevision) throw Object.assign(new Error('computer control is disabled'), { code: 'computer_disabled' });
+  }
 
   async #locked(work) {
     const prior = this.lifecycleTail;
@@ -239,20 +250,27 @@ class McpDriverAdapter {
     try { return await work(); } finally { release(); }
   }
 
-  async #startLocked() {
+  async #startLocked(revision) {
+    this.#requireEnabled(revision);
     if (this.driver && this.connection) return;
     if (!this.executable || !fs.existsSync(this.executable)) throw Object.assign(new Error('driver unavailable'), { code: 'driver_unavailable' });
     const sdk = await this.sdkLoader();
+    this.#requireEnabled(revision);
     const host = new sdk.EmbeddedCuaDriverHost(this.executable, this.hostBundleId);
     this.host = host;
     try {
       const connection = await host.start();
+      this.#requireEnabled(revision);
       const actualVersion = String(connection.driverVersion || '');
       if (actualVersion !== this.expectedVersion) throw Object.assign(new Error('unsupported driver version'), {
         code: 'driver_protocol_error', expectedVersion: this.expectedVersion, actualVersion: actualVersion || 'missing',
       });
       const driver = sdk.CuaDriver.connect(connection.socketPath);
       const metadata = await driver.metadata();
+      if (!this.enabled || revision !== this.enableRevision) {
+        driver.uniffiDestroy?.();
+        this.#requireEnabled(revision);
+      }
       if (!metadata?.embedded || Number(metadata.pid) !== Number(connection.pid)
         || String(metadata.driverVersion || '') !== actualVersion
         || String(metadata.hostBundleId || '') !== this.hostBundleId) {
@@ -274,7 +292,8 @@ class McpDriverAdapter {
   }
 
   async start() {
-    return this.#locked(() => this.#startLocked());
+    const revision = this.enableRevision;
+    return this.#locked(() => this.#startLocked(revision));
   }
 
   #watchExit(host, generation, driver) {
@@ -290,8 +309,10 @@ class McpDriverAdapter {
   }
 
   async call(tool, args) {
+    const revision = this.enableRevision;
     const lease = await this.#locked(async () => {
-      await this.#startLocked();
+      await this.#startLocked(revision);
+      this.#requireEnabled(revision);
       const controller = new AbortController();
       let settle;
       const done = new Promise(resolve => { settle = resolve; });
@@ -303,7 +324,10 @@ class McpDriverAdapter {
     const { driver, controller, generation } = lease;
     const timer = setTimeout(() => controller.abort(), this.callTimeoutMs);
     let response;
-    try { response = await driver.callTool(tool, JSON.stringify(args), { signal: controller.signal }); }
+    try {
+      this.#requireEnabled(revision);
+      response = await driver.callTool(tool, JSON.stringify(args), { signal: controller.signal });
+    }
     catch (error) {
       if (controller.signal.aborted) throw Object.assign(new Error('driver timeout'), { code: 'outcome_unknown' });
       throw Object.assign(error instanceof Error ? error : new Error('driver disconnected'), {
@@ -314,7 +338,7 @@ class McpDriverAdapter {
       this.activeCalls.delete(lease.id);
       lease.settle();
     }
-    if (controller.signal.aborted || this.connection?.generation !== generation || this.driver !== driver) {
+    if (controller.signal.aborted || revision !== this.enableRevision || this.connection?.generation !== generation || this.driver !== driver) {
       throw Object.assign(new Error('driver response arrived after lifecycle ended'), { code: 'outcome_unknown' });
     }
     let structured;
@@ -404,6 +428,7 @@ class ComputerBroker {
     this.driver = driver;
     this.onTestEvidence = onTestEvidence;
     this.enabled = enabled;
+    this.driver?.setEnabled?.(enabled);
     this.maxActions = maxActions;
     this.maxActiveMs = maxActiveMs;
     this.secret = crypto.randomBytes(32).toString('hex');
@@ -443,10 +468,18 @@ class ComputerBroker {
   }
 
   startupPayload() { return { socket_path: this.socketPath, secret: this.secret, enabled: true }; }
-  setEnabled(enabled) {
+  async setEnabled(enabled) {
     if (typeof enabled !== 'boolean') throw new Error('invalid computer enabled state');
+    if (enabled === this.enabled) {
+      if (!enabled) await this.driverStop;
+      return this.publicState();
+    }
     this.enabled = enabled;
-    if (!enabled) this.revoke('computer_disabled');
+    this.driver?.setEnabled?.(enabled);
+    if (!enabled) {
+      this.revoke('computer_disabled');
+      await Promise.all([this.driverStop, this.permissionsRefresh]);
+    }
     this.onStateChange(this.publicState());
     return this.publicState();
   }
@@ -497,10 +530,11 @@ class ComputerBroker {
   }
 
   async refreshPermissions(force = false) {
-    if (!this.driver) return this.publicState();
+    if (!this.enabled || !this.driver) return this.publicState();
     if (this.permissionsRefresh) { await this.permissionsRefresh; return this.publicState(); }
     if (!force && now() - this.permissionsCheckedAt < 5_000) return this.publicState();
     this.permissionsRefresh = this.driver.call('check_permissions', { prompt: false }).then(result => {
+      if (!this.enabled) return;
       const source = result?.source && typeof result.source === 'object' ? result.source : {};
       const identity = result?._driver_identity && typeof result._driver_identity === 'object' ? result._driver_identity : {};
       const hostBundleId = String(source.host_bundle_id || '');
@@ -527,8 +561,9 @@ class ComputerBroker {
             || host.screen_recording === true && this.permissions.screen_recording === false);
         } catch { /* Host diagnostics never substitute for Driver permission checks. */ }
       }
-    }, () => { this.permissions = { ...this.permissions, status: 'error' }; }).finally(() => {
-      this.permissionsCheckedAt = now(); this.permissionsRefresh = null;
+    }, () => { if (this.enabled) this.permissions = { ...this.permissions, status: 'error' }; }).finally(() => {
+      if (this.enabled) this.permissionsCheckedAt = now();
+      this.permissionsRefresh = null;
     });
     await this.permissionsRefresh;
     return this.publicState();
@@ -709,10 +744,12 @@ class ComputerBroker {
     }
     let driverSessionEnded = false;
     let driverSessionCleanupFailed = false;
-    try {
-      const ended = await this.driver.call('end_session', { session: driverSession });
-      driverSessionEnded = ended?.active === false;
-    } catch { driverSessionCleanupFailed = true; /* Logical revocation already completed. */ }
+    if (this.enabled) {
+      try {
+        const ended = await this.driver.call('end_session', { session: driverSession });
+        driverSessionEnded = ended?.active === false;
+      } catch { driverSessionCleanupFailed = true; /* Logical revocation already completed. */ }
+    }
     return this.#response(message, 'completed_known', '', false, true, {
       task_id: taskId, terminal_id: terminalId, already_ended: false, driver_session_ended: driverSessionEnded,
       cleanup: { capture_file_failures: captureCleanupFailures, driver_session_failed: driverSessionCleanupFailed },
@@ -738,7 +775,8 @@ class ComputerBroker {
     this.recovery.clear(); this.unknownDigests.clear(); this.taskBudgets.clear();
     for (const entry of this.inflight.values()) entry.revoked = true;
     this.generation += 1;
-    void this.driver?.stop?.();
+    this.driverStop = Promise.resolve(this.driver?.stop?.());
+    void this.driverStop.catch(() => {});
     this.permissions = { ...this.permissions, status: 'checking' }; this.permissionsCheckedAt = 0;
     this.#cleanupCaptures();
     return this.publicState();
@@ -2098,10 +2136,12 @@ class ComputerBroker {
   }
 
   async stop() {
+    this.enabled = false;
+    this.driver?.setEnabled?.(false);
     this.revoke('shutdown'); this.generation += 1; this.brokerSessionId = id('cu_session');
     if (this.server) await new Promise(resolve => this.server.close(resolve));
     this.server = null; try { fs.unlinkSync(this.socketPath); } catch (error) { if (error.code !== 'ENOENT') throw error; }
-    await this.driver?.stop?.();
+    await this.driverStop;
   }
 }
 

@@ -1,0 +1,41 @@
+{
+  "windowState034": {
+    "fixture_schema": "tcode.cua-driver-response.v1",
+    "driver_version": "0.34.0",
+    "source": "fixed-upstream-contract",
+    "capture_id": "capture_fixture_034",
+    "window_bounds": { "x": 40, "y": 60, "width": 640, "height": 480 },
+    "screenshot_width": 1280,
+    "screenshot_height": 960,
+    "screenshot_scale": 2,
+    "frame_valid": true,
+    "ax_state": "complete"
+  },
+  "windows034": {
+    "fixture_schema": "tcode.cua-driver-response.v1",
+    "driver_version": "0.34.0",
+    "source": "fixed-upstream-contract",
+    "windows": [{ "pid": 4242, "window_id": 17, "is_on_screen": true, "on_current_space": true,
+      "bounds": { "x": 40, "y": 60, "width": 640, "height": 480 } }]
+  },
+  "runtimeShape034": {
+    "fixture_schema": "tcode.cua-driver-runtime-shape.v1",
+    "driver_version": "0.34.0",
+    "source": "local-isolated-appkit-fixture",
+    "app": { "bundle_id": "com.tcode.computer-fixture", "pid_positive": true, "running": true },
+    "window": {
+      "window_id_positive": true,
+      "keys": ["app_name", "bounds", "current_space_id", "is_on_screen", "layer", "on_current_space", "pid", "space_ids", "title", "window_id", "z_index"],
+      "bounds": { "x": 496, "y": 177, "width": 520, "height": 292 }
+    },
+    "state": {
+      "keys": ["_note", "app_name", "background_input", "capture_id", "element_count", "elements", "elements_complete", "nodes_pending", "nodes_visited", "pid", "returned_element_count", "screenshot_frame_valid", "screenshot_height", "screenshot_mime_type", "screenshot_scale", "screenshot_width", "snapshot_id", "timeout_ms", "total_element_count", "tree_markdown", "truncated", "walk_elapsed_ms", "window_bounds", "window_id", "window_title"],
+      "window_bounds": { "x": 496, "y": 177, "width": 520, "height": 292 },
+      "screenshot_width": 1040,
+      "screenshot_height": 584,
+      "screenshot_scale": 2,
+      "has_image": true,
+      "capture_id_type": "string"
+    }
+  }
+}

@@ -6,9 +6,7 @@ const net = require('node:net');
 const crypto = require('node:crypto');
 const test = require('node:test');
 const { ComputerBroker, McpDriverAdapter, OPERATIONS, READ_ONLY, WRITE, INTERNAL_OPERATIONS, DRIVER_CONTRACTS, DRIVER_TOOLS, OBSERVATION_REF_PATTERN, classifyDriverError, observationSemantics, semanticCoverage, approvalPresentation, resolvedApprovalPanelRequest } = require('../computer.cjs');
-const windowState034 = JSON.parse(fs.readFileSync(path.join(__dirname, '../../tests/fixtures/computer-use/cua-0.34.0-window-state.json'), 'utf8'));
-const windows034 = JSON.parse(fs.readFileSync(path.join(__dirname, '../../tests/fixtures/computer-use/cua-0.34.0-list-windows.json'), 'utf8'));
-const runtimeShape034 = JSON.parse(fs.readFileSync(path.join(__dirname, '../../tests/fixtures/computer-use/cua-0.34.0-runtime-shape.json'), 'utf8'));
+const { windowState034, windows034, runtimeShape034 } = require('./fixture/cua-0.34.0-contract.json');
 
 test('every operation has one coherent read/write/control contract', () => {
   const contracts = new Set(Object.keys(DRIVER_CONTRACTS));
@@ -406,15 +404,52 @@ test('disabled computer use blocks discovery and writes and cancels pending appr
     assert.equal((await broker.handle(message(broker, operation, { task_id: 'task' }))).error_code, 'computer_disabled');
   }
   assert.equal(calls, 0);
-  broker.setEnabled(true);
+  await broker.setEnabled(true);
   const pending = broker.handle({ ...message(broker, 'type_text', { task_id: 'task', app: { bundle_id: 'fixture.app' }, text: 'text', delivery_mode: 'background' }), request_id: 'b'.repeat(32) });
   await new Promise(resolve => setImmediate(resolve));
   assert.ok(broker.publicState().pending_approval);
-  broker.setEnabled(false);
+  await broker.setEnabled(false);
   assert.equal((await pending).error_code, 'control_revoked');
   assert.equal(broker.publicState().enabled, false);
   assert.equal(broker.publicState().pending_approval, null);
   assert.equal(broker.grants.size, 0);
+});
+
+test('the disabled broker never loads the driver, including status and task cleanup', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'tcode-computer-off-'));
+  let loads = 0;
+  const driver = new McpDriverAdapter({ executable: __filename, sdkLoader: async () => { loads++; throw Error('must not load'); } });
+  const broker = new ComputerBroker({ runtimeRoot: root, driver, enabled: false });
+  try {
+    await broker.start();
+    assert.equal((await broker.refreshPermissions()).available, true);
+    await broker.refreshPermissions(true);
+    const result = await broker.handle(message(broker, 'end_task', { task_id: 'task', terminal_id: 'f'.repeat(32) }));
+    assert.equal(result.status, 'completed_known');
+    assert.equal(result.result.driver_session_ended, false);
+    await assert.rejects(driver.call('check_permissions', {}), { code: 'computer_disabled' });
+    assert.equal(loads, 0);
+  } finally { await broker.stop(); fs.rmdirSync(path.join(root, 'computer')); fs.rmdirSync(root); }
+});
+
+test('switching off cancels stale driver starts, even across a rapid re-enable', async () => {
+  let release;
+  let started = 0;
+  const loading = new Promise(resolve => { release = resolve; });
+  const driver = new McpDriverAdapter({ executable: __filename, sdkLoader: async () => {
+    await loading;
+    return { EmbeddedCuaDriverHost: class { async start() { started++; throw Error('stale start'); } async stop() {} } };
+  } });
+  const pending = driver.call('check_permissions', {});
+  const rejected = assert.rejects(pending, { code: 'computer_disabled' });
+  await new Promise(resolve => setImmediate(resolve));
+  driver.setEnabled(false);
+  const stopped = driver.stop();
+  driver.setEnabled(true);
+  release();
+  await rejected;
+  await stopped;
+  assert.equal(started, 0);
 });
 
 test('driver errors are reduced to fixed non-sensitive enums', () => {
@@ -1808,7 +1843,6 @@ test('end_task is idempotent, task-scoped, and closes only its driver session', 
   }
   assert.equal(broker.taskGrants.size, 2);
   broker.captures.set('bad-cleanup', { task_id: 'task-a', model_image_path: root });
-  broker.enabled = false;
   failEndSession = true;
   const terminal = { task_id: 'task-a', terminal_id: 'a'.repeat(64) };
   const first = await broker.handle({ ...message(broker, 'end_task', terminal), request_id: 'c'.repeat(32) });

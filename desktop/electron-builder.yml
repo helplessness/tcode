@@ -34,6 +34,12 @@ extraResources:
     to: backend
   - from: vendor/cua-driver
     to: computer/cua-driver
+  - from: vendor/CUA_DRIVER_LICENSE
+    to: computer/LICENSE
+  - from: vendor/CUA_DRIVER_THIRD_PARTY_NOTICES.md
+    to: computer/THIRD_PARTY_NOTICES.md
+  - from: licenses/MPL-2.0.txt
+    to: computer/MPL-2.0.txt
 
 mac:
   target:

@@ -24,3 +24,4 @@ if [ "$BIN_HASH" != "512f488f631469decfebecc6e5f54e74a6f10e78f9644f89f1eb43ce7e8
 fi
 install -m 0755 "$TMP_DIR/cua-driver" "$DESKTOP_DIR/vendor/cua-driver"
 install -m 0644 "$TMP_DIR/LICENSE" "$DESKTOP_DIR/vendor/CUA_DRIVER_LICENSE"
+install -m 0644 "$TMP_DIR/THIRD_PARTY_NOTICES.md" "$DESKTOP_DIR/vendor/CUA_DRIVER_THIRD_PARTY_NOTICES.md"
