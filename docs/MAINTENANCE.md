@@ -9,7 +9,7 @@ TCode 的 Web 与 Electron 桌面共用主要界面和 Python 后端；基本聊
 | `tcode_agent/harness/`、`context/`、`tools/` | Agent 循环、上下文与工具执行 |
 | `tcode_agent/runtime/`、`session/`、`workflow/`、`workspace/` | 运行状态、会话、异步恢复、工作流与领域 Run |
 | `tcode_agent/mcp/`、`plugins/`、`packages/artifact-sdk/` | MCP 客户端、插件接入及可独立安装的文件传输 SDK |
-| `config/`、`scripts/`、`tests/` | 公开模板、启动与开发入口、回归测试 |
+| `config/`、`scripts/`、`scripts/tests/` | 公开模板、启动与开发入口、公开回归测试 |
 
 一次对话由界面送入后端，Agent 读取任务上下文并调用当前获准的工具；结果和状态由后端回传。异步工作保留提交回执，再根据原任务引用查询状态和结果。提交状态不明时不要盲目重提；界面在线不代表远端任务已完成。同步聊天无需依赖这一链路。
 

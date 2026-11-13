@@ -31,7 +31,9 @@ npm --prefix web run check:stage4
 npm --prefix web run typecheck
 npm --prefix web test
 npm --prefix web run build
-diff -qr web/dist tcode_agent/server/static
+# Match CI: Mol* vendor files are generated from npm and are not tracked.
+diff -qr -x vendor web/dist tcode_agent/server/static
+cp -R web/dist/vendor tcode_agent/server/static/
 
 release_dir="$(mktemp -d)"
 trap 'rm -rf "$release_dir"' EXIT

@@ -1,8 +1,25 @@
 import { describe, expect, it } from 'vitest';
+import { McpUiInitializeRequestSchema } from '@modelcontextprotocol/ext-apps/app-bridge';
+import { z } from 'zod/v4';
 
 import { HOST_CSP, buildHostCsp, isolatedDocument, redactToolArguments } from './McpAppHost';
 
 describe('MCP App iframe isolation', () => {
+  it('accepts the MCP App handshake and rejects oversized constrained arrays before parsing elements', () => {
+    const request = { method: 'ui/initialize', params: {
+      protocolVersion: '2026-01-26', appInfo: { name: 'fixture', version: '1.0.0' }, appCapabilities: {},
+    } };
+    expect(McpUiInitializeRequestSchema.safeParse(request).success).toBe(true);
+    expect(McpUiInitializeRequestSchema.safeParse({ ...request, params: [] }).success).toBe(false);
+
+    let parsed = 0;
+    const schema = z.array(z.string().superRefine(() => { parsed += 1; })).max(1);
+    expect(schema.safeParse(['one', 'two']).success).toBe(false);
+    expect(parsed).toBe(0);
+    expect(schema.safeParse(['one']).success).toBe(true);
+    expect(parsed).toBe(1);
+  });
+
   it('injects the host CSP before untrusted document content', () => {
     const source = '<html><head><base href="https://evil.example/"><meta http-equiv="Content-Security-Policy" content="default-src *"></head><body><form action="https://evil.example/"></form></body></html>';
     const document = isolatedDocument(source);

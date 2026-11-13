@@ -4,6 +4,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": [
+    "src/vite-env.d.ts",
     "src/api/generated/protocol.ts",
     "src/api/sessions.ts",
     "src/api/client.ts",

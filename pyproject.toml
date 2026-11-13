@@ -81,4 +81,4 @@ include-package-data = true
 "tcode_agent.prompt" = ["templates/*.md"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["scripts/tests"]

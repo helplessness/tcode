@@ -32,6 +32,7 @@ on:
       - "web/src/utils/contentBlocks*"
       - "web/package.json"
       - "web/package-lock.json"
+      - "web/scripts/prepare-molstar.mjs"
       - "packages/tcode-agui-client/**"
       - "examples/agui-copilotkit/**"
       - "examples/agui-http-agent/**"
@@ -78,6 +79,7 @@ on:
       - "web/src/utils/contentBlocks*"
       - "web/package.json"
       - "web/package-lock.json"
+      - "web/scripts/prepare-molstar.mjs"
       - "packages/tcode-agui-client/**"
       - "examples/agui-copilotkit/**"
       - "examples/agui-http-agent/**"
@@ -190,6 +192,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm --prefix web ci
+      - name: Prepare Mol* viewer assets for Python packages
+        run: |
+          npm --prefix web run prebuild
+          cp -R web/public/vendor tcode_agent/server/static/
       - run: python -m pip install build twine
       - run: python -m build --outdir build/release-dist
       - run: >-

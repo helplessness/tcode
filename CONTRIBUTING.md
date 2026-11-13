@@ -30,3 +30,5 @@ python scripts/dsh.py catalog --check
 提交说明应写明用户遇到的问题、修复后的行为及验证结果。重构应说明模块职责和兼容性，不以减少行数作为唯一理由。
 
 发布前同步 `VERSION`、`pyproject.toml`、`tcode_agent.__version__` 和 `web/package.json`。提交并保持工作树干净后运行 `./scripts/tag_release.sh` 创建带注释的本地标签；脚本不会推送标签。
+
+构建 Python 发布包前先在干净目录准备 Mol*：运行 `npm --prefix web ci` 和 `npm --prefix web run prebuild`，再执行 `cp -R web/public/vendor tcode_agent/server/static/`。这些文件由锁定的 npm 依赖生成，不提交到 Git；CI 和 `scripts/validate_agui_release.sh` 会在打包前准备它们。

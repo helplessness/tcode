@@ -1,0 +1,1 @@
+import{c as n,o as s,b as a}from"./paper-theme-BtYjUJ7-.js";function c(){const[i,t]=n(typeof document>"u"?!0:document.visibilityState==="visible");return s(()=>{const e=()=>{t(document.visibilityState==="visible")};document.addEventListener("visibilitychange",e),a(()=>document.removeEventListener("visibilitychange",e))}),i}export{c};

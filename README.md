@@ -2,7 +2,9 @@
 
 TCode 是一个可自托管的 AI 研究工作台，重点面向蛋白质研究。你可以在同一个工作区里整理文献、调用研究工具、跟踪远程计算，并把返回的文件和结果留给下一步分析。
 
-这是首版公开源码 Alpha 的候选快照。它保留研究工具和插件代码，不附带私有配置、真实验收记录、未确认可分发的知识库或研究样本。依赖这些数据的插件需由部署方提供有权使用的数据，基础聊天不需要它们。
+这是首版开源 Alpha 的候选快照，面向本机和自托管研究，不代表生产多租户部署已经验收。仓库保留研究工具和插件代码，不附带私有配置、真实验收记录、未确认可分发的知识库或研究样本。依赖这些数据的插件需由部署方提供有权使用的数据，基础聊天不需要它们。
+
+`v0.0.2` 是固定的源码快照；`main` 包含其后的开发改动。复现问题时请注明使用的标签或提交，不要只看应用显示的版本号。
 
 ## 为什么用 TCode？
 
@@ -24,13 +26,13 @@ TCode 是一个可自托管的 AI 研究工作台，重点面向蛋白质研究�
 
 ### 先选择启动方式
 
-| 平台与用途 | 首次准备 | 配置完成后的日常启动 |
+| 平台 | Alpha 支持范围 | 配置完成后的日常启动 |
 | --- | --- | --- |
-| [Windows Web](docs/Windows-Web快速启动.md)（待实机验收） | PowerShell；安装依赖并填写模型配置 | 在 PowerShell 用 `tcode-server.exe` 启动，浏览器访问 |
-| [Linux Web](#linux安装并启动-web) | Bash；安装依赖并填写模型配置 | 本机体验用 `tcode-server`；按配置启动服务用 `./scripts/start_web.sh` |
-| [macOS 桌面源码版](#macos启动桌面端) | Apple Silicon（arm64）；初始化配置、设置首次登录密码 | `./scripts/start_desktop.sh`，不需要另启 Web |
+| [Linux Web](#linux安装并启动-web) | 主要 Web 部署入口；本机试用和按配置部署的启动方式不同。 | 本机体验用 `tcode-server`；按配置启动用 `./scripts/start_web.sh` |
+| [macOS 桌面源码版](#macos启动桌面端) | Apple Silicon（arm64）；不提供已签名安装包，不支持 Intel Mac 桌面。 | `./scripts/start_desktop.sh`，不需要另启 Web |
+| [Windows Web](docs/Windows-Web快速启动.md) | 原生 PowerShell 源码启动，实验性支持，尚待 Windows 实机验收；不提供 Windows 桌面版。 | 在 PowerShell 用 `tcode-server.exe` 启动，浏览器访问 |
 
-以上命令从项目根目录执行，首次使用前都需要安装依赖和配置模型。**Windows 目前是 Web 源码启动，不是 Windows 桌面版。** Windows 和 Linux 的本机最小 Web 启动方式都不要求 Docker；连接普通远程 MCP 也不要求本机安装 Docker。异步任务、文件传输和需要隔离的工具按使用场景另行配置。
+以上命令从项目根目录执行，首次使用前都需要安装依赖和配置模型。Windows 和 Linux 的本机最小 Web 启动方式都不要求 Docker；连接普通远程 MCP 也不要求本机安装 Docker。浏览器接管、电脑控制和本机隔离等能力不承诺跨平台对等。异步任务、文件传输和需要隔离的工具按使用场景另行配置。
 
 ### 依赖与必填配置
 
@@ -160,18 +162,21 @@ python scripts/dsh.py smoke \
 
 ## 需要哪些服务？
 
-**第一次聊天只需要 TCode 和一个可用的模型接口。** GitHub 仓库不自带 TMCP 服务，也不会自动连接任何 MCP。首次初始化生成的 MCP 服务清单是空的；用到哪个再配置哪个。
+**装好 TCode 后，第一次聊天只需配置一个可用的模型接口。** 不需要单独部署数据库、Redis、TMCP 或沙箱。首次初始化生成的 MCP 服务清单是空的，不会自动连接外部工具。
 
-| 服务 | 什么时候需要 |
-| --- | --- |
-| TCode Web / 桌面后端 | 提供聊天和工作区。桌面用自己的后端，不必另外启动 Web。 |
-| 模型 API | 聊天必需，可用本地或远端模型；视觉和向量模型按需添加。 |
-| 普通 MCP | 可选。工具直接返回结果时，把服务加入 [MCP 配置](tcode_agent/MCP_QUICKSTART.md)，不需要 Job Protocol。 |
-| Job Protocol、后台执行与状态跟踪 | 需要异步提交、取消和结果恢复时配置。下文的第三方插件方案使用单独部署的兼容 Job Protocol，不是安装 SDK 就会启动。 |
-| Artifact 文件服务 | 采用文件引用在 TCode 和远端工具之间传输入文件、取回输出时需要。普通文本工具不需要。 |
-| 领域 MCP、Sandbox Runner | Boltz、文献检索等服务按需接入，不随仓库部署；需要隔离执行的场景才部署 Runner。 |
+| 组件 | 默认 | 何时需要额外配置 |
+| --- | --- | --- |
+| TCode 后端与模型 API | 后端随 TCode；桌面不需要另启 Web。 | 聊天需配置本地或远端模型；图片输入另需可用的视觉模型。 |
+| SQLite | 内置，持久化会话、异步跟踪等本地状态。 | 不需要部署数据库服务；重启后应继续使用同一运行数据目录。 |
+| 证据图与本体 | 使用本地 SQLite 和图文件等存储，不依赖外部图数据库。 | 特定研究插件可能需要另配有权使用的数据；无需部署 Neo4j。 |
+| Redis | 不需要；运行指导通知和 Swarm 消息传递默认不依赖 Redis。 | 按需配置部分通知或 Swarm 消息后端。Redis 不替代 SQLite，也不等于支持高可用部署。 |
+| FAISS 与 Embedding | 基础聊天不需要。 | 启用证据语义召回时安装本地 FAISS 并配置 Embedding；没有可用语义索引时，证据搜索仍可用关键词。 |
+| 普通 MCP | 不预连任何服务。 | 工具直接返回结果时加入 [MCP 配置](tcode_agent/MCP_QUICKSTART.md)，不需要 Job Protocol。 |
+| Job Protocol 与计算执行端 | 不随源码启动外部计算服务。 | 需要远程异步提交、状态查询、取消和结果恢复时，连接兼容任务服务与实际执行端。 |
+| Artifact 文件服务 | 基础聊天和纯文本工具不需要。 | 远程工具需要通过文件引用收发输入或产物时，配置 Artifact 地址和认证；安装 SDK 不会部署服务。 |
+| 领域工具与 Sandbox Runner | 基础聊天不需要。 | 领域工具（例如 Boltz）由实际执行端提供；需要隔离的工具须配置对应隔离后端，不应绕过隔离。 |
 
-现有可选服务和接入配置见 [MCP 服务示例](config/examples/README.md)；启动与部署入口见[运行指南](docs/RUNNING.md)。
+`--full` 安装的是 Redis 客户端、FAISS 等可选 Python 依赖，不会部署 Redis 或下载 Embedding 模型。接入配置见 [MCP 服务示例](config/examples/README.md)和[配置指南](docs/CONFIGURATION.md)；共享部署前请先读[安全说明](SECURITY.md)。
 
 ### 开发自己的 MCP
 
@@ -186,6 +191,7 @@ python scripts/dsh.py smoke \
 - [公开快照范围与验证](docs/PUBLIC-ALPHA.md)：本版包含什么、如何验证、不承诺什么。
 - [项目架构](docs/MAINTENANCE.md)：前后端职责、异步任务和数据边界。
 - [贡献指南](CONTRIBUTING.md)。
+- [安全说明与漏洞报告](SECURITY.md)。
 
 ## 功能进度
 
@@ -227,6 +233,14 @@ python scripts/dsh.py smoke \
 - [ ] **直接导入外部本体**：目前不能在工作台直接导入现成的 OWL/RDF 文件、预览与现有知识的差异，再按审核结果合并。这与上传文档抽取候选是两种功能。
 - [ ] **扫描件直接进入本体抽取**：当前文档导入不包含扫描件 OCR；图片型 PDF 需要先转成可提取文字的文档。
 
+## Roadmap
+
+- **近期**：补做 Windows Web 实机验收，持续验证干净环境的安装、前端构建和安装包。
+- **接下来**：串起已有的第三方 MCP 示例，提供从上传文件、提交异步任务，到服务重启后恢复并取回产物的完整演练。
+- **按需求评估**：多实例部署和外部图数据库。先确认单实例或本地图存储确实遇到瓶颈，不把新服务变成基础使用门槛。
+
+这是开发优先级，不是发布日程或已支持功能列表。
+
 ## 项目结构
 
 | 路径 | 内容 |
@@ -237,7 +251,7 @@ python scripts/dsh.py smoke \
 | `tcode_agent/plugins/`、`plugins/` | 插件机制与仓库插件 |
 | `tcode_agent/research/`、`mcp/` | 研究资产与外部工具集成 |
 | `web/src/` | Web 界面、会话和输入状态 |
-| `tests/`、`scripts/dsh.py` | 回归与本地验证工具 |
+| `scripts/tests/`、`scripts/dsh.py` | 公开回归测试与本地入口验证 |
 
 ## 许可证与来源
 

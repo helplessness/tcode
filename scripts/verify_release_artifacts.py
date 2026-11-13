@@ -17,6 +17,12 @@ from packaging.version import Version
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _molstar_files() -> set[str]:
+    version = json.loads((ROOT / "web" / "package.json").read_text(encoding="utf-8"))["dependencies"]["molstar"]
+    vendor = f"tcode_agent/server/static/vendor/molstar-{version}"
+    return {f"{vendor}/{name}" for name in ("molstar.js", "molstar.css", "LICENSE", "images/cells.jpg")}
+
+
 class ReleaseArtifactError(RuntimeError):
     """Raised when a release archive violates the public package contract."""
 
@@ -131,7 +137,7 @@ def verify_wheel(path: Path) -> dict[str, object]:
         "tcode_agent/external_harness/schema/harness-runtime-v2.schema.json",
         "tcode_agent/external_harness/provider.py",
         "tcode_agent/external_harness/conformance/runner.py",
-    }
+    } | _molstar_files()
     missing = sorted(required - names)
     _require(not missing, f"wheel is missing required files: {missing}")
     _require(any(name.startswith("tcode_agent/server/static/assets/") for name in names), "wheel has no built Web assets")
@@ -166,7 +172,7 @@ def verify_sdist(path: Path) -> dict[str, object]:
         "pyproject.toml",
         "tcode_agent/protocol/v2/schema/protocol.schema.json",
         "tcode_agent/server/static/index.html",
-    }
+    } | _molstar_files()
     missing = sorted(required - names)
     _require(not missing, f"sdist is missing required files: {missing}")
     return {"path": str(path), "files": len(raw_names)}

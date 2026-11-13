@@ -22,9 +22,13 @@ describe('native dialog migration safety boundaries',()=>{
     expect(research).toContain("if (confirmation === null)");
     expect(research).toContain("confirmation.trim().toLowerCase() === 'yes'");
     const graph=readFileSync(resolve('src/components/OntologyGraph.tsx'),'utf8');
+    expect(graph).toMatch(/const includePrivateInExport = async \(\) => !!data\(\)\?\.has_private\s*&& await confirmAction\(/);
     expect(graph).toContain('const includePrivate = await includePrivateInExport()');
-    expect(graph).toContain('await includePrivateInExport() ? displayData() : publicDisplayData()');
-    expect(graph).toContain("node.scope === 'public'");
+    expect(graph).toContain('await exportData(includePrivate)');
+    expect(graph).toContain('await exportData(await includePrivateInExport())');
+    expect(graph).toContain('if (includePrivate) return displayData()');
+    expect(graph).toMatch(/new URLSearchParams\(\{[^}]*scope: 'public'/);
+    expect(graph).toContain('ontologyRequest<OntologyGraphData>(props.workspaceId, `/graph?${params}`)');
     expect(readFileSync(resolve('src/components/PaperWikiWorkspace.tsx'),'utf8')).toContain("e.preventDefault(); e.returnValue = ''");
   });
 });
