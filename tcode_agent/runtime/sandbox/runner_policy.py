@@ -49,6 +49,21 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+def _mount_roots(name: str) -> tuple[Path, ...]:
+    roots = [Path(raw).expanduser().resolve(strict=True) for raw in _env_list(name)]
+    # Preserve old runner configurations for the TCode checkout only. Never
+    # derive a trusted sibling from a workspace or an arbitrary legacy root.
+    projects = {Path(__file__).resolve().parents[3]}
+    if configured := os.environ.get("TCODE_PROJECT_ROOT", "").strip():
+        projects.add(Path(configured).expanduser().resolve())
+    for project in projects:
+        if project / ".claude/skills" in roots:
+            current = project / ".tcode/skills"
+            if current.is_dir() and current.resolve() == current:
+                roots.append(current)
+    return tuple(dict.fromkeys(roots))
+
+
 def _parse_memory_bytes(value: str) -> int:
     text = str(value or "").strip().lower()
     match = re.fullmatch(r"(\d+)([kmgt]?)b?", text)
@@ -187,12 +202,10 @@ class SandboxRunnerPolicy:
         if not allowed_images:
             raise RuntimeError("TCODE_SANDBOX_RUNNER_ALLOWED_IMAGES is empty")
 
-        mount_roots = []
-        for raw in _env_list("TCODE_SANDBOX_RUNNER_ALLOWED_MOUNT_ROOTS"):
-            path = Path(raw).expanduser().resolve(strict=True)
+        mount_roots = _mount_roots("TCODE_SANDBOX_RUNNER_ALLOWED_MOUNT_ROOTS")
+        for path in mount_roots:
             if not path.is_dir():
                 raise RuntimeError(f"Allowed mount root is not a directory: {path}")
-            mount_roots.append(path)
 
         allowed_networks = _env_list(
             "TCODE_SANDBOX_RUNNER_ALLOWED_NETWORKS",
@@ -215,11 +228,8 @@ class SandboxRunnerPolicy:
                 "bash,exec,read,write,edit,glob,grep,browser,skill_run,plugin_runtime,plugin_network,plugin:*",
             ),
             allowed_networks=allowed_networks,
-            allowed_mount_roots=tuple(mount_roots),
-            trusted_mount_roots=tuple(
-                Path(value).expanduser().resolve(strict=True)
-                for value in _env_list("TCODE_SANDBOX_RUNNER_TRUSTED_MOUNT_ROOTS")
-            ),
+            allowed_mount_roots=mount_roots,
+            trusted_mount_roots=_mount_roots("TCODE_SANDBOX_RUNNER_TRUSTED_MOUNT_ROOTS"),
             max_timeout_seconds=max(
                 1, _env_int("TCODE_SANDBOX_RUNNER_MAX_TIMEOUT_SECONDS", 3600)
             ),

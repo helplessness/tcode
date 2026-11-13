@@ -36,3 +36,7 @@ Python 依赖见 `tcode_agent/requirements-core.txt` 与 `tcode_agent/requiremen
 ## Anatomy 绘图技能
 
 `.claude/skills/anatomy/` 选择性捆绑 [Anatomy](https://github.com/wheresryan22/anatomy) 提交 `1482e8469b0a9e0d8cc18ea2740a01423d29ae80` 的几何工具和设计资料，MIT，`Copyright (c) 2026 Ryan`。完整声明在该目录 `LICENSE`，原版文件校验见 `upstream.json`。TCode 的技能入口和 `scripts/render.mjs` 为本地适配；原版几何文件保留。此引入独立于 `presentation/isometric.py` 的原有原创三维部件实现，不表示已接入上游完整网页、WebGL 或工程验证能力。
+
+## DOCX / PDF 技能
+
+`.tcode/skills/docx/` 和 `.tcode/skills/pdf/` 来自 [Anthropic Skills 的 Apache 2.0 版本](https://github.com/anthropics/skills/commit/2c5958ecac7cee2b583967a2c4981d0f4a75c579)。两份上游 `LICENSE.txt` 随技能分发。TCode 修改了两份 `SKILL.md` 和 PDF 的 `scripts/convert_pdf_to_images.py`，并新增 `scripts/tcode_pdf_*.py` 作为沙箱动作的本地适配。未分发上游运行环境、办公软件或命令行依赖。

@@ -26,6 +26,12 @@
 - `human_review.json` 管理工具审核规则；`sandbox_runner_tool_policy.json` 是 Runner 侧工具执行的权限上限。不要为解决连接问题而放宽审核或隔离策略。
 - `local.env` 继承同目录的 `symphony_route.env`。`desktop.env` 与 `mcp_host.env` 分别用于桌面与独立服务主机；非对应场景无需填写。
 
+### DOCX / PDF 技能与沙箱挂载
+
+内置 DOCX、PDF 位于 `.tcode/skills/`，TCode 仍识别 `.claude/skills/`，已有自定义技能不用搬。若从非 editable 安装启动源码仓库的 Web，设置 `TCODE_PROJECT_ROOT` 指向该仓库。
+
+Runner 模板允许挂载这两个技能根。已有配置若列出了同一 TCode 项目的 `.claude/skills`，Runner 会沿用该项配置兼容 `.tcode/skills`。技能脚本仍只读挂载。不要把用户可写目录加入可信挂载根。
+
 ### 生效与本机数据
 
 源码启动脚本默认使用 `.tcode-local/local.env`，可用 `TCODE_ENV_FILE` 显式指定环境文件；`TCODE_CONFIG_ROOT` 指定核心配置目录。修改环境文件后重启对应进程，桌面需完全退出再打开。运行记录、缓存和用户产物与配置分开，见[数据边界](MAINTENANCE.md#数据边界)。

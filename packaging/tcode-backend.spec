@@ -29,6 +29,10 @@ datas += tree(ROOT / "plugins", "plugins", excluded={"__pycache__", ".cache", "t
 datas += tree(ROOT / "config" / "templates", "config/templates")
 datas += tree(ROOT / ".claude" / "skills" / "anatomy", ".claude/skills/anatomy",
               excluded={"__pycache__", "node_modules"})
+datas.append((str(ROOT / "THIRD_PARTY_NOTICES.md"), "."))
+for name in ("docx", "pdf"):
+    datas += tree(ROOT / ".tcode" / "skills" / name, f".tcode/skills/{name}",
+                  excluded={"__pycache__", "node_modules"})
 datas += [
     (str(ROOT / "scripts" / name), "scripts")
     for name in (

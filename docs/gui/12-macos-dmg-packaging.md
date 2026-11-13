@@ -14,4 +14,6 @@ npm --prefix desktop run smoke:backend:mac
 
 后端位于 `build/release/backend/`，安装镜像位于 `desktop/release/`。PyInstaller 明确排除 `tmcp`，只内置 TCode 的通用 Job Protocol。打包时从校验过的 Cua 上游归档复制许可证和第三方声明到 `TCode.app/Contents/Resources/computer/`，不依赖开发机的本地文件。可用 `hdiutil verify` 检查镜像，再安装到独立目录检查许可证、启动、退出和本机数据目录。后端 smoke 不替代真实桌面验收。
 
+除了原有的 `anatomy`，冻结后端也会附带 `.tcode/skills/` 下的 `docx` 和 `pdf` 及其许可证。LibreOffice、Pandoc、Poppler、Tesseract 等可选工具须按需要在执行环境另行安装。
+
 当前命令生成的是未做 Developer ID 签名和公证的本地测试包，不应当作下载即用的发行包。只想运行源码版，请按[桌面首次启动](../../README.md#macos启动桌面端)操作。
