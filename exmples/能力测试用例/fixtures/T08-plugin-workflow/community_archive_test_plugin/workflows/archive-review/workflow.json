@@ -1,0 +1,77 @@
+{
+  "template_key": "archive-review",
+  "display_name": "ZIP 插件回显与复核",
+  "domain": "community-test",
+  "description": "验证从 ZIP 安装的第三方插件能够携带两阶段声明式 Workflow。",
+  "enabled": true,
+  "input_contract": {
+    "required": ["text"]
+  },
+  "output_contract": {
+    "required": ["review_summary"]
+  },
+  "stages": [
+    {
+      "stage_id": "archive_echo",
+      "depends_on": [],
+      "label": "生成 ZIP 插件回显",
+      "owner": "build",
+      "call_type": "agent",
+      "description": "调用 ZIP 插件回显工具形成第一阶段结果。",
+      "prompt_file": "archive_echo.md",
+      "allowed_tools": ["community_archive_echo"],
+      "required_skills": [],
+      "input_contract": {
+        "required": ["text"]
+      },
+      "output_contract": {
+        "required": ["echo_text"]
+      },
+      "expected_artifacts": [],
+      "success_checks": ["回显结果非空"],
+      "validators": [
+        {"type": "non_empty"},
+        {"type": "no_failure_signal"}
+      ],
+      "retry_policy": {"max_attempts": 2},
+      "failure_policy": {"action": "block"},
+      "fallback_stage_ids": [],
+      "review_gate": false,
+      "metadata": {}
+    },
+    {
+      "stage_id": "archive_review",
+      "depends_on": ["archive_echo"],
+      "label": "复核 ZIP 插件回显",
+      "owner": "build",
+      "call_type": "agent",
+      "description": "调用 ZIP 插件统计工具复核第一阶段结果。",
+      "prompt_file": "archive_review.md",
+      "allowed_tools": ["community_archive_count"],
+      "required_skills": [],
+      "input_contract": {},
+      "output_contract": {
+        "required": ["review_summary"]
+      },
+      "expected_artifacts": [],
+      "success_checks": ["复核摘要非空"],
+      "validators": [
+        {"type": "non_empty"},
+        {"type": "no_failure_signal"}
+      ],
+      "retry_policy": {"max_attempts": 1},
+      "failure_policy": {"action": "block"},
+      "fallback_stage_ids": [],
+      "review_gate": true,
+      "metadata": {}
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "prompt_dir": "prompts",
+    "routing": {
+      "enabled": true,
+      "auto_start": false
+    }
+  }
+}

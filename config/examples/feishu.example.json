@@ -1,0 +1,15 @@
+{
+  "cli": "/absolute/path/to/lark-tcode-bot",
+  "app_id": "cli_REPLACE_ME",
+  "bot_id": "ou_REPLACE_BOT_ID",
+  "direct_messages": true,
+  "chats": ["oc_REPLACE_GROUP_ID"],
+  "users": {
+    "ou_REPLACE_YOUR_OPEN_ID": {
+      "tenant_id": "default",
+      "user_id": "local",
+      "workspace_id": "workspace-1"
+    }
+  },
+  "poll_seconds": 3
+}

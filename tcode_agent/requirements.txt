@@ -1,0 +1,6 @@
+-r requirements-core.txt
+# Optional swarm orchestration, vector search and Redis services.
+swarms>=6.8.1
+numpy>=1.26.0
+faiss-cpu>=1.8.0
+redis>=5.0.0

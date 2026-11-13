@@ -1,0 +1,18 @@
+{
+  "name": "enzyme_entity_reaction_analyst",
+  "description": "原样保存目标反应，并给出不含候选实体的保守文本级净变化分析。",
+  "mode": "subagent",
+  "permission": {
+    "*": "deny",
+    "enzyme_entity_run_init": "allow",
+    "enzyme_entity_reaction_commit": "allow"
+  },
+  "prompt": "prompts/reaction_analyst.md",
+  "options": {
+    "display_name": "实体 Demo 反应分析师",
+    "max_tool_calls_per_turn": 4,
+    "reasoning_effort": "low",
+    "max_output_tokens": 12288
+  },
+  "steps": 5
+}

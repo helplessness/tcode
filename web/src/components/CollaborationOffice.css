@@ -1,0 +1,62 @@
+.office-view{height:100%;min-height:0;display:flex;flex-direction:column;background:#f3efe5;color:#354439;container-type:inline-size}
+.office-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;border-bottom:1px solid #cfd7c8;background:linear-gradient(180deg,#fbfaf5,#f0f1e8);flex-shrink:0}
+.office-heading h2{font-size:14px;font-weight:700;letter-spacing:.01em;margin:0}.office-heading p{font-size:11px;color:#687565;margin:4px 0 0}
+.office-view button{border:1px solid #becab4;border-radius:6px;padding:6px 10px;background:#e8eddf;color:#42563c;font-size:11px;cursor:pointer;white-space:nowrap}
+.office-view button:hover{background:#dce5d2}.office-view button:focus-visible{outline:2px solid #547943;outline-offset:3px}
+.office-camera{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:7px 12px;border-bottom:1px solid #d7dccd;background:#e9ede3;flex-shrink:0}.office-camera output{min-width:38px;text-align:center;font-size:11px;font-variant-numeric:tabular-nums}.office-camera span{font-size:10px;color:#687565}.office-camera button:disabled{opacity:.4;cursor:default}
+.office-scroll{flex:1;min-height:0;overflow:auto;padding:14px;background:radial-gradient(circle at 50% 0,#fffdf7 0,#eee9de 72%);scrollbar-width:thin;cursor:grab;touch-action:none;overscroll-behavior:contain}
+.office-scroll:active{cursor:grabbing}.office-scroll:focus-visible{outline:2px solid #839b75;outline-offset:-2px}
+.office-scene-space{display:grid;place-items:center}.office-scene{display:block;flex-shrink:0;overflow:visible;user-select:none}
+.office-room-label{font:700 10px system-ui;fill:#526451;letter-spacing:1.1px;text-transform:uppercase}.office-zone-plaque{fill:#edf2e8;stroke:#b1bfaa;stroke-width:1.5}
+.office-name{font:600 12px system-ui;fill:#354439}.office-status{font:10px system-ui;fill:#63705d}
+.office-member .office-name,.office-member .office-status{fill:#f7ead5;paint-order:stroke;stroke:#503521;stroke-width:3px;stroke-linejoin:round}
+.office-manager-floor{fill:#6d4a39}.office-manager-wall{fill:none;stroke:#172534;stroke-width:10;stroke-linejoin:round}.office-manager-threshold{fill:none;stroke:#d8b17c;stroke-width:5;stroke-dasharray:5 4}.office-manager-name{font-weight:700;fill:#f6ead7}.office-room-label--light{fill:#e4edf0}.office-wall-shelf rect{fill:#805338;stroke:#4e3225;stroke-width:3}.office-wall-shelf path{fill:none;stroke:#dfbd66;stroke-width:5}.office-clock circle{fill:#f4efdd;stroke:#775f4b;stroke-width:3}.office-clock path{fill:none;stroke:#51483f;stroke-width:2.5;stroke-linecap:square}.office-plant rect{fill:#a66f4e;stroke:#76513d;stroke-width:2}.office-plant path{fill:none;stroke:#78a966;stroke-width:6;stroke-linecap:round}
+.office-door-leaf{transform-origin:0 0;transition:transform .45s steps(4,end)}.office-door-leaf path{fill:none;stroke:#d7aa70;stroke-width:7;stroke-linecap:square}.office-door-leaf circle{fill:#f2d37f;stroke:#60452f;stroke-width:1.5}.office-door-leaf.is-open{transform:rotate(-78deg)}
+.office-lounge>rect{fill:#a83f69;stroke:#692a47;stroke-width:3}.office-lounge .office-coffee-table{fill:#bd9168;stroke:#76553d}.office-lounge .office-coffee-cup{fill:#efe8da;stroke:#61666b;stroke-width:2}.office-status-light{fill:#a8aea1}.office-status-light.is-live{fill:#5bd07a;filter:drop-shadow(0 0 3px #64b77b)}
+.office-resting-name{font:700 8px system-ui;fill:#f7ead5;paint-order:stroke;stroke:#31516b;stroke-width:2px}
+.office-member{cursor:pointer;outline:none}.office-seat-focus{fill:transparent;stroke:transparent;stroke-width:2}
+.office-member:hover .office-seat-focus,.office-member:focus-visible .office-seat-focus{fill:#f8f6ed80;stroke:#839b75}
+.office-member[aria-pressed=true] .office-seat-focus{fill:#f8f6eda0;stroke:#5e7f50}
+.office-traveler{transform:translate(var(--home-x),var(--home-y));pointer-events:none;transition:transform 1.8s steps(8,end)}
+.office-traveler.is-resting{transform:translate(var(--rest-x),var(--rest-y))}
+.office-reporting{animation:office-report 11s linear both}
+.office-spawning{animation:office-spawn 3.6s ease-in-out both}
+.office-action--thinking .office-person{animation:office-think 1.8s steps(2,end) infinite}
+.office-action--tooling .office-arms{animation:office-type .45s steps(2,end) infinite}
+.office-action--tooling .office-person{animation:office-work 1.4s steps(2,end) infinite}
+.office-action--asking .office-arms{animation:office-ask .8s ease-in-out infinite}
+.office-action--done .office-person{animation:office-done .8s ease-out 2}
+.office-action--failed .office-person{transform:rotate(70deg) translate(8px,5px)}
+.office-action--interrupted .office-person{animation:office-interrupted .18s linear infinite}
+.office-action--idle-0 .office-person{animation:office-rest 3s ease-in-out infinite}
+.office-action--idle-1 .office-arms{animation:office-snack 1.8s steps(2,end) infinite}
+.office-action--idle-2 .office-person{animation:office-hum 1.2s steps(2,end) infinite}
+.office-action--idle-3 .office-person{transform:rotate(13deg);animation:office-rest 4s ease-in-out infinite}
+.office-action--idle-3 .office-prop,.office-action--idle-2 .office-prop{animation:office-rest 2s ease-in-out infinite}
+.office-reporting .office-person{animation:office-work .3s steps(2,end) infinite;transform:none}
+.office-report-bubble{opacity:0;animation:office-report-message 11s linear both;pointer-events:none}
+.office-report-bubble rect,.office-report-bubble path{fill:#fffdf6;stroke:#738369;stroke-width:2}
+.office-report-bubble text{font:600 11px system-ui;fill:#354439}
+.office-prop{font:bold 15px monospace;fill:#6e785a}.office-action--failed .office-prop,.office-action--interrupted .office-prop{fill:#b4563e}.office-action--asking .office-prop{fill:#a16d24}.office-action--tooling .office-prop{fill:#416e88}
+.office-peer-path{fill:none;stroke:#7a68a6;stroke-width:3;stroke-dasharray:5 5;opacity:.75}
+.office-peer-signal{fill:#7258a5;stroke:#fffdf6;stroke-width:2}.office-peer-signal--reply{fill:#4f8c76}
+.office-peer-bubble rect{fill:#fffdf6;stroke:#7a68a6;stroke-width:2}.office-peer-bubble text{font:600 10px system-ui;fill:#51436d}
+.office-details{padding:12px 16px;border-top:1px solid #cfd7c8;background:linear-gradient(180deg,#faf8f1,#f1eee5);max-height:190px;overflow:auto;flex-shrink:0;box-shadow:0 -5px 18px #6a74550d}
+.office-details strong{font-size:12px}.office-details p{font-size:11px;line-height:1.6;margin:3px 0 8px;overflow-wrap:anywhere;color:#5e6c59}
+.office-details button{margin-top:3px}
+.office-view[data-paused=true] *{animation-play-state:paused!important}
+@keyframes office-type{to{transform:translateY(-4px)}}
+@keyframes office-work{50%{transform:translateY(-2px)}}
+@keyframes office-rest{50%{translate:0 2px}}
+@keyframes office-snack{50%{transform:translate(0,-10px)}}
+@keyframes office-hum{50%{transform:rotate(-7deg)}}
+@keyframes office-think{50%{transform:translateY(-2px) rotate(-3deg)}}
+@keyframes office-ask{50%{transform:translateY(-9px)}}
+@keyframes office-done{50%{transform:translateY(-9px)}}
+@keyframes office-interrupted{50%{transform:translateX(3px)}}
+@keyframes office-spawn{0%{transform:translate(478px,var(--entry-y));opacity:0}18%{opacity:1}70%{transform:translate(350px,calc(var(--home-y) + 28px))}100%{transform:translate(var(--home-x),var(--home-y));opacity:1}}
+/* 走到负责人桌前汇报，停留后返回工位。 */
+@keyframes office-report{0%,100%{transform:translate(var(--home-x),var(--home-y))}8%,92%{transform:translate(var(--home-x),calc(var(--home-y) - 42px))}16%,84%{transform:translate(350px,calc(var(--home-y) - 42px))}23%,77%{transform:translate(350px,220px)}27.27%,72.73%{transform:translate(412px,220px)}}
+@keyframes office-report-message{0%,27.26%,72.74%,100%{opacity:0}29%,71%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.office-view *{animation:none!important}}
+@container(max-width:380px){.office-heading{padding:10px;gap:6px}.office-scroll{padding:6px}.office-details{padding:10px}}

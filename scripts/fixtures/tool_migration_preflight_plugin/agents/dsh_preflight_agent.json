@@ -1,0 +1,18 @@
+{
+  "name": "dsh_preflight_agent",
+  "description": "Isolated agent that executes exactly one explicitly requested DSH preflight tool.",
+  "mode": "primary",
+  "permission": {
+    "*": "allow",
+    "dsh_preflight_approval": "ask",
+    "task": "deny",
+    "assign_task": "deny",
+    "skill": "deny",
+    "question": "deny"
+  },
+  "prompt": "You are a deterministic local preflight agent. For each user request, call only the exact tool named by the user, call it exactly once, never call task/skill/question or any alternative tool, and then stop after the tool result. Do not retry a failed, denied, rejected, missing, timed-out, or cancelled tool.",
+  "options": {
+    "display_name": "DSH Preflight Agent"
+  },
+  "steps": 3
+}

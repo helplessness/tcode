@@ -1,0 +1,40 @@
+{
+  "$schema": "../config/tcode.schema.json",
+  "model": "demo/your-model-id",
+  "vision_model": "demo/your-vision-model-id",
+  "provider": {
+    "demo": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "your-model-id",
+      "options": {"baseURLEnv": "TCODE_DEMO_BASE_URL", "apiKeyEnv": "TCODE_DEMO_API_KEY", "timeoutSeconds": 120, "apiMode": "chat_completions"},
+      "models": {
+        "your-model-id": {"name": "My text model", "supports_images": false, "input_modalities": ["text"]},
+        "your-vision-model-id": {"name": "My vision model", "supports_images": true, "input_modalities": ["text", "image"]}
+      }
+    }
+  },
+  "runtime": {"llm_timeout_seconds": 120},
+  "command_policy": {
+    "mode": "enforce",
+    "allow_workspace_write": true,
+    "allow_network": false,
+    "allow_dependency_install": false,
+    "allow_system_operations": false,
+    "allow_background_process": false,
+    "allow_external_read": false,
+    "allow_external_write": false
+  },
+  "learning": {
+    "enabled": true,
+    "reflection": {"enabled": true, "ttl_days": 30, "max_per_scope": 400, "min_tool_calls": 1, "min_response_chars": 80},
+    "compaction_flush": {"enabled": true, "ttl_days": 21},
+    "skill_drafts": {"enabled": true, "min_success_count": 2, "min_tool_count": 2},
+    "adaptive_hints": {"enabled": true, "min_confidence": 0.55, "max_reflections": 2, "max_hints": 3, "window_days": 45}
+  },
+  "embeddings": {
+    "enabled": false,
+    "provider": "ollama",
+    "model": "your-embedding-model",
+    "options": {"baseURL": "http://127.0.0.1:11434/v1"}
+  }
+}

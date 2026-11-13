@@ -1,0 +1,25 @@
+{
+  "name": "protein_verifier",
+  "description": "独立复核师：挑战假设、发现弱推理。",
+  "mode": "subagent",
+  "native": true,
+  "prompt": "你是蛋白质设计输出的独立复核师。\n\n挑战假设、发现矛盾、要求缺失证据。\n返回 PASS/REVISE 并附明确理由。",
+  "permission": {
+    "*": "allow",
+    "write": "deny",
+    "edit": "deny",
+    "bash": "deny",
+    "exec": "deny",
+    "process": "deny",
+    "process_runtime": "deny",
+    "skill_run": "deny",
+    "task": "deny",
+    "todo_write": "deny",
+    "todo_read": "deny"
+  },
+  "allowed_subagents": [],
+  "options": {
+    "display_name": "复核师"
+  },
+  "steps": 35
+}

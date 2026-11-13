@@ -1,0 +1,249 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tcode.local/enzyme-reaction-discovery/mechanism-hypothesis-v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "evidence_ledger",
+    "mechanism_hypotheses"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_ledger": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidenceStatement"
+      }
+    },
+    "mechanism_hypotheses": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": [
+          "hypothesis_id",
+          "route_type",
+          "summary",
+          "required_events",
+          "supports",
+          "contradictions",
+          "falsifiers",
+          "assumptions",
+          "confidence"
+        ],
+        "properties": {
+          "hypothesis_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]+$"
+          },
+          "route_type": {
+            "enum": [
+              "direct",
+              "engineered_single_enzyme",
+              "multi_enzyme"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "knowledge_anchor_refs": {
+            "type": "array",
+            "maxItems": 2,
+            "uniqueItems": true,
+            "items": {"type": "string", "maxLength": 160}
+          },
+          "knowledge_anchor_card_ids": {
+            "type": "array",
+            "maxItems": 2,
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^ERD-CARD-[0-9]{3,}$"}
+          },
+          "required_events": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "key_intermediates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "supports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contradictions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "falsifiers": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "assumptions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "confidence": {
+            "enum": [
+              "high",
+              "medium",
+              "low",
+              "unresolved"
+            ]
+          },
+          "evidence_basis": {
+            "enum": [
+              "wiki_analogy",
+              "model_hypothesis"
+            ]
+          },
+          "verification_note": {
+            "type": "string",
+            "minLength": 1
+          },
+          "event_evidence": {
+            "type": "array",
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "required": [
+                "event_id",
+                "event",
+                "status",
+                "wiki_refs",
+                "reason"
+              ],
+              "properties": {
+                "event_id": {
+                  "type": "string"
+                },
+                "event": {
+                  "type": "string"
+                },
+                "status": {
+                  "enum": [
+                    "local_evidence",
+                    "related_analogy",
+                    "model_hypothesis",
+                    "unmatched_capability",
+                    "conflict"
+                  ]
+                },
+                "wiki_refs": {
+                  "type": "array",
+                  "maxItems": 6,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 160
+                  }
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "counterfactual_bridge": {
+            "type": "object",
+            "required": [
+              "shared_events",
+              "missing_events",
+              "conflicting_events",
+              "native_termination",
+              "target_alternative_termination",
+              "unsupported_assumptions",
+              "validation_signals",
+              "source",
+              "target_activity_status"
+            ],
+            "properties": {
+              "shared_events": {"type": "array", "items": {"type": "string"}},
+              "missing_events": {"type": "array", "items": {"type": "string"}},
+              "conflicting_events": {"type": "array", "items": {"type": "string"}},
+              "native_termination": {"type": "array", "maxItems": 4, "items": {"type": "string"}},
+              "target_alternative_termination": {"type": "array", "maxItems": 4, "items": {"type": "string"}},
+              "unsupported_assumptions": {"type": "array", "maxItems": 6, "items": {"type": "string"}},
+              "validation_signals": {"type": "array", "minItems": 1, "maxItems": 4, "items": {"type": "string"}},
+              "source": {"enum": ["explicit_wiki_alignment", "legacy_event_projection"]},
+              "target_activity_status": {"const": "hypothesis_unvalidated"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "evidenceStatement": {
+      "type": "object",
+      "required": [
+        "statement_id",
+        "kind",
+        "statement",
+        "source_refs"
+      ],
+      "properties": {
+        "statement_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "fact",
+            "inference",
+            "hypothesis",
+            "counterevidence",
+            "unknown"
+          ]
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "card_id": {
+          "type": "string"
+        },
+        "field_path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,10 @@
+body{margin:0;background:#f7f8f7;color:#20352a;font:16px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;display:grid;place-items:center;min-height:100vh}main{max-width:640px;padding:40px;text-align:center}h1{font-size:24px;margin:28px 0 12px}p{line-height:1.8;color:#617168;white-space:pre-wrap;font-size:14px}
+/* Adapted from bright-lizard-8 by dexter-st, Copyright 2026, MIT License.
+   https://uiverse.io/dexter-st/bright-lizard-8; same animation as the former workspace loader. */
+.startup-orb-wrapper{position:relative;display:flex;width:144px;height:144px;margin:auto;align-items:center;justify-content:center;border-radius:50%;font-size:15px;font-weight:600;letter-spacing:.08em;user-select:none}
+.startup-orb{position:absolute;inset:0;z-index:0;border-radius:50%;animation:startup-orb-rotate 2.2s linear infinite}
+.startup-orb-wrapper>span{z-index:1;opacity:.45;animation:startup-orb-letter 1.8s infinite}
+.startup-orb-wrapper>span:nth-child(2){animation-delay:.1s}.startup-orb-wrapper>span:nth-child(3){animation-delay:.2s}.startup-orb-wrapper>span:nth-child(4){animation-delay:.3s}.startup-orb-wrapper>span:nth-child(5){animation-delay:.4s}
+@keyframes startup-orb-rotate{0%{transform:rotate(90deg);box-shadow:0 8px 18px #fff inset,0 24px 26px #b8c9b2 inset,0 58px 48px #607b59 inset,0 12px 36px #40583a24}50%{transform:rotate(270deg);box-shadow:0 8px 18px #fff inset,0 18px 16px #d8dfd3 inset,0 48px 52px #779170 inset,0 16px 40px #40583a2b}100%{transform:rotate(450deg);box-shadow:0 8px 18px #fff inset,0 24px 26px #b8c9b2 inset,0 58px 48px #607b59 inset,0 12px 36px #40583a24}}
+@keyframes startup-orb-letter{0%,100%{opacity:.4;transform:translateY(0)}20%{opacity:1;transform:scale(1.12)}40%{opacity:.7;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.startup-orb{animation:none;box-shadow:0 8px 18px #fff inset,0 24px 26px #b8c9b2 inset,0 58px 48px #607b59 inset}.startup-orb-wrapper>span{animation:none;opacity:1}}

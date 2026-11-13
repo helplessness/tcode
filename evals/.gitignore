@@ -1,0 +1,7 @@
+results/*
+!results/.gitkeep
+public_data/*
+!public_data/.gitkeep
+__pycache__/
+*/__pycache__/
+datasets/*

@@ -1,0 +1,63 @@
+{
+  "name": "paper-research-workflow",
+  "version": "0.1.0",
+  "apiVersion": "1.0",
+  "sdk": ">=1.6.0,<2.0.0",
+  "python": ">=3.11",
+  "runtime": "python",
+  "desktopRuntime": "trusted-worker",
+  "entry": "plugin.py:Plugin",
+  "contributes": ["tools", "prompt", "events"],
+  "provides": [
+    "tcode.paper-research@1"
+  ],
+  "requires": [
+    "tcode.tools@1",
+    "tcode.events@1"
+  ],
+  "optional": [
+    "tcode.jobs@1",
+    "tcode.prompt@1",
+    "tcode.session.projection@1"
+  ],
+  "permissions": [
+    {
+      "scope": "filesystem.read",
+      "patterns": [
+        "./.tcode/plugins/paper_research_workflow",
+        "./.tcode/plugins/paper_research_workflow/**",
+        "./download",
+        "./download/**",
+        "./upload",
+        "./upload/**"
+      ],
+      "description": "Read the paper library workspace and downloaded papers.",
+      "required": true
+    },
+    {
+      "scope": "filesystem.write",
+      "patterns": [
+        "./.tcode/plugins/paper_research_workflow",
+        "./.tcode/plugins/paper_research_workflow/**",
+        "./download",
+        "./download/**"
+      ],
+      "description": "Write the paper library workspace and downloaded papers.",
+      "required": true
+    }
+  ],
+  "scope": "workspace",
+  "configSchema": "config.schema.json",
+  "requestedTrust": "trusted",
+  "description": "文献研究协作插件，提供 paper_auto 协作团队、固定研究子角色、论文检索工具和 literature skills。",
+  "author": "OpenAI Codex",
+  "skills": [
+    "skills"
+  ],
+  "agents": [
+    "agents"
+  ],
+  "mcpServers": [
+    "mcp"
+  ]
+}

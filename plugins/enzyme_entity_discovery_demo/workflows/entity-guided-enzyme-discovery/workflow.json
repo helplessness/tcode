@@ -1,0 +1,532 @@
+{
+  "template_key": "entity-guided-enzyme-discovery-demo",
+  "display_name": "实体引导的未知反应酶发现 Demo",
+  "domain": "enzyme-discovery",
+  "description": "从目标反应同时形成分步能力与共价辅因子分流假说，冻结独立候选后允许本地五卡 OWL 的强关系触发一次候选扩展，再执行有界通路连接；事实、类比和预测分开保存。",
+  "metadata": {
+    "version": "0.17.1",
+    "presentation": {
+      "stage_narration": "status_only",
+      "completion": {
+        "source": "stage_output_field",
+        "stage_id": "critical_report",
+        "field": "user_summary"
+      },
+      "structured_artifacts": "on_explicit_request"
+    }
+  },
+  "enabled": true,
+  "input_contract": {
+    "required": [],
+    "optional": [
+      "reactants",
+      "products",
+      "reactant_names",
+      "product_names",
+      "reaction_name",
+      "reaction_id",
+      "natural_language_request",
+      "target_description",
+      "substrate_or_product",
+      "context",
+      "constraints",
+      "component_assumptions"
+    ]
+  },
+  "output_contract": {
+    "required": [
+      "schema_version",
+      "run_id",
+      "review_decision",
+      "final_artifacts",
+      "top_summary",
+      "user_summary"
+    ],
+    "artifacts": [
+      "01_reaction_analysis.json",
+      "02_mechanism_hypotheses.json",
+      "02_mechanisms.json",
+      "03_capabilities.json",
+      "hypotheses.jsonl",
+      "baseline_candidate_draft.json",
+      "03_candidate_and_routes.json",
+      "04_candidates.json",
+      "05_routes.json",
+      "04_critical_report.json",
+      "04_critical_report.md",
+      "06_critique.json",
+      "07_final_report.json",
+      "07_final_report.md",
+      "mechanism_routes.mmd",
+      "entity_usage.jsonl"
+    ]
+  },
+  "stage_defaults": {
+    "required_skills": [],
+    "retry_policy": {
+      "max_attempts": 2
+    },
+    "review_gate": false
+  },
+  "stages": [
+    {
+      "stage_id": "reaction_analysis",
+      "depends_on": [],
+      "label": "反应定义与净变化",
+      "owner": "enzyme_entity_reaction_analyst",
+      "call_type": "agent",
+      "description": "原样保存输入，只做无化学引擎的保守文本分析，不提前出现候选酶或实体。",
+      "prompt_file": "reaction_analysis.md",
+      "allowed_tools": [
+        "enzyme_entity_run_init",
+        "enzyme_entity_reaction_commit"
+      ],
+      "input_contract": {
+        "required": []
+      },
+      "output_contract": {
+        "type": "object",
+        "required": [
+          "schema_version",
+          "run_id",
+          "committed_artifacts",
+          "net_change_count",
+          "warning_count",
+          "unresolved_question_count"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "string"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "committed_artifacts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "net_change_count": {
+            "type": "integer"
+          },
+          "warning_count": {
+            "type": "integer"
+          },
+          "unresolved_question_count": {
+            "type": "integer"
+          }
+        }
+      },
+      "expected_artifacts": [
+        "01_reaction_analysis.json"
+      ],
+      "success_checks": [
+        "用户输入未被静默补写或改写",
+        "分析明确为无原子映射的文本解释",
+        "候选实体在第一阶段被明确排除"
+      ],
+      "validators": [
+        {
+          "type": "json_schema"
+        },
+        {
+          "type": "required_artifacts",
+          "names": [
+            "01_reaction_analysis.json"
+          ]
+        },
+        {
+          "type": "files_exist",
+          "names": [
+            "01_reaction_analysis.json"
+          ]
+        }
+      ],
+      "failure_policy": {
+        "action": "block"
+      },
+      "fallback_stage_ids": [],
+      "metadata": {
+        "risk_level": "high",
+        "automated_continuation": true,
+        "result_source": {
+          "type": "tool_receipt",
+          "tool": "enzyme_entity_reaction_commit"
+        },
+        "context_max_chars": 12000
+      }
+    },
+    {
+      "stage_id": "mechanism_and_capability",
+      "depends_on": [
+        "reaction_analysis"
+      ],
+      "label": "机制、催化能力与假说账本",
+      "owner": "enzyme_entity_mechanism_planner",
+      "call_type": "agent",
+      "description": "从目标事件独立形成竞争机制，再用本插件的本体关系与逐字 Evidence 核验；事实、类比和预测分别提交。",
+      "prompt_file": "mechanism_and_capability.md",
+      "allowed_tools": [
+        "enzyme_entity_run_context",
+        "enzyme_entity_resolve",
+        "enzyme_entity_relations",
+        "enzyme_entity_reaction_analogs",
+        "enzyme_entity_substrate_branch_scan",
+        "enzyme_entity_mechanism_fragments",
+        "enzyme_entity_read_evidence",
+        "enzyme_entity_hypothesis_stage",
+        "enzyme_entity_hypotheses_commit",
+        "enzyme_entity_workspace_query"
+      ],
+      "input_contract": {},
+      "output_contract": {
+        "type": "object",
+        "required": [
+          "schema_version",
+          "run_id",
+          "committed_artifacts",
+          "hypothesis_count",
+          "fact_claim_count",
+          "prediction_claim_count"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "string"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "committed_artifacts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hypothesis_count": {
+            "type": "integer"
+          },
+          "fact_claim_count": {
+            "type": "integer"
+          },
+          "prediction_claim_count": {
+            "type": "integer"
+          }
+        }
+      },
+      "expected_artifacts": [
+        "02_mechanism_hypotheses.json",
+        "02_mechanisms.json",
+        "03_capabilities.json",
+        "hypotheses.jsonl"
+      ],
+      "success_checks": [
+        "reported 事实均有 Assertion 和已回读 Evidence",
+        "机制类比与模型预测不冒充目标活性",
+        "每个可解析直接反应物均完成同底物反应扫描",
+        "至少完成一次跨底物机制扩展，并记录四条召回通道的命中或覆盖缺口",
+        "满足触发条件的实体线索只进入有界弱线索池，经正文回读、化学门控和机制聚类后参与最终假说竞争",
+        "每个假说包含反例、证据缺口和证伪测试",
+        "本体反应局部图按参与物、转化、能力、辅因子和中间体检索，并为入选片段记录共享、缺失、冲突和替代终止",
+        "全部机制片段和证据只来自本插件固定的 OWL/Turtle、Assertion 与 Evidence"
+      ],
+      "validators": [
+        {
+          "type": "json_schema"
+        },
+        {
+          "type": "required_artifacts",
+          "names": [
+            "02_mechanism_hypotheses.json",
+            "02_mechanisms.json",
+            "03_capabilities.json",
+            "hypotheses.jsonl"
+          ]
+        },
+        {
+          "type": "files_exist",
+          "names": [
+            "02_mechanism_hypotheses.json",
+            "02_mechanisms.json",
+            "03_capabilities.json",
+            "hypotheses.jsonl"
+          ]
+        },
+        {
+          "type": "evidence_coverage",
+          "require_existing": false,
+          "min_records": 0
+        }
+      ],
+      "failure_policy": {
+        "action": "fallback",
+        "fallback_on_codes": [
+          "explicit_failure_signal"
+        ]
+      },
+      "fallback_stage_ids": [
+        "reaction_analysis"
+      ],
+      "metadata": {
+        "risk_level": "high",
+        "automated_continuation": true,
+        "bounded_entity_retrieval": true,
+        "result_source": {
+          "type": "tool_receipt",
+          "tool": "enzyme_entity_hypotheses_commit"
+        },
+        "context_max_chars": 16000
+      }
+    },
+    {
+      "stage_id": "family_screening_and_routes",
+      "depends_on": [
+        "mechanism_and_capability"
+      ],
+      "label": "候选家族筛选与有界通路组装",
+      "owner": "enzyme_entity_family_screener",
+      "call_type": "agent",
+      "description": "先冻结 chemistry-first 独立候选，再用本体核验支持、反对和未知；直接单酶候选与多酶路线分开排序和验证。",
+      "prompt_file": "family_screening_and_routes.md",
+      "allowed_tools": [
+        "enzyme_entity_run_context",
+        "enzyme_entity_baseline_candidates_commit",
+        "enzyme_entity_capability_candidates",
+        "enzyme_entity_route_connect",
+        "enzyme_entity_resolve",
+        "enzyme_entity_relations",
+        "enzyme_entity_reaction_analogs",
+        "enzyme_entity_read_evidence",
+        "enzyme_entity_candidates_commit",
+        "enzyme_entity_workspace_query"
+      ],
+      "input_contract": {},
+      "output_contract": {
+        "type": "object",
+        "required": [
+          "schema_version",
+          "run_id",
+          "committed_artifacts",
+          "baseline_candidate_count",
+          "entity_expanded_candidate_count",
+          "candidate_ids",
+          "route_count",
+          "route_planning_status"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "string"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "committed_artifacts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "baseline_candidate_count": {
+            "type": "integer"
+          },
+          "entity_expanded_candidate_count": {
+            "type": "integer"
+          },
+          "candidate_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "route_count": {
+            "type": "integer"
+          },
+          "route_planning_status": {
+            "enum": [
+              "completed_with_hypotheses",
+              "no_local_route"
+            ]
+          }
+        }
+      },
+      "expected_artifacts": [
+        "baseline_candidate_draft.json",
+        "03_candidate_and_routes.json",
+        "04_candidates.json",
+        "05_routes.json"
+      ],
+      "success_checks": [
+        "基线候选在阶段三实体查询前冻结且不含实体引用",
+        "基线保持不可变但不作为最终候选白名单",
+        "实体强关系命中只获得弱线索竞争资格，不自动加分或强制晋级",
+        "候选覆盖同底物、同反应中心、同机制、同中间体或辅因子四条通道且单一通道不自动定序",
+        "弱线索遵守 6 条池、3 个机制簇、3 条晋级和 1 个多样性竞争名额，并与全部候选统一排序且不绕过 Top N",
+        "具体蛋白、蛋白组、家族、模型候选和能力缺口身份分开",
+        "实体事实只核验来源，不自动证明目标反应活性",
+        "每条路线完成物料、方向、资源、副产物、条件和中间体检查",
+        "已报道步骤全部回读证据，新增步骤保持未验证假说"
+      ],
+      "validators": [
+        {
+          "type": "json_schema"
+        },
+        {
+          "type": "required_artifacts",
+          "names": [
+            "baseline_candidate_draft.json",
+            "03_candidate_and_routes.json",
+            "04_candidates.json",
+            "05_routes.json"
+          ]
+        },
+        {
+          "type": "files_exist",
+          "names": [
+            "baseline_candidate_draft.json",
+            "03_candidate_and_routes.json",
+            "04_candidates.json",
+            "05_routes.json"
+          ]
+        },
+        {
+          "type": "evidence_coverage",
+          "require_existing": false,
+          "min_records": 0
+        }
+      ],
+      "failure_policy": {
+        "action": "block"
+      },
+      "fallback_stage_ids": [],
+      "metadata": {
+        "risk_level": "critical",
+        "automated_continuation": true,
+        "baseline_freeze_required": true,
+        "bounded_route_search": true,
+        "result_source": {
+          "type": "tool_receipt",
+          "tool": "enzyme_entity_candidates_commit"
+        },
+        "context_max_chars": 16000
+      }
+    },
+    {
+      "stage_id": "critical_report",
+      "depends_on": [
+        "family_screening_and_routes"
+      ],
+      "label": "事实边界批判与 P2 报告",
+      "owner": "enzyme_entity_critical_reviewer",
+      "call_type": "agent",
+      "description": "按本插件的事实边界执行批判与确定性报告，检查候选冻结、归属、证据回读、事实预测分离和路线闭合，并生成 06/07 报告。",
+      "prompt_file": "critical_report.md",
+      "allowed_tools": [
+        "enzyme_entity_run_context",
+        "enzyme_entity_read_evidence",
+        "enzyme_entity_critical_report_commit",
+        "enzyme_entity_workspace_query"
+      ],
+      "input_contract": {},
+      "output_contract": {
+        "type": "object",
+        "required": [
+          "schema_version",
+          "run_id",
+          "review_decision",
+          "final_artifacts",
+          "top_summary",
+          "user_summary"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "string"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "review_decision": {
+            "enum": [
+              "PASS",
+              "REVISE"
+            ]
+          },
+          "final_artifacts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "top_summary": {
+            "type": "object"
+          },
+          "user_summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 6000
+          },
+          "private_assertion_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "expected_artifacts": [
+        "04_critical_report.json",
+        "04_critical_report.md",
+        "entity_usage.jsonl"
+      ],
+      "success_checks": [
+        "六项事实与路线边界检查全部给出结论",
+        "PASS 表示表达和证据合规，不表示目标路线已经实验验证",
+        "分散事实不得拼成未经单条 Evidence 直接支持的机制事实",
+        "审核四条召回通道、有界弱假说竞争和综合排序，不因实体或关系命中强制候选进入最终报告",
+        "报告明确当前五卡、离线、无文档解析和无序列结构库的限制"
+      ],
+      "validators": [
+        {
+          "type": "json_schema"
+        },
+        {
+          "type": "review_decision"
+        },
+        {
+          "type": "required_artifacts",
+          "names": [
+            "04_critical_report.json",
+            "04_critical_report.md",
+            "entity_usage.jsonl"
+          ]
+        },
+        {
+          "type": "files_exist",
+          "names": [
+            "04_critical_report.json",
+            "04_critical_report.md",
+            "entity_usage.jsonl"
+          ]
+        },
+        {
+          "type": "evidence_coverage",
+          "require_existing": false,
+          "min_records": 0
+        }
+      ],
+      "failure_policy": {
+        "action": "block"
+      },
+      "fallback_stage_ids": [],
+      "review_gate": false,
+      "metadata": {
+        "risk_level": "critical",
+        "automated_critic": true,
+        "result_source": {
+          "type": "tool_receipt",
+          "tool": "enzyme_entity_critical_report_commit"
+        },
+        "context_max_chars": 16000
+      }
+    }
+  ]
+}

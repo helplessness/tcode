@@ -1,0 +1,20 @@
+.git
+.github
+.venv
+.tcode
+.tcode-local
+.tcode-local copy
+tests
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+build
+dist
+tmp
+runs
+upload
+workdirs
+web/node_modules
+web/dist
+config/sandbox_production.env
+docs_my

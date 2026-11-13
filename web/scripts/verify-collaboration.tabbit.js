@@ -1,0 +1,38 @@
+// Run with Tabbit nodejs on an authenticated local page that has child sessions.
+// UI-only: never sends messages, starts computation, or changes backend records.
+const panel = page.getByTestId('collaboration-panel');
+await page.getByRole('navigation',{name:'活动导航'}).getByRole('button',{name:'协作',exact:true}).click();
+await expect(panel).toBeVisible();
+await expect(page.getByRole('navigation', {name:'功能导航'})).not.toContainText('旁支聊天');
+await expect(page.getByRole('navigation', {name:'功能导航'})).not.toContainText('团队协作');
+const history = panel.getByRole('button', {name:/查看已结束任务/});
+if(await history.count()) await history.click();
+await panel.getByRole('button', {name:'与它讨论',exact:true}).first().click();
+const select = page.getByLabel('选择侧边讨论对象');
+await expect(select).toBeVisible();
+await expect(select).not.toHaveValue('');
+const selected = await select.inputValue();
+const split = page.getByRole('separator',{name:'调整任务区与讨论区比例'});
+await split.press('Home');await expect(split).toHaveAttribute('aria-valuenow','25');
+await split.press('ArrowDown');await expect(split).toHaveAttribute('aria-valuenow','28');
+await split.dblclick();await expect(split).toHaveAttribute('aria-valuenow','42');
+await panel.getByRole('button',{name:'收起任务区',exact:true}).click();
+await expect(page.locator('.collaboration-overview')).toBeHidden();
+await panel.getByRole('button',{name:'展开任务区',exact:true}).click();
+await panel.getByRole('button',{name:'AI 成员',exact:true}).click();
+await expect(panel).toContainText('AI 成员与通信');
+await panel.getByRole('button',{name:'协作记录',exact:true}).click();
+await expect(panel).toContainText('频道事件');
+await panel.getByRole('button',{name:'执行任务',exact:true}).click();
+await expect(select).toHaveValue(selected);
+await page.getByRole('button',{name:'关闭侧边讨论',exact:true}).click();
+await expect(page.locator('.collaboration-discussion')).toBeHidden();
+await panel.getByRole('button',{name:'侧边讨论',exact:true}).click();
+await expect(select).toHaveValue(selected);
+await page.getByRole('button',{name:'收起右侧面板',exact:true}).click();
+await expect(panel).toBeHidden();
+await page.getByRole('navigation',{name:'活动导航'}).getByRole('button',{name:'协作',exact:true}).click();
+await expect(panel).toBeVisible();
+await expect(select).toHaveValue(selected);
+await expect(page.locator('.studio-chat')).toBeVisible();
+return {passed:true, url:page.url(), selectedSessionId:selected};

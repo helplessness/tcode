@@ -1,0 +1,9 @@
+{
+  "version": "0.35.2",
+  "git_sha": "ad694f82aaaa12e67257e4510837fc1f6cfc9484",
+  "asset": "cua-driver-rs-0.35.2-darwin-arm64.tar.gz",
+  "sha256": "4922ddd042d3b2197a9c034926472c1d6e0c3daa55fff7f146beb720948cbdd7",
+  "binary_sha256": "512f488f631469decfebecc6e5f54e74a6f10e78f9644f89f1eb43ce7e8426ba",
+  "license": "MIT",
+  "optional_perception_extension": false
+}

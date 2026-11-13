@@ -1,0 +1,31 @@
+{
+  "name": "tcode-desktop",
+  "version": "0.0.2",
+  "private": true,
+  "description": "TCode macOS development desktop",
+  "main": "main.cjs",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "electron .",
+    "dev:test": "node scripts/launch-test.cjs",
+    "test": "node --test test/*.test.cjs",
+    "smoke": "electron . --smoke-test",
+    "build:web": "npm --prefix ../web run build",
+    "build:icon:mac": "./scripts/build-icon-mac.sh",
+    "build:backend:mac": "./scripts/build-backend-mac.sh",
+    "smoke:backend:mac": "node ./scripts/smoke-backend-mac.cjs",
+    "prepare:computer": "./scripts/prepare-computer-driver.sh",
+    "package:mac:dir": "npm run prepare:computer && npm run build:web && npm run build:icon:mac && npm run build:backend:mac && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac dir --arm64",
+    "package:mac": "npm run prepare:computer && npm run build:web && npm run build:icon:mac && npm run build:backend:mac && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac dmg --arm64"
+  },
+  "devDependencies": {
+    "electron": "44.4.3",
+    "electron-builder": "26.15.3"
+  },
+  "dependencies": {
+    "@trycua/cua-driver": "0.35.2",
+    "@trycua/cua-driver-darwin-arm64": "0.35.2"
+  }
+}

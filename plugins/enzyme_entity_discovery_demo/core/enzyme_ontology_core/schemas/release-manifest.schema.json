@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "release-manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "storage_format",
+    "release_id",
+    "bundle_digest",
+    "database_path",
+    "ontology_path",
+    "files",
+    "statistics"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "storage_format": {
+      "const": "sqlite-v2"
+    },
+    "release_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "bundle_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "database_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ontology_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "files": {
+      "type": "array",
+      "minItems": 3
+    },
+    "statistics": {
+      "type": "object"
+    }
+  }
+}

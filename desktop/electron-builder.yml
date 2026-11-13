@@ -1,0 +1,55 @@
+appId: com.tcode.desktop
+productName: TCode
+artifactName: TCode-${version}-${arch}.${ext}
+asar: true
+asarUnpack:
+  - node_modules/@trycua/**
+  - node_modules/@ubjs/**
+
+directories:
+  output: release
+  buildResources: assets
+
+files:
+  - main.cjs
+  - startup.css
+  - preload.cjs
+  - backend.cjs
+  - native.cjs
+  - recovery.cjs
+  - computer.cjs
+  - browser.cjs
+  - tray-panel.cjs
+  - tray-panel.html
+  - tray-panel.js
+  - tray-preload.cjs
+  - assets/*Template.png
+  - THIRD_PARTY_NOTICES.md
+  - package.json
+
+extraResources:
+  - from: ../build/release/backend
+    to: backend
+  - from: vendor/cua-driver
+    to: computer/cua-driver
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - arm64
+  category: public.app-category.developer-tools
+  icon: assets/icon.icns
+  identity: null
+
+dmg:
+  title: TCode ${version}
+  icon: assets/icon.icns
+  contents:
+    - x: 180
+      y: 190
+      type: file
+    - x: 480
+      y: 190
+      type: link
+      path: /Applications

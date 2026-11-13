@@ -1,0 +1,30 @@
+{
+  "job-protocol-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/job-protocol-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 30000,
+    "timeout": 300000
+  },
+  "simple-demo-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/simple-demo-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 5000,
+    "timeout": 300000
+  },
+  "paper-search-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/paper-search-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 30000,
+    "timeout": 300000
+  },
+  "paper-download-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/paper-download-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 30000,
+    "timeout": 300000
+  }
+}

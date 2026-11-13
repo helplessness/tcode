@@ -1,0 +1,59 @@
+{
+  "design_generation": [
+    "rfdiffusion",
+    "rf-diffusion",
+    "computational-protein-designer",
+    "protein-designer"
+  ],
+  "sequence_design": [
+    "ligandmpnn",
+    "ligand-mpnn",
+    "consensus-sequence",
+    "rational-design",
+    "mutation-design"
+  ],
+  "structure_prediction": [
+    "boltz",
+    "esmfold",
+    "esm-fold",
+    "alphafold",
+    "alphafold2",
+    "structure-prediction"
+  ],
+  "interface_analysis": [
+    "plip",
+    "interface-scoring",
+    "interface-analysis",
+    "contact-analysis"
+  ],
+  "affinity_prediction": [
+    "gnina",
+    "boltz-affinity",
+    "affinity-prediction",
+    "docking"
+  ],
+  "stability_scoring": [
+    "foldx",
+    "rosetta",
+    "pythia",
+    "energy-optimization",
+    "stability-scoring",
+    "ddg"
+  ],
+  "literature_evidence": [
+    "paper-library-agent",
+    "paper_library_agent",
+    "paper-workflow",
+    "literature-search",
+    "pubmed",
+    "semantic-scholar"
+  ],
+  "review_verification": [
+    "protein-design-loop-verifier",
+    "review-gate",
+    "review_gate",
+    "verifier",
+    "reviewer",
+    "critic"
+  ]
+}

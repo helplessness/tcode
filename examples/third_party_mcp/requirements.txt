@@ -1,0 +1,4 @@
+fastmcp>=3.2,<4
+httpx>=0.27,<1
+# Remote deployments must first install the repository's artifact-sdk wheel.
+# Source checkout: python -m pip install ./packages/artifact-sdk (from repo root).

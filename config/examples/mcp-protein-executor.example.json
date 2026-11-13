@@ -1,0 +1,136 @@
+{
+  "simulation-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/simulation-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 5000,
+    "timeout": 300000,
+    "tool_timeout_seconds": {
+      "simulation_run_mcp_server": 0
+    }
+  },
+  "boltz-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/boltz-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 5000,
+    "timeout": 300000,
+    "tool_timeout_seconds": {
+      "boltz_mcp_server": 0
+    }
+  },
+  "gnina-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/gnina-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 5000,
+    "timeout": 300000,
+    "tool_timeout_seconds": {
+      "gnina_mcp_server": 0
+    }
+  },
+  "ligandmpnn-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/ligandmpnn-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 5000,
+    "timeout": 300000,
+    "tool_timeout_seconds": {
+      "ligandmpnn_run_mcp_server": 0
+    }
+  },
+  "placer-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/placer-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 5000,
+    "timeout": 300000,
+    "tool_timeout_seconds": {
+      "placer_mcp_server": 0
+    }
+  },
+  "plip-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/plip-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 5000,
+    "timeout": 300000,
+    "tool_timeout_seconds": {
+      "plip_mcp_server": 0
+    }
+  },
+  "rfdiffusion-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/rfdiffusion-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 5000,
+    "timeout": 300000,
+    "tool_timeout_seconds": {
+      "rfdiffusion_mcp_server": 0
+    }
+  },
+  "evolvepro-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/evolvepro-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 5000,
+    "timeout": 300000,
+    "tool_timeout_seconds": {
+      "evolvepro_single_round_mcp_server": 0,
+      "evolvepro_multi_round_mcp_server": 0
+    }
+  },
+  "mutation-scoring-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/mutation-scoring-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 30000,
+    "timeout": 300000,
+    "tool_timeout_seconds": {
+      "multi_model_sequence_mutation_scoring_mcp_server": 0
+    }
+  },
+  "simple-demo-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/simple-demo-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 5000,
+    "timeout": 300000
+  },
+  "pythia-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/pythia-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 10000,
+    "timeout": 300000,
+    "tool_timeout_seconds": {
+      "pythia_mcp_server": 0
+    },
+    "invocation_mode": "async"
+  },
+  "foldx-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/foldx-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 10000,
+    "timeout": 300000,
+    "tool_timeout_seconds": {
+      "foldx_repair_mcp_server": 0,
+      "foldx_scan_mcp_server": 0
+    },
+    "invocation_mode": "async"
+  },
+  "homology-mcp": {
+    "enabled": false,
+    "url": "https://mcp.example.com/homology-mcp/mcp",
+    "transport": "streamable-http",
+    "connect_timeout": 10000,
+    "timeout": 300000,
+    "tool_timeout_seconds": {
+      "homology_search_mcp_server": 0,
+      "homology_align_mcp_server": 0,
+      "homology_conservation_mcp_server": 0
+    },
+    "invocation_mode": "async"
+  }
+}

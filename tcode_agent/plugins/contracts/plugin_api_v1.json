@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "contract_id": "tcode.plugin-api.v1",
+  "api_version": "1.0",
+  "sdk_version": "1.6.0",
+  "status": "stable",
+  "owner": "TCode Plugin Platform",
+  "compatibility": ">=1.0.0,<2.0.0",
+  "python": ">=3.11",
+  "public_exports": [
+    "ArtifactAPI",
+    "EventAPI",
+    "EventEnvelope",
+    "EventHandler",
+    "PLUGIN_API_VERSION",
+    "PLUGIN_SDK_COMPATIBILITY",
+    "PLUGIN_SDK_VERSION",
+    "NetworkAPI",
+    "MemoryAPI",
+    "PluginContext",
+    "PluginHealth",
+    "PluginHealthStatus",
+    "PluginInstance",
+    "PluginLogger",
+    "PluginMetadata",
+    "PluginScope",
+    "ProcessAPI",
+    "ProviderDefinition",
+    "ProviderHandler",
+    "ProviderProtocol",
+    "ProviderRequest",
+    "ProviderResponse",
+    "PromptAPI",
+    "PromptContribution",
+    "PromptRenderContext",
+    "PublicEvent",
+    "ToolAPI",
+    "ToolCallContext",
+    "ToolDefinition",
+    "ToolOutput",
+    "VerifierAPI",
+    "VerifierDefinition",
+    "VerifierHandler",
+    "VerifierOutput",
+    "WorkspaceAPI"
+  ],
+  "manifest": {
+    "only_supported_format": "Manifest v2",
+    "api_version": "1.0",
+    "legacy_adapter": false,
+    "validation_phase": "before-python-entry-import",
+    "supported_scope": "workspace",
+    "requires_sdk_and_python_ranges": true
+  },
+  "admission": {
+    "host_trust_source": "official-package-or-exact-host-allowlist",
+    "allowlist_environment": "TCODE_PLUGIN_TRUSTED_ALLOWLIST",
+    "wildcards_supported": false,
+    "unknown_community_plugin": "isolated-worker",
+    "unknown_permissions": "explicit-host-grant-via-capability-broker",
+    "unknown_contributions": ["tools"],
+    "declarative_workflows": "allowed-after-host-schema-validation"
+  },
+  "public_context": {
+    "members": [
+      "config",
+      "events",
+      "instance",
+      "logger",
+      "memory",
+      "network",
+      "process",
+      "prompt",
+      "scope",
+      "tools",
+      "verifiers",
+      "workspace"
+    ],
+    "raw_host_objects_exposed": false,
+    "workspace_and_process_are_manifest_permission_bound": true,
+    "workspace_id_is_opaque": true
+  },
+  "provider_contract": {
+    "types": [
+      "ProviderDefinition",
+      "ProviderProtocol",
+      "ProviderRequest",
+      "ProviderResponse"
+    ],
+    "production_provider_replacement_authorized": false
+  },
+  "verifier_contract": {
+    "status": "experimental-until-core-canary",
+    "types": [
+      "VerifierDefinition",
+      "VerifierOutput",
+      "VerifierAPI"
+    ],
+    "plugin_default_max_proof_level": "P1",
+    "plugin_hard_max_proof_level": "P1",
+    "p3_p4_plugin_authority": false,
+    "proof_level_is_host_admitted": true,
+    "result_binding": "contract-version-criterion-current-input-digest",
+    "runtime_receipt": "host-hmac-sha256",
+    "execution_isolation": "bounded-controlled-host-not-a-security-sandbox"
+  },
+  "tool_pipeline_order": [
+    "request",
+    "context",
+    "before-hook",
+    "argument-validation",
+    "policy",
+    "approval",
+    "route",
+    "body",
+    "finalize",
+    "result-handoff"
+  ],
+  "security_invariants": [
+    "biosafety-before-execution",
+    "explicit-deny-is-not-overridable",
+    "unknown-permission-fails-closed",
+    "argument-validation-does-not-write-back",
+    "plugin-side-effects-cannot-exceed-manifest-grant",
+    "unknown-code-does-not-enter-host-process",
+    "unknown-code-has-no-docker-or-runner-credential",
+    "delegated-tools-reenter-host-policy-pipeline",
+    "plugin-verifier-output-cannot-self-assign-proof-level",
+    "plugin-verifier-result-cannot-be-replayed-for-a-different-input",
+    "plugin-verifier-result-mutation-invalidates-runtime-receipt",
+    "unload-removes-owned-contributions-and-worker"
+  ],
+  "official_public_sdk_references": [
+    "example-plugin",
+    "git-repo-harness",
+    "openagent-workflow"
+  ]
+}

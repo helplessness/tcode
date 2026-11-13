@@ -1,0 +1,14 @@
+{
+  "auto_discover": false,
+  "plugins": [
+    {
+      "enabled": false,
+      "name": "example-plugin",
+      "path": "./plugins/example_plugin",
+      "config": {
+        "default_prefix": "Echo"
+      },
+      "source": "plugins.json"
+    }
+  ]
+}

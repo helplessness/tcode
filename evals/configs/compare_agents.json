@@ -1,0 +1,21 @@
+{
+  "dataset": "evals/datasets/lite.jsonl",
+  "trials": 1,
+  "agents": [
+    {
+      "name": "fixture",
+      "adapter": "fixture",
+      "model": ""
+    },
+    {
+      "name": "protein_orchestrator",
+      "adapter": "tcode",
+      "model": ""
+    },
+    {
+      "name": "build",
+      "adapter": "tcode",
+      "model": ""
+    }
+  ]
+}

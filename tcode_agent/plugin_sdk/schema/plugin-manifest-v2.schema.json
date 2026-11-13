@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tcode.local/schemas/plugin-manifest-v2.schema.json",
+  "title": "TCode Plugin Manifest v2",
+  "type": "object",
+  "required": [
+    "name", "version", "apiVersion", "sdk", "python", "runtime", "entry", "provides",
+    "requires", "optional", "permissions", "scope", "configSchema",
+    "requestedTrust"
+  ],
+  "properties": {
+    "name": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"},
+    "version": {"type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$"},
+    "apiVersion": {"const": "1.0"},
+    "sdk": {"type": "string", "minLength": 1},
+    "python": {"type": "string", "minLength": 1},
+    "runtime": {"const": "python"},
+    "entry": {"type": "string", "pattern": "^[^:/\\\\]+(?:/[^:/\\\\]+)*\\.py:[A-Za-z_][A-Za-z0-9_]*$"},
+    "provides": {"$ref": "#/$defs/serviceKeys"},
+    "requires": {"$ref": "#/$defs/serviceKeys"},
+    "optional": {"$ref": "#/$defs/serviceKeys"},
+    "permissions": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/permission"}
+    },
+    "scope": {"const": "workspace"},
+    "configSchema": {"type": ["string", "null"], "minLength": 1},
+    "requestedTrust": {"enum": ["builtin", "trusted", "isolated", "quarantined"]},
+    "desktopRuntime": {"enum": ["remote", "trusted-worker"]},
+    "contributes": {
+      "type": "array",
+      "items": {"enum": ["tools", "prompt", "events", "verifiers"]},
+      "uniqueItems": true
+    },
+    "description": {"type": "string"},
+    "author": {"type": "string"},
+    "homepage": {"type": "string"},
+    "commands": {"$ref": "#/$defs/paths"},
+    "skills": {"$ref": "#/$defs/paths"},
+    "agents": {"$ref": "#/$defs/paths"},
+    "mcpServers": {"$ref": "#/$defs/paths"},
+    "asyncTargets": {"$ref": "#/$defs/paths"},
+    "workflows": {"$ref": "#/$defs/paths"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "serviceKeys": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*(\\.[a-z][a-z0-9_-]*)+@[1-9][0-9]*$"},
+      "uniqueItems": true
+    },
+    "paths": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "permission": {
+      "type": "object",
+      "required": ["scope", "patterns"],
+      "properties": {
+        "scope": {"enum": ["process.exec", "filesystem.read", "filesystem.write", "env.read", "network.outbound", "model.embedding", "tools.invoke", "skills.invoke", "sandbox.profile", "memory.read", "memory.write", "memory.delete", "memory.promote", "memory.maintenance", "ontology.read"]},
+        "patterns": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "description": {"type": "string"},
+        "required": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

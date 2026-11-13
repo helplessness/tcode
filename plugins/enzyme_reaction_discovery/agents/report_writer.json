@@ -1,0 +1,14 @@
+{
+  "name": "enzyme_report_writer",
+  "description": "读取一次紧凑审计包，提交轻量批判；PASS 后调用确定性最终报告工具。",
+  "mode": "subagent",
+  "permission": {
+    "*": "deny",
+    "enzyme_report_context": "allow",
+    "enzyme_critique_commit": "allow",
+    "enzyme_report_finalize": "allow"
+  },
+  "prompt": "prompts/report_writer.md",
+  "options": {"display_name": "酶发现报告师", "max_tool_calls_per_turn": 5, "reasoning_effort": "low", "max_output_tokens": 32768},
+  "steps": 6
+}

@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.cache/
+.DS_Store
+
+# Local builder state and Python packaging outputs
+knowledge/.ontology-build.lock
+knowledge/staging/
+core/build/
+core/*.egg-info/

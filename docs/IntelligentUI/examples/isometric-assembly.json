@@ -1,0 +1,235 @@
+{
+  "id": "device",
+  "title": "等轴测轴承台",
+  "description": "",
+  "assemblies": [
+    {
+      "id": "base",
+      "label": "底座与支座",
+      "description": "",
+      "pieces": [
+        {
+          "id": "plate",
+          "label": "底板",
+          "kind": "plate",
+          "position": [
+            -65,
+            -35,
+            0
+          ],
+          "size": [
+            130,
+            70,
+            6
+          ]
+        },
+        {
+          "id": "rail_front",
+          "label": "前导轨",
+          "kind": "rail",
+          "position": [
+            -52,
+            23,
+            6
+          ],
+          "size": [
+            104,
+            6,
+            4
+          ]
+        },
+        {
+          "id": "rail_back",
+          "label": "后导轨",
+          "kind": "rail",
+          "position": [
+            -52,
+            -29,
+            6
+          ],
+          "size": [
+            104,
+            6,
+            4
+          ]
+        },
+        {
+          "id": "post_0",
+          "label": "后左支柱",
+          "kind": "cylinder",
+          "position": [
+            -35,
+            -17,
+            6
+          ],
+          "radius": 2.5,
+          "length": 49,
+          "material": "alloy"
+        },
+        {
+          "id": "post_1",
+          "label": "前左支柱",
+          "kind": "cylinder",
+          "position": [
+            -35,
+            17,
+            6
+          ],
+          "radius": 2.5,
+          "length": 49,
+          "material": "alloy"
+        },
+        {
+          "id": "post_2",
+          "label": "后右支柱",
+          "kind": "cylinder",
+          "position": [
+            35,
+            -17,
+            6
+          ],
+          "radius": 2.5,
+          "length": 49,
+          "material": "alloy"
+        },
+        {
+          "id": "post_3",
+          "label": "前右支柱",
+          "kind": "cylinder",
+          "position": [
+            35,
+            17,
+            6
+          ],
+          "radius": 2.5,
+          "length": 49,
+          "material": "alloy"
+        }
+      ],
+      "explode": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "order": 2
+    },
+    {
+      "id": "drive",
+      "label": "转轴与套环",
+      "description": "",
+      "pieces": [
+        {
+          "id": "shaft",
+          "label": "转轴",
+          "description": "",
+          "kind": "cylinder",
+          "position": [
+            -35.0,
+            5.0,
+            38.0
+          ],
+          "size": [
+            24.0,
+            24.0,
+            8.0
+          ],
+          "radius": 7.0,
+          "inner_radius": 5.0,
+          "length": 70.0,
+          "axis": "x",
+          "material": "alloy",
+          "explode": null,
+          "order": 0
+        },
+        {
+          "id": "collar",
+          "label": "套环",
+          "description": "",
+          "kind": "ring",
+          "position": [
+            -12.0,
+            5.0,
+            38.0
+          ],
+          "size": [
+            24.0,
+            24.0,
+            8.0
+          ],
+          "radius": 14.0,
+          "inner_radius": 8.0,
+          "length": 10.0,
+          "axis": "x",
+          "material": "accent",
+          "explode": null,
+          "order": 0
+        }
+      ],
+      "explode": [
+        35.0,
+        0.0,
+        15.0
+      ],
+      "order": 1
+    },
+    {
+      "id": "cover",
+      "label": "盖板与旋钮",
+      "description": "",
+      "pieces": [
+        {
+          "id": "lid",
+          "label": "盖板",
+          "description": "",
+          "kind": "plate",
+          "position": [
+            -45,
+            -25,
+            55
+          ],
+          "size": [
+            90,
+            50,
+            5
+          ],
+          "radius": 10.0,
+          "inner_radius": 5.0,
+          "length": 20.0,
+          "axis": "z",
+          "material": "polymer",
+          "explode": null,
+          "order": 0
+        },
+        {
+          "id": "knob",
+          "label": "旋钮",
+          "description": "",
+          "kind": "knob",
+          "position": [
+            0.0,
+            6.0,
+            60.0
+          ],
+          "size": [
+            24.0,
+            24.0,
+            8.0
+          ],
+          "radius": 9.0,
+          "inner_radius": 5.0,
+          "length": 10.0,
+          "axis": "z",
+          "material": "rubber",
+          "explode": null,
+          "order": 0
+        }
+      ],
+      "explode": [
+        0.0,
+        0.0,
+        50.0
+      ],
+      "order": 0
+    }
+  ]
+}

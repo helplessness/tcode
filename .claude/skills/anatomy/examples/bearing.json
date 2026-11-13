@@ -1,0 +1,244 @@
+{
+  "id": "bearing_device",
+  "title": "精密轴承 · 曲面与滚珠教学示意",
+  "description": "用于说明外圈、滚珠、内圈和转轴的相互关系；不代表工程验证。",
+  "animation": {
+    "duration_seconds": 6,
+    "mode": "roundtrip"
+  },
+  "assemblies": [
+    {
+      "id": "outer_group",
+      "label": "外圈",
+      "description": "外圈包围滚动体，提供外侧滚道。",
+      "explode": [
+        0,
+        0,
+        36
+      ],
+      "order": 0,
+      "pieces": [
+        {
+          "id": "outer_ring",
+          "label": "轴承外圈",
+          "description": "轴承外圈的结构教学示意，尺寸不作为制造依据。",
+          "kind": "ring",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "axis": "z",
+          "length": 9,
+          "radius": 30,
+          "inner_radius": 23
+        }
+      ]
+    },
+    {
+      "id": "rolling_group",
+      "label": "滚动体",
+      "description": "八颗滚珠位于内外圈之间，图中未展开保持架及精确滚道截面。",
+      "explode": [
+        0,
+        -38,
+        12
+      ],
+      "order": 1,
+      "pieces": [
+        {
+          "id": "ball_1",
+          "label": "滚珠1",
+          "description": "滚珠1的结构教学示意，尺寸不作为制造依据。",
+          "kind": "sphere",
+          "position": [
+            18.5,
+            0.0,
+            4.5
+          ],
+          "radius": 3.5,
+          "material": "alloy"
+        },
+        {
+          "id": "ball_2",
+          "label": "滚珠2",
+          "description": "滚珠2的结构教学示意，尺寸不作为制造依据。",
+          "kind": "sphere",
+          "position": [
+            13.08147545195113,
+            13.081475451951128,
+            4.5
+          ],
+          "radius": 3.5,
+          "material": "alloy"
+        },
+        {
+          "id": "ball_3",
+          "label": "滚珠3",
+          "description": "滚珠3的结构教学示意，尺寸不作为制造依据。",
+          "kind": "sphere",
+          "position": [
+            1.1327982892113017e-15,
+            18.5,
+            4.5
+          ],
+          "radius": 3.5,
+          "material": "alloy"
+        },
+        {
+          "id": "ball_4",
+          "label": "滚珠4",
+          "description": "滚珠4的结构教学示意，尺寸不作为制造依据。",
+          "kind": "sphere",
+          "position": [
+            -13.081475451951128,
+            13.08147545195113,
+            4.5
+          ],
+          "radius": 3.5,
+          "material": "alloy"
+        },
+        {
+          "id": "ball_5",
+          "label": "滚珠5",
+          "description": "滚珠5的结构教学示意，尺寸不作为制造依据。",
+          "kind": "sphere",
+          "position": [
+            -18.5,
+            2.2655965784226034e-15,
+            4.5
+          ],
+          "radius": 3.5,
+          "material": "alloy"
+        },
+        {
+          "id": "ball_6",
+          "label": "滚珠6",
+          "description": "滚珠6的结构教学示意，尺寸不作为制造依据。",
+          "kind": "sphere",
+          "position": [
+            -13.081475451951132,
+            -13.081475451951128,
+            4.5
+          ],
+          "radius": 3.5,
+          "material": "alloy"
+        },
+        {
+          "id": "ball_7",
+          "label": "滚珠7",
+          "description": "滚珠7的结构教学示意，尺寸不作为制造依据。",
+          "kind": "sphere",
+          "position": [
+            -3.398394867633905e-15,
+            -18.5,
+            4.5
+          ],
+          "radius": 3.5,
+          "material": "alloy"
+        },
+        {
+          "id": "ball_8",
+          "label": "滚珠8",
+          "description": "滚珠8的结构教学示意，尺寸不作为制造依据。",
+          "kind": "sphere",
+          "position": [
+            13.081475451951126,
+            -13.081475451951132,
+            4.5
+          ],
+          "radius": 3.5,
+          "material": "alloy"
+        }
+      ]
+    },
+    {
+      "id": "inner_group",
+      "label": "内圈",
+      "description": "内圈与转轴配合，和滚珠之间保留教学所需间距。",
+      "explode": [
+        0,
+        30,
+        12
+      ],
+      "order": 2,
+      "pieces": [
+        {
+          "id": "inner_ring",
+          "label": "轴承内圈",
+          "description": "轴承内圈的结构教学示意，尺寸不作为制造依据。",
+          "kind": "ring",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "axis": "z",
+          "length": 9,
+          "radius": 14,
+          "inner_radius": 8,
+          "material": "accent"
+        }
+      ]
+    },
+    {
+      "id": "shaft_group",
+      "label": "台阶转轴",
+      "description": "转轴的台阶轮廓与圆环共轴，拆解时保持轴向关系。",
+      "explode": [
+        0,
+        0,
+        -20
+      ],
+      "order": 3,
+      "pieces": [
+        {
+          "id": "shaft",
+          "label": "台阶转轴",
+          "description": "台阶转轴的结构教学示意，尺寸不作为制造依据。",
+          "kind": "lathe",
+          "position": [
+            0,
+            0,
+            -14
+          ],
+          "axis": "z",
+          "profile": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              7
+            ],
+            [
+              1,
+              7.8
+            ],
+            [
+              13,
+              7.8
+            ],
+            [
+              14,
+              7
+            ],
+            [
+              32,
+              7
+            ],
+            [
+              33,
+              6
+            ],
+            [
+              33,
+              0
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

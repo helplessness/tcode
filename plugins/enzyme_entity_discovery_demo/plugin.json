@@ -1,0 +1,53 @@
+{
+  "name": "enzyme-entity-discovery-demo",
+  "version": "0.17.1",
+  "apiVersion": "1.0",
+  "sdk": ">=1.0.0,<2.0.0",
+  "python": ">=3.11",
+  "runtime": "python",
+  "entry": "plugin.py:Plugin",
+  "provides": [],
+  "requires": [],
+  "optional": [],
+  "permissions": [
+    {
+      "scope": "ontology.read",
+      "patterns": ["workspace"],
+      "description": "只读查询系统本体与当前授权 Workspace 的本体，不授予本体写权限。",
+      "required": true
+    },
+    {
+      "scope": "filesystem.read",
+      "patterns": [
+        "./plugins/enzyme_entity_discovery_demo/knowledge/**",
+        "./plugins/enzyme_entity_discovery_demo/schemas/**",
+        "./.tcode/plugins/enzyme_entity_discovery_demo/**"
+      ],
+      "description": "读取插件内经过哈希验证的公共 SQLite 发布库，以及当前 Workspace 的运行产物和查询审计记录。",
+      "required": true
+    },
+    {
+      "scope": "filesystem.write",
+      "patterns": [
+        "./.tcode/plugins/enzyme_entity_discovery_demo/**"
+      ],
+      "description": "写入当前 Workspace 的实体查询审计、假说账本和阶段报告。",
+      "required": true
+    }
+  ],
+  "scope": "workspace",
+  "configSchema": "config.schema.json",
+  "agents": [
+    "agents"
+  ],
+  "workflows": [
+    "workflows"
+  ],
+  "requestedTrust": "trusted",
+  "desktopRuntime": "trusted-worker",
+  "description": "使用独立的机制假说、候选冻结、实体证据核验和事实边界批判流程，以本地只读 SQLite 本体作为知识后端。",
+  "author": "TCode",
+  "contributes": [
+    "tools"
+  ]
+}

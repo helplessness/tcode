@@ -1,0 +1,568 @@
+{
+  "template_key": "mechanism-guided-enzyme-search",
+  "display_name": "机制优先的通用酶逆向发现",
+  "domain": "enzyme-discovery",
+  "description": "模型先按目标反应独立生成候选，再以酶 Wiki 既往反应作证据核验；Wiki 不是候选白名单或排序加分项。",
+  "enabled": true,
+  "input_contract": {
+    "required": [],
+    "optional": [
+      "reactants",
+      "products",
+      "context",
+      "component_assumptions",
+      "reaction_id",
+      "schema_version",
+      {
+        "field": "natural_language_request",
+        "source": "user_request"
+      },
+      "target_description",
+      "substrate_or_product",
+      "constraints"
+    ]
+  },
+  "output_contract": {
+    "required": [
+      "schema_version",
+      "run_id",
+      "review_decision",
+      "final_artifacts",
+      "top_summary",
+      "user_summary"
+    ],
+    "artifacts": [
+      "07_final_report.json",
+      "07_final_report.md",
+      "mechanism_routes.mmd"
+    ]
+  },
+  "stage_defaults": {
+    "required_skills": [],
+    "retry_policy": {
+      "max_attempts": 2
+    },
+    "review_gate": false
+  },
+  "stages": [
+    {
+      "stage_id": "reaction_analysis",
+      "depends_on": [],
+      "label": "反应定义与净变化",
+      "owner": "enzyme_reaction_analyst",
+      "call_type": "agent",
+      "description": "忠实保存输入，只做无化学引擎的保守文本解释，并区分事实、推断和未知。",
+      "prompt_file": "reaction_analysis.md",
+      "allowed_tools": [
+        "enzyme_run_init",
+        "enzyme_reaction_commit"
+      ],
+      "input_contract": {
+        "required": []
+      },
+      "output_contract": {
+        "type": "object",
+        "required": [
+          "schema_version",
+          "run_id",
+          "committed_artifacts",
+          "net_change_count",
+          "warning_count",
+          "unresolved_question_count"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "string"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "committed_artifacts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "net_change_count": {
+            "type": "integer"
+          },
+          "warning_count": {
+            "type": "integer"
+          },
+          "unresolved_question_count": {
+            "type": "integer"
+          }
+        }
+      },
+      "expected_artifacts": [
+        "01_reaction_analysis.json"
+      ],
+      "success_checks": [
+        "原始 SMILES 和自然语言上下文未被静默改写",
+        "只声明文本级净变化且明确无 RDKit/原子映射边界",
+        "01_reaction_analysis.json 已校验并提交"
+      ],
+      "validators": [
+        {
+          "type": "json_schema"
+        },
+        {
+          "type": "required_artifacts",
+          "names": [
+            "01_reaction_analysis.json"
+          ]
+        },
+        {
+          "type": "files_exist",
+          "names": [
+            "01_reaction_analysis.json"
+          ]
+        }
+      ],
+      "failure_policy": {
+        "action": "block"
+      },
+      "fallback_stage_ids": [],
+      "metadata": {
+        "risk_level": "high",
+        "automated_continuation": true,
+        "result_source": {
+          "type": "tool_receipt",
+          "tool": "enzyme_reaction_commit"
+        },
+        "context_max_chars": 12000
+      }
+    },
+    {
+      "stage_id": "mechanism_and_capability",
+      "depends_on": [
+        "reaction_analysis"
+      ],
+      "label": "并列机制与辅因子能力",
+      "owner": "enzyme_mechanism_planner",
+      "call_type": "agent",
+      "description": "从本插件按需回读的 Markdown Wiki 派生局部机制片段，与目标事件逐项对齐并保存反事实桥接；不读取本体 Demo。",
+      "prompt_file": "mechanism_and_capability.md",
+      "allowed_tools": [
+        "enzyme_mechanism_context",
+        "enzyme_mechanism_hypothesis_stage",
+        "enzyme_mechanism_plan_commit"
+      ],
+      "input_contract": {},
+      "output_contract": {
+        "type": "object",
+        "required": [
+          "schema_version",
+          "run_id",
+          "committed_artifacts",
+          "mechanism_count",
+          "top_cofactor_classes"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "string"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "committed_artifacts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mechanism_count": {
+            "type": "integer"
+          },
+          "top_cofactor_classes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "expected_artifacts": [
+        "02_mechanisms.json",
+        "03_capabilities.json"
+      ],
+      "success_checks": [
+        "机制与辅因子区分 Wiki 类比和未经过 Wiki 核实的模型假说；非空引用必须真实已读",
+        "已有反应事实、提出的类比、未知与证伪建议明确区分",
+        "知识不足允许空结果并说明缺口，不强行命中候选",
+        "02_mechanisms.json 与 03_capabilities.json 已提交",
+        "至少一个首轮查询仅描述反应中心、键变化或催化能力，不以底物名、酶名或预选辅因子为前提",
+        "关键事件逐项标记来源事实、类比、模型假说、未匹配能力或冲突；未知事件不能继承整条机制的 Wiki 支持",
+        "知识卡弱线索经 MD 正文回读、化学门控和机制聚类后仅获得竞争资格；机制输出遵守本轮 result_limits",
+        "每条机制保存共享、缺失、冲突、天然终止、目标替代终止、未支持假设与验证信号",
+        "机制片段和桥接只来自本插件 Markdown Wiki，不读取本体文件或其他插件运行产物"
+      ],
+      "validators": [
+        {
+          "type": "json_schema"
+        },
+        {
+          "type": "required_artifacts",
+          "names": [
+            "02_mechanisms.json",
+            "03_capabilities.json"
+          ]
+        },
+        {
+          "type": "files_exist",
+          "names": [
+            "02_mechanisms.json",
+            "03_capabilities.json"
+          ]
+        }
+      ],
+      "failure_policy": {
+        "action": "fallback",
+        "fallback_on_codes": [
+          "explicit_failure_signal"
+        ]
+      },
+      "fallback_stage_ids": [
+        "reaction_analysis"
+      ],
+      "metadata": {
+        "risk_level": "high",
+        "automated_continuation": true,
+        "token_efficient_mechanism_context": true,
+        "result_source": {
+          "type": "tool_receipt",
+          "tool": "enzyme_mechanism_plan_commit"
+        },
+        "context_max_chars": 16000,
+        "bounded_wiki_retrieval": true
+      }
+    },
+    {
+      "stage_id": "family_screening_and_routes",
+      "depends_on": [
+        "mechanism_and_capability"
+      ],
+      "label": "通用酶家族筛选与路线",
+      "owner": "enzyme_screener",
+      "call_type": "agent",
+      "description": "先冻结独立候选草案，再用 Wiki 反事实桥接中的共享、缺失、冲突和替代终止统一比较候选与路线。",
+      "prompt_file": "family_screening_and_routes.md",
+      "allowed_tools": [
+        "enzyme_screen_context",
+        "enzyme_screen_items_stage",
+        "enzyme_screen_commit"
+      ],
+      "input_contract": {},
+      "output_contract": {
+        "type": "object",
+        "required": [
+          "schema_version",
+          "run_id",
+          "committed_artifacts",
+          "top_candidate_ids",
+          "top_route_ids"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "string"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "committed_artifacts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "top_candidate_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "top_route_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "expected_artifacts": [
+        "04_candidates.json",
+        "05_routes.json"
+      ],
+      "success_checks": [
+        "候选草案在 Wiki 卡、检索摘要和继承证据交付前形成并留痕",
+        "候选区分 Wiki 酶、未核实模型酶和未匹配能力；不伪造 Wiki 身份或引用",
+        "Wiki 只改变核实状态，不作为候选白名单或排序加分项",
+        "支持、冲突和未知分开，未报道不等于负证据",
+        "候选及路线评分来自模型的可核查比较理由",
+        "04_candidates.json 与 05_routes.json 已提交",
+        "候选复用阶段二的事件证据并按未闭合事件补查，不要求四个检索视角逐项打卡",
+        "候选关联机制中的类比、模型假说、未匹配能力和冲突保留为候选知识缺口",
+        "直接路线有关键未匹配能力时，对可回读的天然通路骨架逐步核对方向、物料承接和目标底物替换，不把连接线索当事实",
+        "弱线索完成聚类去重并与全部候选统一排序；机制与路线输出遵守本轮 result_limits",
+        "候选排序保留反事实桥接中的缺失事件、天然终止冲突和未验证替代终止"
+      ],
+      "validators": [
+        {
+          "type": "json_schema"
+        },
+        {
+          "type": "required_artifacts",
+          "names": [
+            "04_candidates.json",
+            "05_routes.json"
+          ]
+        },
+        {
+          "type": "files_exist",
+          "names": [
+            "04_candidates.json",
+            "05_routes.json"
+          ]
+        }
+      ],
+      "failure_policy": {
+        "action": "block"
+      },
+      "fallback_stage_ids": [],
+      "metadata": {
+        "risk_level": "critical",
+        "automated_continuation": true,
+        "token_efficient_screening": true,
+        "result_source": {
+          "type": "tool_receipt",
+          "tool": "enzyme_screen_commit"
+        },
+        "context_max_chars": 32000,
+        "bounded_wiki_retrieval": true
+      }
+    },
+    {
+      "stage_id": "critical_report",
+      "depends_on": [
+        "family_screening_and_routes"
+      ],
+      "label": "轻量批判与确定性报告",
+      "owner": "enzyme_report_writer",
+      "call_type": "agent",
+      "description": "模型只提交紧凑批判结论；PASS 后由确定性工具聚合 01—06、校验并生成 JSON、Markdown、候选表和 Mermaid。",
+      "prompt_file": "critical_report.md",
+      "allowed_tools": [
+        "enzyme_report_context",
+        "enzyme_critique_commit",
+        "enzyme_report_finalize"
+      ],
+      "input_contract": {},
+      "output_contract": {
+        "type": "object",
+        "required": [
+          "schema_version",
+          "run_id",
+          "review_decision",
+          "final_artifacts",
+          "top_summary",
+          "user_summary"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "string"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "review_decision": {
+            "enum": [
+              "PASS",
+              "PARTIAL_PASS",
+              "REVISE"
+            ]
+          },
+          "final_artifacts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "top_summary": {
+            "type": "object"
+          },
+          "user_summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 14000
+          }
+        }
+      },
+      "expected_artifacts": [
+        "06_critique.json",
+        "07_final_report.json",
+        "07_final_report.md",
+        "mechanism_routes.mmd"
+      ],
+      "success_checks": [
+        "仅用一次紧凑审计包完成 PASS 或 REVISE 判定",
+        "REVISE 时交付未通过审核的探索报告，保留证据不足路线，不自动重跑前序阶段",
+        "PASS 时由确定性工具聚合报告，不让模型复制大 JSON",
+        "最终三个同源报告产物与 06_critique.json 已提交",
+        "审核未因底物不同排除候选，未将 Wiki 命中固定为第一名或强制写入用户输出，机制与路线展示遵守本轮 result_limits",
+        "用户要求逐步路线时，最终聊天摘要先展示建议路线的分步表和每步证据状态",
+        "最终 JSON 与 Markdown 均保留反事实桥接，目标替代终止没有被升级为已验证活性",
+        "PARTIAL_PASS 只交付已审且未受问题依赖影响的对象；逐对象保留化学与排序状态，未解决的全局问题不能部分放行"
+      ],
+      "validators": [
+        {
+          "type": "json_schema"
+        },
+        {
+          "type": "review_decision",
+          "allowed_decisions": [
+            "PASS",
+            "PARTIAL_PASS",
+            "REVISE"
+          ]
+        },
+        {
+          "type": "required_artifacts",
+          "names": [
+            "06_critique.json",
+            "07_final_report.json",
+            "07_final_report.md",
+            "mechanism_routes.mmd"
+          ],
+          "when": {
+            "field": "review_decision",
+            "equals": "PASS"
+          }
+        },
+        {
+          "type": "required_artifacts",
+          "names": [
+            "06_critique.json"
+          ],
+          "when": {
+            "field": "review_decision",
+            "equals": "REVISE"
+          }
+        },
+        {
+          "type": "files_exist",
+          "names": [
+            "06_critique.json",
+            "07_final_report.json",
+            "07_final_report.md",
+            "mechanism_routes.mmd"
+          ],
+          "when": {
+            "field": "review_decision",
+            "equals": "PASS"
+          }
+        },
+        {
+          "type": "files_exist",
+          "names": [
+            "06_critique.json"
+          ],
+          "when": {
+            "field": "review_decision",
+            "equals": "REVISE"
+          }
+        },
+        {
+          "type": "required_artifacts",
+          "names": [
+            "06_critique.json",
+            "07_final_report.json",
+            "07_final_report.md",
+            "mechanism_routes.mmd"
+          ],
+          "when": {
+            "field": "review_decision",
+            "equals": "PARTIAL_PASS"
+          }
+        },
+        {
+          "type": "files_exist",
+          "names": [
+            "06_critique.json",
+            "07_final_report.json",
+            "07_final_report.md",
+            "mechanism_routes.mmd"
+          ],
+          "when": {
+            "field": "review_decision",
+            "equals": "PARTIAL_PASS"
+          }
+        }
+      ],
+      "failure_policy": {
+        "action": "block"
+      },
+      "fallback_stage_ids": [],
+      "review_gate": false,
+      "metadata": {
+        "risk_level": "critical",
+        "automated_critic": true,
+        "revision_request_field": "revision_request",
+        "revision_decisions": ["REVISE", "PARTIAL_PASS"],
+        "revision_target_stage_ids": [
+          "reaction_analysis",
+          "mechanism_and_capability",
+          "family_screening_and_routes",
+          "critical_report"
+        ],
+        "token_efficient_finalization": true,
+        "result_source": {
+          "type": "tool_receipt",
+          "tool": "enzyme_report_finalize"
+        },
+        "context_max_chars": 32000
+      }
+    }
+  ],
+  "metadata": {
+    "version": "3.10.0",
+    "prompt_dir": "prompts",
+    "auto_continue_on_create": true,
+    "routing": {
+      "enabled": true,
+      "auto_start": false,
+      "summary": "用户提供反应物和产物 SMILES，希望解释可能机制、辅因子类别和候选酶家族时使用。",
+      "trigger_terms": [
+        "候选酶",
+        "反应机制",
+        "酶家族",
+        "催化机制",
+        "催化的酶",
+        "哪些酶可以催化"
+      ],
+      "use_when": [
+        "用户给出两个或多组 SMILES 并询问可能的酶或反应机制",
+        "用户要求从底物和产物逆向筛选酶家族",
+        "用户要求在封闭离线知识库中比较候选酶"
+      ],
+      "do_not_use_when": [
+        "用户要求查询具体论文、网页或在线数据库",
+        "用户只询问一个已知酶的普通定义",
+        "用户要求序列设计、分子对接或突变预测"
+      ],
+      "match_threshold": 0.45
+    },
+    "artifact_root": ".tcode/plugins/enzyme_reaction_discovery/runs/<run_id>",
+    "presentation": {
+      "stage_narration": "status_only",
+      "completion": {
+        "source": "stage_output_field",
+        "stage_id": "critical_report",
+        "field": "user_summary"
+      },
+      "structured_artifacts": "on_explicit_request"
+    },
+    "target_novel_reaction_in_production_knowledge": false,
+    "external_fact_source": "enzyme_wiki_only",
+    "model_knowledge_policy": "chemistry_first_candidates_then_wiki_verification"
+  }
+}

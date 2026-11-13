@@ -1,0 +1,14 @@
+Blender MCP 本地启动配置
+
+TCode 桌面后端负责启动 HTTP 代理，并在正常退出时关闭代理及其 stdio 子进程。
+默认关闭：service.json 的 enabled 为 false，不占用 10131，也不尝试连接。
+开启：先将本目录的 service.json 和 upstream.json 复制到 .tcode-local/blender/，
+再把本机 service.json 中 enabled 改为 true，下次启动 TCode 生效。
+运行日志位于桌面运行根下的 .tcode/blender/service.log，不写入配置目录。
+端口：service.json 的 host/port，当前 127.0.0.1:10131。
+Blender 插件地址：upstream.json 的 --host/--port，当前 127.0.0.1:9876。
+上游依赖版本：upstream.json 的 mcp-for-blender==2.2.4。
+TCode 自动同步 desktop-mcp.json 的 blender-mcp 地址和启用状态，不需要再修改两份端口。
+端口被占用、命令不存在或启动超时：跳过该服务，不弹错误、不阻止 TCode 启动；仅记录 service.log。
+配置备份：config/blender/service.json、config/blender/upstream.json（初始默认配置，不覆盖本地设置）。
+运行配置改动在下次启动 TCode 时生效。此开关管理 HTTP 服务，不负责打开 Blender 应用。

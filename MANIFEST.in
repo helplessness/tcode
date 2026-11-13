@@ -1,0 +1,4 @@
+include LICENSE README.md VERSION
+recursive-include tcode_agent *.json *.md *.html *.css *.js *.woff *.woff2 *.ttf *.txt
+global-exclude *.py[cod] .DS_Store
+global-exclude __pycache__

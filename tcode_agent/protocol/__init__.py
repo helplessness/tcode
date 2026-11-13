@@ -1,0 +1,71 @@
+"""前后端共享的传输协议。
+
+运行时对象可以继续使用 dataclass 或字典；凡是跨 HTTP/WebSocket 边界的核心数据，
+都以这里的 Pydantic 模型为权威定义。
+"""
+
+from .models import (
+    AsyncCompletionEvent,
+    ChatToolEvent,
+    GuidanceMessageMetadata,
+    PermissionRequestEvent,
+    QuestionPayload,
+    QuestionRequestEvent,
+    QuestionTimeoutEvent,
+    SessionDetail,
+    SessionMessage,
+    SessionSummary,
+    SessionTaskRuntimeSummary,
+    SessionUsageNode,
+    SessionUsageSummary,
+    TaskRuntimeEvent,
+    TaskRuntimeItem,
+    TokenUsage,
+    ToolCall,
+    ToolResult,
+    ToolResultEvent,
+    ToolState,
+    ToolUsingEvent,
+    UsageStatusEvent,
+    protocol_schema_document,
+)
+from .serialize import (
+    permission_request_event,
+    question_request_event,
+    question_timeout_event,
+    tool_result_event,
+    tool_using_event,
+    usage_status_event,
+)
+
+__all__ = [
+    "AsyncCompletionEvent",
+    "ChatToolEvent",
+    "GuidanceMessageMetadata",
+    "PermissionRequestEvent",
+    "QuestionPayload",
+    "QuestionRequestEvent",
+    "QuestionTimeoutEvent",
+    "SessionDetail",
+    "SessionMessage",
+    "SessionSummary",
+    "SessionTaskRuntimeSummary",
+    "SessionUsageNode",
+    "SessionUsageSummary",
+    "TaskRuntimeEvent",
+    "TaskRuntimeItem",
+    "TokenUsage",
+    "ToolCall",
+    "ToolResult",
+    "ToolResultEvent",
+    "ToolState",
+    "ToolUsingEvent",
+    "UsageStatusEvent",
+    "permission_request_event",
+    "protocol_schema_document",
+    "question_request_event",
+    "question_timeout_event",
+    "tool_result_event",
+    "tool_using_event",
+    "usage_status_event",
+]

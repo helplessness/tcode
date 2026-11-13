@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "targets": [{
+    "id": "compute",
+    "connection": {"transport": "streamable-http", "urlConfig": "compute_url", "bearerTokenConfig": "compute_token_env"},
+    "execution": {"mode": "remote-job", "submitTool": "submit_prediction", "statusTool": "get_prediction_status", "resultTool": "get_prediction_result", "cancelTool": "cancel_prediction"},
+    "tools": [{
+      "name": "predict",
+      "summary": "读取输入文件或目录，生成报告与原始输入副本",
+      "skill": "community-predict-runner",
+      "argumentStyle": "flat",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "input_file": {"type": "object", "properties": {"kind": {"const": "artifact"}, "artifact_id": {"type": "string", "minLength": 1}}, "required": ["kind", "artifact_id"], "additionalProperties": false},
+          "input_directory": {"type": "object", "properties": {"kind": {"const": "artifact_bundle"}, "bundle_id": {"type": "string", "minLength": 1}}, "required": ["kind", "bundle_id"], "additionalProperties": false},
+          "delay_seconds": {"type": "integer", "minimum": 0, "maximum": 300, "default": 2}
+        },
+        "anyOf": [{"required": ["input_file"]}, {"required": ["input_directory"]}],
+        "additionalProperties": false
+      },
+      "files": [
+        {"pointer": "/input_file", "kind": "file", "transport": "artifact"},
+        {"pointer": "/input_directory", "kind": "directory", "transport": "artifact"}
+      ],
+      "output": {"contract": "artifact-bundle-v1"}
+    }]
+  }]
+}

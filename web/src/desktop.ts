@@ -1,0 +1,42 @@
+export type ComputerState = {
+  available: boolean; enabled?: boolean; status: string; driver_generation?: number; control_epoch?: number;
+  action_budget?: { used: number; limit: number };
+  active_scope?: { purpose: string; display_name: string; target_label: string; file_root?: string; expires_at: number; remaining_actions: number } | null;
+  permissions?: { status: string; accessibility: boolean | null; screen_recording: boolean | null; identity_verified: boolean; attribution: string; host_bundle_id: string; direct_capture_status?: string; host_accessibility?: boolean | null; host_screen_recording?: boolean | null; runtime_mismatch?: boolean };
+  pending_approval?: { approval_id: string; revision?: number; task_id: string; operation: string; app?: { bundle_id?: string }; window?: Record<string, unknown>; delivery_mode: string; parameter_digest: string; action_summary?: Record<string, unknown>; expires_at?: number } | null;
+};
+export type BrowserCommand = { action: 'attach' | 'detach' | 'close' | 'state' | 'menu' | 'navigate' | 'back' | 'forward' | 'reload' | 'zoom' | 'fit' | 'find' | 'print' | 'screenshot' | 'clear-data' | 'downloads-enabled' | 'reveal-download'; bounds?: { x: number; y: number; width: number; height: number }; url?: string; factor?: number; text?: string; forward?: boolean; enabled?: boolean; id?: string };
+export type BrowserState = { url: string; title: string; loading: boolean; error?: string; canGoBack: boolean; canGoForward: boolean; zoom: number; fitWidth?: boolean; history?: { url: string; title: string; time: number }[]; downloads?: { id: string; name: string; state: string; received: number; total: number }[]; downloadsEnabled?: boolean };
+type DesktopBridge = {
+  modelSettings?: (payload: Record<string, unknown>) => Promise<{ok?: boolean; message?: string; services?: DesktopModelService[]; default_chat?: string; default_embedding?: string; secure_storage?: boolean; embedding_local_only?: boolean}>;
+  browserPanel?: (session: string, command: BrowserCommand) => Promise<BrowserState>;
+  onBrowserNewTab?: (callback: (url: string) => void) => () => void;
+  workspace: (workspaceId: string, action: 'finder' | 'terminal') => Promise<void>;
+  revealFile: (workspaceId: string, path: string) => Promise<void>;
+  resolveFile: (workspaceId: string, path: string) => Promise<{ path: string }>;
+  copyFilePath: (workspaceId: string, path: string) => Promise<{ path: string }>;
+  copyText?: (text: string) => Promise<{ success: boolean }>;
+  saveFile: (resource: { path: string; workspaceId?: string; jobId?: string; root?: string }) => Promise<void>;
+  onDownloadResult?: (callback: (result: { url: string; state: 'completed' | 'cancelled' | 'interrupted' }) => void) => () => void;
+  notify: (event: { id: string; title: string; body: string }) => Promise<boolean>;
+  browserControl?: (session: string, action: 'takeover' | 'release') => Promise<{ success: boolean; control_mode: 'agent' | 'human' }>;
+  browserInput?: (session: string, input: { action: 'observe' | 'click' | 'scroll' | 'key' | 'text'; x?: number; y?: number; deltaX?: number; deltaY?: number; key?: string; text?: string }) => Promise<{ success: boolean; screenshot?: string }>;
+  onNotification: (callback: (id: string) => void) => () => void;
+  onRecovery: (callback: (event: { state: 'recovering' | 'ready'; reason: string }) => void) => () => void;
+  computerPreview?: () => Promise<{ image: string; app: string; observed_at?: number } | null>;
+  computerStatus?: () => Promise<ComputerState>;
+  computerOpenPermission?: (permission: 'accessibility' | 'screen_recording') => Promise<{ success: boolean }>;
+  computerRefreshPermissions?: () => Promise<ComputerState>;
+  computerSetEnabled?: (enabled: boolean) => Promise<ComputerState>;
+  computerControl?: (action: 'pause' | 'takeover' | 'emergency_stop') => Promise<ComputerState>;
+  computerGrant?: (grant: { approval_id: string; task_id: string; operation: string; parameter_digest: string; remember_control?: boolean; navigation?: boolean; single_message?: { recipient: string; text: string } }) => Promise<{ success: boolean; state: ComputerState }>;
+  computerReject?: (approval: { approval_id: string; parameter_digest: string }) => Promise<ComputerState>;
+  onComputerStatus?: (callback: (state: ComputerState) => void) => () => void;
+  computerPanelRequest?: () => Promise<{ request_id: number | null; reason?: 'permissions' | 'approval' }>;
+  computerPanelAck?: (requestId: number) => Promise<{ success: boolean }>;
+  onComputerPanelOpen?: (callback: (request: { request_id: number; reason?: 'permissions' | 'approval' }) => void) => () => void;
+};
+declare global { interface Window { tcodeDesktop?: DesktopBridge } }
+export const desktop = typeof window === 'undefined' ? undefined : window.tcodeDesktop;
+export type DesktopModelService = {id:string;name:string;kind:'chat'|'embedding';protocol:'openai_compatible'|'ollama'|'anthropic';base_url:string;models:string[];key_saved?:boolean};
+if (desktop && typeof document !== 'undefined') document.documentElement.dataset.desktop = 'true';

@@ -1,0 +1,85 @@
+.command-menu, .composer-skill-chip {
+  /* This compact popup owns its white/black palette, independent of shell themes. */
+  --command-text: #000000;
+  --command-muted: #000000;
+  --command-selected: #edf2f6;
+  --command-border: #627b8c;
+  --command-focus: #334f63;
+}
+.command-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100dvh - 12rem);
+  margin-bottom: 8px;
+  overflow: hidden;
+  border: 1px solid var(--tcode-border-strong);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--command-text);
+  box-shadow: 0 8px 24px #0006;
+}
+.command-menu-header { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-bottom: 1px solid var(--tcode-border); flex-shrink: 0; }
+.command-menu-title { flex: 1; min-width: 0; font-size: .929rem; font-weight: 600; }
+.command-menu-escape { display: flex; align-items: center; gap: 6px; color: var(--command-muted); font-size: .929rem; white-space: nowrap; }
+.command-menu-control { min-height: 28px; min-width: 28px; padding: 3px 6px; border-radius: 5px; color: var(--command-text); cursor: pointer; font-size: .929rem; }
+.command-menu-control:hover { background: var(--command-selected); }
+.command-menu-control:focus-visible { outline: 2px solid var(--command-focus); outline-offset: 2px; }
+.command-menu-search { flex-shrink: 0; width: 100%; padding: 8px 12px; border: 0; border-bottom: 1px solid var(--tcode-border); background: transparent; color: var(--command-text); font-size: 1.143rem; line-height: 1.5; }
+.command-menu-search::placeholder { color: var(--command-muted); }
+.command-menu-search:focus { outline: 2px solid var(--command-focus); outline-offset: -2px; }
+.command-menu-list { min-height: 0; max-height: 280px; overflow-y: auto; padding: 6px; scroll-padding: 6px; }
+.command-menu-option {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 100ms, border-color 100ms;
+}
+.command-menu-option + .command-menu-option { margin-top: 2px; }
+.command-menu-option:hover { background: #f2f4f6; }
+.command-menu-option[aria-selected="true"] { background: var(--command-selected); border-color: var(--command-border); }
+.command-menu-option[aria-selected="true"]::before { content: ''; position: absolute; top: 8px; bottom: 8px; left: 0; width: 3px; border-radius: 0 3px 3px 0; background: var(--command-focus); }
+.command-menu-option:focus-visible { outline: 2px solid var(--command-focus); outline-offset: -3px; }
+.command-menu-icon { display: flex; width: 24px; height: 24px; flex-shrink: 0; align-items: center; justify-content: center; color: var(--command-muted); }
+.command-menu-option[aria-selected="true"] .command-menu-icon { color: var(--command-focus); }
+.command-menu-copy { flex: 1; min-width: 0; }
+.command-menu-label { color: var(--command-text); font-size: 1.0715rem; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.command-menu-description { margin-top: 1px; color: var(--command-muted); font-size: .929rem; font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+.command-menu-option[aria-selected="true"] .command-menu-description { color: var(--command-text); }
+.command-menu-state { display: flex; flex-shrink: 0; align-items: center; gap: 6px; font-size: .929rem; }
+.command-menu-current { color: var(--tcode-success); white-space: nowrap; }
+.command-menu-unavailable { color: var(--command-muted); font-size: .857rem; }
+.command-menu-option[aria-disabled="true"] { cursor: not-allowed; }
+.command-menu-option[aria-disabled="true"] .command-menu-label { color: var(--command-muted); font-weight: 500; }
+.command-menu kbd { display: inline-flex; min-width: 20px; min-height: 20px; align-items: center; justify-content: center; padding: 0 4px; border: 1px solid var(--tcode-border-strong); border-radius: 4px; color: var(--command-muted); font: inherit; font-size: .857rem; }
+.command-menu-option[aria-selected="true"] kbd { border-color: var(--command-focus); color: var(--command-text); }
+.command-menu-footer { display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 7px 12px; flex-shrink: 0; border-top: 1px solid var(--tcode-border); color: var(--command-muted); font-size: .857rem; }
+.command-menu-footer > span { display: inline-flex; align-items: center; gap: 5px; }
+.command-menu-help { overflow-y: auto; padding: 0 12px 10px; color: var(--command-muted); font-size: .929rem; line-height: 1.5; }
+.command-menu-empty { padding: 12px 10px; color: var(--command-muted); font-size: 1rem; }
+.command-menu-error { color: var(--tcode-danger); }
+.composer-skill-chip { display: inline-flex; max-width: 100%; align-items: center; gap: 6px; padding: 3px 6px 3px 10px; border: 1px solid var(--command-border); border-radius: 6px; background: var(--command-selected); color: var(--command-text); font-size: .929rem; font-weight: 600; }
+.composer-skill-chip > span { min-width: 0; overflow-wrap: anywhere; }
+.composer-skill-chip > button { width: 28px; height: 28px; flex-shrink: 0; border-radius: 5px; color: var(--command-focus); cursor: pointer; font-size: 1.429rem; line-height: 1; }
+.composer-skill-chip > button:hover { background: color-mix(in srgb, var(--command-focus) 12%, transparent); }
+.composer-skill-chip > button:focus-visible { outline: 2px solid var(--command-focus); outline-offset: 1px; }
+@media (max-width: 480px) {
+  .command-menu-option { gap: 8px; padding: 6px 8px; }
+  .command-menu-state { flex-direction: column; }
+  .command-menu-header { padding: 6px 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .command-menu-option { transition: none; } }

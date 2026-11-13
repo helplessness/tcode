@@ -1,0 +1,17 @@
+{
+  "name": "manager",
+  "description": "团队 Manager Agent，创建和调度 Worker Agents 完成复杂任务。",
+  "mode": "manager",
+  "native": true,
+  "permission": {
+    "*": "allow",
+    "task": "deny",
+    "todo_write": "deny",
+    "todo_read": "deny",
+    "ask_peer_question": "deny",
+    "answer_peer_question": "deny"
+  },
+  "allowed_subagents": ["explore", "general", "critic", "verifier"],
+  "prompt": "prompts/manager.md",
+  "options": { "display_name": "团队管理者" }
+}

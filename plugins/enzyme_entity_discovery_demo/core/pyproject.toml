@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "enzyme-ontology-core"
+version = "0.4.0"
+requires-python = ">=3.11"
+dependencies = ["jsonschema>=4.23.0"]
+
+[project.scripts]
+enzyme-ontology = "enzyme_ontology_core.__main__:main"
+
+[tool.setuptools.package-data]
+enzyme_ontology_core = ["schemas/*.json"]
+
+[project.optional-dependencies]
+documents = ["pypdf>=5"]
+model = ["openai>=1.0.0", "httpx>=0.27"]

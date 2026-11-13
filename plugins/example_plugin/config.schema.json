@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "default_prefix": {"type": "string", "default": "Echo"}
+  },
+  "additionalProperties": false
+}

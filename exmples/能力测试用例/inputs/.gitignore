@@ -1,0 +1,8 @@
+# 测试输入默认只保留在本机，避免大文件、业务数据和敏感配置进入 Git。
+*
+!.gitignore
+!README.md
+!*/
+!T08-plugin-workflow/README.md
+!T08-plugin-workflow/expected.json
+!T08-plugin-workflow/*.zip

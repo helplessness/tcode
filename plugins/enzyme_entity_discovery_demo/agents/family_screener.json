@@ -1,0 +1,26 @@
+{
+  "name": "enzyme_entity_family_screener",
+  "description": "先冻结独立候选草案，再用本地实体关系补充和核验候选蛋白、蛋白组或酶家族。",
+  "mode": "subagent",
+  "permission": {
+    "*": "deny",
+    "enzyme_entity_run_context": "allow",
+    "enzyme_entity_baseline_candidates_commit": "allow",
+    "enzyme_entity_capability_candidates": "allow",
+    "enzyme_entity_route_connect": "allow",
+    "enzyme_entity_resolve": "allow",
+    "enzyme_entity_relations": "allow",
+    "enzyme_entity_reaction_analogs": "allow",
+    "enzyme_entity_read_evidence": "allow",
+    "enzyme_entity_candidates_commit": "allow",
+    "enzyme_entity_workspace_query": "allow"
+  },
+  "prompt": "prompts/family_screener.md",
+  "options": {
+    "display_name": "实体 Demo 候选家族筛选师",
+    "max_tool_calls_per_turn": 32,
+    "reasoning_effort": "low",
+    "max_output_tokens": 16384
+  },
+  "steps": 18
+}

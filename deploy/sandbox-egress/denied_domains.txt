@@ -1,0 +1,7 @@
+# One domain suffix per line. Public destinations are allowed by default.
+# Add organization-specific blocked domains below. The proxy separately blocks
+# loopback, private, link-local, CGNAT, metadata IPs, and unsafe ports.
+localhost
+.local
+.internal
+.home.arpa

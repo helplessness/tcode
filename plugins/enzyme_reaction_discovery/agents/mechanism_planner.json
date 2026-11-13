@@ -1,0 +1,19 @@
+{
+  "name": "enzyme_mechanism_planner",
+  "description": "以 Wiki 既往反应为依据，自主提出机制类比、能力需求和辅因子假说。",
+  "mode": "subagent",
+  "permission": {
+    "*": "deny",
+    "enzyme_mechanism_context": "allow",
+    "enzyme_mechanism_hypothesis_stage": "allow",
+    "enzyme_mechanism_plan_commit": "allow"
+  },
+  "prompt": "prompts/mechanism_planner.md",
+  "options": {
+    "display_name": "机制规划师",
+    "max_tool_calls_per_turn": 24,
+    "reasoning_effort": "low",
+    "max_output_tokens": 32768
+  },
+  "steps": 25
+}

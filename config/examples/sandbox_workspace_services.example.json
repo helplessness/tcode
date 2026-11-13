@@ -1,0 +1,17 @@
+{
+  "tenant-a/alice/workspace-1": {
+    "containers": [
+      {
+        "name": "workspace-1-postgres",
+        "alias": "workspace-db"
+      }
+    ],
+    "env": {
+      "DATABASE_HOST": "workspace-db",
+      "DATABASE_PORT": "5432",
+      "DATABASE_NAME": "workspace_1",
+      "DATABASE_USER": "workspace_1",
+      "DATABASE_PASSWORD": "replace-with-secret"
+    }
+  }
+}

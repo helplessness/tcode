@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tcode.local/enzyme-reaction-discovery/reaction-input-v1.schema.json",
+  "title": "Enzyme reaction discovery input",
+  "type": "object",
+  "required": ["reactants", "products"],
+  "properties": {
+    "schema_version": {"const": "1.0", "default": "1.0"},
+    "reaction_id": {"type": ["string", "null"], "maxLength": 200},
+    "reactants": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {"$ref": "#/$defs/component"}
+    },
+    "products": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {"$ref": "#/$defs/component"}
+    },
+    "context": {"$ref": "#/$defs/context"},
+    "component_assumptions": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1, "maxLength": 1200}
+    },
+    "user_confirmed": {"type": "boolean", "default": false}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "component": {
+      "type": "object",
+      "anyOf": [
+        {"required": ["smiles"], "properties": {"smiles": {"type": "string", "minLength": 1}}},
+        {"required": ["name"], "properties": {"name": {"type": "string", "minLength": 1}}}
+      ],
+      "properties": {
+        "smiles": {"type": "string", "maxLength": 4000},
+        "name": {"type": ["string", "null"], "maxLength": 500},
+        "role": {
+          "enum": [
+            "substrate",
+            "co_substrate",
+            "target",
+            "byproduct",
+            "salt",
+            "solvent",
+            "spectator",
+            "unknown"
+          ],
+          "default": "unknown"
+        },
+        "stoichiometry": {"type": ["number", "null"], "exclusiveMinimum": 0},
+        "notes": {
+          "type": "array",
+          "items": {"type": "string", "maxLength": 500}
+        }
+      },
+      "additionalProperties": false
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "organism": {"type": ["string", "null"], "maxLength": 500},
+        "compartment": {"type": ["string", "null"], "maxLength": 500},
+        "ph": {"type": ["number", "null"], "minimum": 0, "maximum": 14},
+        "temperature_c": {"type": ["number", "null"]},
+        "allowed_cofactors": {"type": "array", "items": {"type": "string"}},
+        "forbidden_cofactors": {"type": "array", "items": {"type": "string"}},
+        "single_enzyme_preferred": {"type": "boolean", "default": false},
+        "max_route_steps": {"type": "integer", "minimum": 1, "maximum": 8, "default": 8},
+        "notes": {"type": "array", "items": {"type": "string", "maxLength": 1200}}
+      },
+      "additionalProperties": false
+    }
+  }
+}

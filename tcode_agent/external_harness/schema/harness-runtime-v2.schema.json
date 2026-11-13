@@ -1,0 +1,310 @@
+{
+  "$defs": {
+    "ExecutableDef": {
+      "additionalProperties": false,
+      "properties": {
+        "primary": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Primary",
+          "type": "string"
+        },
+        "fallbacks": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Fallbacks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "primary"
+      ],
+      "title": "ExecutableDef",
+      "type": "object"
+    },
+    "HarnessCapabilities": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "default": true,
+          "title": "Text",
+          "type": "boolean"
+        },
+        "images": {
+          "default": false,
+          "title": "Images",
+          "type": "boolean"
+        },
+        "tools": {
+          "default": false,
+          "title": "Tools",
+          "type": "boolean"
+        },
+        "permissionAuthority": {
+          "default": "none",
+          "enum": [
+            "tcode",
+            "shared",
+            "runtime",
+            "none"
+          ],
+          "title": "Permissionauthority",
+          "type": "string"
+        },
+        "resume": {
+          "default": false,
+          "title": "Resume",
+          "type": "boolean"
+        },
+        "cancel": {
+          "default": true,
+          "title": "Cancel",
+          "type": "boolean"
+        },
+        "mcpInjection": {
+          "default": "none",
+          "maxLength": 80,
+          "title": "Mcpinjection",
+          "type": "string"
+        },
+        "negotiated": {
+          "default": false,
+          "title": "Negotiated",
+          "type": "boolean"
+        },
+        "guidanceMode": {
+          "default": "queue_only",
+          "enum": [
+            "in_turn",
+            "restart_turn",
+            "queue_only",
+            "unsupported"
+          ],
+          "title": "Guidancemode",
+          "type": "string"
+        }
+      },
+      "title": "HarnessCapabilities",
+      "type": "object"
+    },
+    "HarnessCompatibility": {
+      "additionalProperties": false,
+      "properties": {
+        "adapterApiVersion": {
+          "const": "1",
+          "default": "1",
+          "title": "Adapterapiversion",
+          "type": "string"
+        },
+        "tcodeVersion": {
+          "default": ">=0.0.1,<1",
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Tcodeversion",
+          "type": "string"
+        }
+      },
+      "title": "HarnessCompatibility",
+      "type": "object"
+    },
+    "HarnessSecurity": {
+      "additionalProperties": false,
+      "properties": {
+        "workspaceMode": {
+          "const": "configured",
+          "default": "configured",
+          "title": "Workspacemode",
+          "type": "string"
+        },
+        "inheritEnvironment": {
+          "const": "allowlist",
+          "default": "allowlist",
+          "title": "Inheritenvironment",
+          "type": "string"
+        },
+        "publicServer": {
+          "default": false,
+          "title": "Publicserver",
+          "type": "boolean"
+        }
+      },
+      "title": "HarnessSecurity",
+      "type": "object"
+    },
+    "InvocationDef": {
+      "additionalProperties": false,
+      "properties": {
+        "args": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Args",
+          "type": "array"
+        },
+        "promptMode": {
+          "default": "stdin",
+          "enum": [
+            "stdin",
+            "jsonl",
+            "file",
+            "argv",
+            "acp"
+          ],
+          "title": "Promptmode",
+          "type": "string"
+        },
+        "streamFormat": {
+          "enum": [
+            "acp-json-rpc",
+            "codex-jsonl",
+            "claude-stream-json",
+            "ndjson",
+            "plain"
+          ],
+          "title": "Streamformat",
+          "type": "string"
+        },
+        "stderrMode": {
+          "default": "diagnostic",
+          "enum": [
+            "diagnostic",
+            "ignore"
+          ],
+          "title": "Stderrmode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "streamFormat"
+      ],
+      "title": "InvocationDef",
+      "type": "object"
+    },
+    "ProbeDef": {
+      "additionalProperties": false,
+      "properties": {
+        "versionArgs": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "title": "Versionargs",
+          "type": "array"
+        },
+        "authStrategy": {
+          "default": "unknown",
+          "maxLength": 80,
+          "title": "Authstrategy",
+          "type": "string"
+        },
+        "modelStrategy": {
+          "default": "none",
+          "maxLength": 80,
+          "title": "Modelstrategy",
+          "type": "string"
+        },
+        "timeoutSeconds": {
+          "default": 3.0,
+          "maximum": 30,
+          "minimum": 0.1,
+          "title": "Timeoutseconds",
+          "type": "number"
+        }
+      },
+      "title": "ProbeDef",
+      "type": "object"
+    },
+    "SessionDef": {
+      "additionalProperties": false,
+      "properties": {
+        "strategy": {
+          "default": "none",
+          "enum": [
+            "none",
+            "native",
+            "acp"
+          ],
+          "title": "Strategy",
+          "type": "string"
+        },
+        "resumeStrategy": {
+          "default": "none",
+          "maxLength": 80,
+          "title": "Resumestrategy",
+          "type": "string"
+        }
+      },
+      "title": "SessionDef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "tcode.harness-runtime.v2",
+      "default": "tcode.harness-runtime.v2",
+      "description": "Public Harness Runtime Profile schema identifier."
+    },
+    "id": {
+      "pattern": "^[a-z][a-z0-9-]{1,63}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "displayName": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Displayname",
+      "type": "string"
+    },
+    "kind": {
+      "const": "local_cli",
+      "default": "local_cli",
+      "title": "Kind",
+      "type": "string"
+    },
+    "release": {
+      "default": "beta",
+      "enum": [
+        "experimental",
+        "beta",
+        "stable"
+      ],
+      "title": "Release",
+      "type": "string"
+    },
+    "executables": {
+      "$ref": "#/$defs/ExecutableDef"
+    },
+    "probes": {
+      "$ref": "#/$defs/ProbeDef"
+    },
+    "invocation": {
+      "$ref": "#/$defs/InvocationDef"
+    },
+    "session": {
+      "$ref": "#/$defs/SessionDef"
+    },
+    "capabilities": {
+      "$ref": "#/$defs/HarnessCapabilities"
+    },
+    "security": {
+      "$ref": "#/$defs/HarnessSecurity"
+    },
+    "compatibility": {
+      "$ref": "#/$defs/HarnessCompatibility"
+    }
+  },
+  "required": [
+    "id",
+    "displayName",
+    "executables",
+    "invocation"
+  ],
+  "title": "TCode Harness Runtime Profile v2",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/helplessness/tcode/schemas/harness-runtime-v2.schema.json"
+}

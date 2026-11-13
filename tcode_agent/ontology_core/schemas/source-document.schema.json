@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "source-document",
+  "type": "object",
+  "required": [
+    "source_id",
+    "revision",
+    "scope",
+    "workspace_id",
+    "object_path",
+    "object_sha256"
+  ],
+  "properties": {
+    "source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "scope": {
+      "const": "public"
+    },
+    "workspace_id": {
+      "type": "null"
+    },
+    "object_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "object_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

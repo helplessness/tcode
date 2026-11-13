@@ -1,0 +1,41 @@
+{
+  "enabled": true,
+  "decision_ttl_minutes": 120,
+  "protected_workers": ["design", "experiment"],
+  "reviewer_workers": ["risk"],
+  "sensitive_tool_patterns": [
+    "*rfdiffusion*",
+    "*ligandmpnn*",
+    "*evolvepro*",
+    "*mutation-scoring*",
+    "*mutation_scoring*",
+    "*sequence_mutation*"
+  ],
+  "sequence_export_extensions": [".fa", ".faa", ".fasta", ".fas"],
+  "high_risk_action_terms": [
+    "increase virulence",
+    "enhance virulence",
+    "enhance pathogenicity",
+    "immune evasion",
+    "expand host range",
+    "gain of function",
+    "提高毒力",
+    "增强毒力",
+    "增强致病性",
+    "免疫逃逸",
+    "扩大宿主范围",
+    "功能获得"
+  ],
+  "high_risk_subject_terms": [
+    "pathogen",
+    "virus",
+    "bacterium",
+    "toxin",
+    "virulence",
+    "病原",
+    "病毒",
+    "细菌",
+    "毒素",
+    "毒力"
+  ]
+}

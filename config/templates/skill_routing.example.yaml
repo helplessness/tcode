@@ -1,0 +1,166 @@
+# Skill 路由配置（P0-P1）
+# 【高级 · 默认不改】仅在需要调整 Skill 扫描范围或匹配策略时编辑。
+# 优先核对 enabled 和 catalog；没有明确需求时保留后续阈值默认值。
+#
+# 设计原则：
+# 1. 代码只实现路由算法，领域、标签和别名由配置或每个 Skill 自己声明。
+# 2. 每个 Skill 可以在 SKILL.md frontmatter 中增加 routing: 配置。
+# 3. 分数和阈值会在下一次路由按文件修改时间重新加载。
+#    如果修改 catalog 的扫描范围，建议重启服务或调用 SkillManager.reload() 重建目录。
+
+version: 1
+
+# 是否启用新的混合路由器。
+# 设为 false 时会回退到旧版词项重叠推荐逻辑，便于紧急回滚。
+enabled: true
+
+catalog:
+  # 是否扫描当前工作目录的父目录中的 Skill。
+  # 生产默认关闭，避免从 tall/、tmcp/、chajian/ 等兄弟目录误扫大量 Skill。
+  # 需要跨 workspace 复用时再显式改为 true。
+  inherit_parent_skills: false
+
+  # 是否加载用户主目录（例如 ~/.claude/skills）中的 Skill。
+  # 生产默认关闭，保证服务端 Skill catalog 可复现，并减少启动扫描成本。
+  include_home_skills: false
+
+  # 同名 Skill 的处理方式：
+  # keep-last  = 后加载的 Skill 生效（兼容旧行为，但会明确记录冲突）
+  # keep-first = 先加载的 Skill 生效
+  # error      = 发现同名立即报错，适合严格 CI/生产环境
+  duplicate_policy: keep-last
+
+  # 是否把当前真实生效的 Skill 目录写入快照文件。
+  write_snapshot: true
+  snapshot_path: .tcode/skill-routing/catalog.json
+
+routing:
+  # 路由运行模式：
+  # active = 新路由结果直接生效
+  # shadow = 新路由只记录对比 Trace，Agent 继续使用旧路由结果
+  # legacy = 只运行旧路由器
+  mode: active
+
+  # 进入最终评分记录的候选数量。这里只保存短元数据，不会加载完整 SKILL.md。
+  candidate_limit: 6
+
+  # 最多向 Agent 展示多少个推荐候选。
+  # 候选不等于全部加载；默认只允许唯一主 Skill 自动加载。
+  recommendation_limit: 3
+
+  # 候选低于此分数时不向 Agent 推荐。
+  recommendation_min_score: 0.16
+
+  # Top-1 低于此分数时返回 no-skill，不强行选择 Skill。
+  selection_min_score: 0.32
+
+  # Top-1 与 Top-2 的分差低于此值时返回 clarify，不自动加载。
+  selection_min_margin: 0.06
+
+  # 只有唯一主 Skill 达到此分数，才具备自动预加载资格。
+  # 自动预加载还受 TCODE_AUTO_PRELOAD_RECOMMENDED_SKILLS 总开关控制。
+  auto_load_min_score: 0.58
+
+  # 命中 negative_examples 或 excludes 后的最大扣分权重。
+  negative_penalty_weight: 0.25
+
+  # 每个 Skill 自定义 priority 对最终分数的轻量影响，避免优先级盖过语义本身。
+  priority_weight: 0.03
+
+  # 是否把记忆召回文本拼入路由查询。
+  # 默认关闭，避免历史记忆把当前意图带偏。
+  include_recall_context: false
+
+  # 四路分数权重；加载时会自动归一化，不要求人工保证总和等于 1。
+  weights:
+    rule: 0.40
+    bm25: 0.30
+    vector: 0.25
+    domain: 0.05
+
+  # 全局停用词只用于路由检索，不影响 Agent 理解原始请求。
+  # 这里适合放置经评测确认会造成误命中的高频泛词，不建议一次添加太多。
+  stop_terms:
+    - 这个
+    - 帮我
+    - 一下
+    - 需要
+    - 使用
+
+vector:
+  # 是否启用向量召回。外部 embedding 不可用时会自动使用稳定的本地哈希向量。
+  # 开启且 tcode.json 的 embeddings.enabled=true 时，路由查询会发送到所配置的
+  # embedding 服务；涉及敏感请求时请使用可信内网服务，或把这里设为 false。
+  enabled: true
+
+  # 仅用于本地回退向量；使用 Ollama embedding 时维度由模型决定。
+  dimensions: 256
+
+  # Skill 路由使用独立索引，不与长期记忆向量库混合。
+  index_path: .tcode/skill-routing/vector-index.json
+
+trace:
+  # 是否记录每次路由的结构化 Trace。
+  enabled: true
+
+  # 默认不保存用户原文，只保存 query_hash，降低敏感信息进入日志的风险。
+  include_query: false
+
+  path: .tcode/skill-routing/traces.jsonl
+
+  # 每条 Trace 最多保存多少个候选的分项分数。
+  max_candidates: 10
+
+composite:
+  # P2 组合 Skill 计划层。
+  # 它只生成多步骤 Skill Plan，不直接创建 workflow run，也不自动提交重计算任务。
+  enabled: true
+
+  # off    = 关闭组合计划
+  # shadow = 只写 Trace，不注入 Agent 提示词
+  # active = 写 Trace，并在多 Skill 请求时把计划注入 Agent 提示词
+  mode: active
+
+  # 最多拆多少个子任务，避免长请求生成过大的上下文计划。
+  max_steps: 6
+
+  # 至少需要多少个可路由子任务，才认为是 composite。
+  min_steps: 2
+
+  # 至少需要命中多少个不同 Skill，才把计划暴露给 Agent。
+  # 例如“读 PDF 并总结”通常只需要 pdf 一个 Skill，不升级成 composite。
+  min_distinct_skills: 2
+
+  # 单个子任务的最低路由分数；低于该值只作为未路由步骤保留。
+  min_step_score: 0.30
+
+  # 多步骤计划里保留“报告/人工筛选”等未命中 Skill 的步骤，便于 Agent 理解全链路。
+  include_unrouted_steps: true
+
+  # active 模式下是否把计划注入 Agent 提示词。
+  expose_to_agent: true
+
+# 领域软路由配置。
+# 这是开放字典，不是代码里的固定枚举：可以自由新增领域，也可以保持为空。
+# Skill 在自己的 routing.domains 中引用这些名称；未登记的新名称仍然可以使用。
+domains:
+  document:
+    aliases: [PDF, DOCX, CSV, 文档, 表格, 文件处理]
+
+  literature:
+    aliases: [论文, 文献, DOI, PMID, PubMed, arXiv]
+
+  protein-sequence:
+    aliases: [蛋白序列, FASTA, 突变, 序列设计, 功能预测, 理化性质]
+
+  protein-structure:
+    aliases: [蛋白结构, PDB, CIF, 结构预测, 结构生成, 结构补全]
+
+  docking-interaction:
+    aliases: [分子对接, docking, binding pose, 相互作用, 氢键, 疏水作用]
+
+  simulation:
+    aliases: [分子动力学, MD, OpenMM, 轨迹, simulation]
+
+  software-engineering:
+    aliases: [代码, 测试, 调试, 仓库, Python, Git]

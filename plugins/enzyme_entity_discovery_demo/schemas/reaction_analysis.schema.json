@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:tcode:enzyme-entity-demo:schema:reaction-analysis:1.0",
+  "type": "object",
+  "required": ["schema_version", "run_id", "analysis_scope", "direction", "reaction_summary", "net_changes", "assumptions", "warnings", "unresolved_questions", "candidate_entities_intentionally_omitted"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "run_id": {"type": "string"},
+    "analysis_scope": {"const": "text_only_without_atom_mapping"},
+    "direction": {"enum": ["forward", "reverse", "reversible", "unknown"]},
+    "reaction_summary": {"type": "string", "minLength": 1},
+    "net_changes": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": ["change_id", "description", "basis", "confidence"],
+        "properties": {
+          "change_id": {"type": "string"},
+          "description": {"type": "string", "minLength": 1},
+          "basis": {"const": "user_input_interpretation"},
+          "confidence": {"enum": ["high", "medium", "low", "unknown"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "assumptions": {"type": "array", "items": {"type": "string"}},
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "unresolved_questions": {"type": "array", "items": {"type": "string"}},
+    "candidate_entities_intentionally_omitted": {"const": true}
+  },
+  "additionalProperties": false
+}

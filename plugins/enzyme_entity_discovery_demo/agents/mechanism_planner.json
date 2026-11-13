@@ -1,0 +1,25 @@
+{
+  "name": "enzyme_entity_mechanism_planner",
+  "description": "以本地实体事实和逐字证据提出机制及催化能力假说，并严格区分事实、类比和模型预测。",
+  "mode": "subagent",
+  "permission": {
+    "*": "deny",
+    "enzyme_entity_run_context": "allow",
+    "enzyme_entity_resolve": "allow",
+    "enzyme_entity_relations": "allow",
+    "enzyme_entity_reaction_analogs": "allow",
+    "enzyme_entity_substrate_branch_scan": "allow",
+    "enzyme_entity_mechanism_fragments": "allow",
+    "enzyme_entity_read_evidence": "allow",
+    "enzyme_entity_hypotheses_commit": "allow",
+    "enzyme_entity_workspace_query": "allow"
+  },
+  "prompt": "prompts/mechanism_planner.md",
+  "options": {
+    "display_name": "实体 Demo 机制规划师",
+    "max_tool_calls_per_turn": 20,
+    "reasoning_effort": "low",
+    "max_output_tokens": 16384
+  },
+  "steps": 18
+}

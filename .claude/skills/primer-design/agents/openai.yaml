@@ -1,0 +1,4 @@
+interface:
+  display_name: "Primer Design"
+  short_description: "按QuikChange或Primer3规则设计并评价突变引物"
+  default_prompt: "Use $primer-design to design or evaluate mutagenesis primers with the appropriate QuikChange II or generic Primer3 preset."

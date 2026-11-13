@@ -1,0 +1,60 @@
+.evidence-panel {
+  --evidence-text: var(--tcode-text, #e6edf3);
+  --evidence-muted: var(--tcode-text-muted, #99a7b2);
+  --evidence-border: var(--tcode-border, #303b43);
+  --evidence-surface: var(--tcode-surface, #11171b);
+  --evidence-soft: var(--tcode-surface-soft, #192127);
+  height: 100%; min-height: 0; display: flex; flex-direction: column;
+  background: var(--evidence-surface); color: var(--evidence-text); font-size: 13px; letter-spacing: 0;
+}
+.evidence-panel-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid var(--evidence-border); }
+.evidence-panel button { color:inherit; font:inherit; cursor:pointer; }
+.evidence-panel-header h2 { font-size:15px; font-weight:600; margin:0; }
+.evidence-close { width:36px; height:36px; font-size:22px; border-radius:4px; }
+.evidence-close:hover { background:var(--evidence-soft); }
+.evidence-panel-body { flex:1; min-height:0; overflow:auto; padding:16px; overflow-wrap:anywhere; }
+.evidence-title { font-size:15px; font-weight:600; line-height:1.6; margin:16px 0 6px; }
+.evidence-source { color:var(--evidence-muted); font-size:12px; line-height:1.65; margin:8px 0; }
+.evidence-locator { font-size:12px; color:var(--tcode-primary-strong, #8ed5ff); margin:6px 0; }
+.evidence-notice { border-left:3px solid #479b65; background:color-mix(in srgb, #479b65 12%, var(--evidence-surface)); padding:10px 12px; line-height:1.6; }
+.evidence-notice[data-state=warn],.evidence-notice[data-state=disabled],.evidence-notice[data-state=historical] { border-color:#c78b20; background:color-mix(in srgb, #c78b20 12%, var(--evidence-surface)); }
+.evidence-notice:is([data-state=fail],[data-state=withdrawn],[data-state=missing],[data-state=forbidden]) { border-color:#d34f46; background:color-mix(in srgb, #d34f46 12%, var(--evidence-surface)); }
+.evidence-notice button { margin-left:12px; text-decoration:underline; }
+.evidence-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-bottom:1px solid var(--evidence-border); margin:18px 0 16px; }
+.evidence-tabs button { min-height:44px; display:flex; align-items:center; justify-content:center; gap:5px; padding:0 4px; font-size:13px; background:transparent; border:0; border-bottom:2px solid transparent; }
+.evidence-tabs button[aria-selected=true] { border-color:var(--tcode-primary-strong, #7bd0ff); color:var(--tcode-primary-strong, #7bd0ff); font-weight:600; }
+.evidence-tabs span { color:var(--evidence-muted); font-size:11px; font-variant-numeric:tabular-nums; }
+.evidence-panel :is(button,summary,a,[tabindex]):focus-visible { outline:2px solid var(--tcode-primary-strong, #7bd0ff); outline-offset:2px; }
+.evidence-empty { padding:28px 0; color:var(--evidence-muted); line-height:1.7; }
+.evidence-quote { margin:0; padding:12px 14px; border-left:3px solid #d4ad47; background:color-mix(in srgb, #d4ad47 8%, var(--evidence-surface)); white-space:pre-wrap; line-height:1.85; }
+.evidence-details { margin:20px 0 0; border-top:1px solid var(--evidence-border); padding-top:12px; color:var(--evidence-muted); font-size:12px; }
+.evidence-details summary { cursor:pointer; min-height:32px; }
+.evidence-details pre { white-space:pre-wrap; overflow-wrap:anywhere; font-size:11px; margin-top:10px; line-height:1.7; }
+.evidence-images { display:grid; gap:16px; }
+.evidence-images figure { margin:0; }
+.evidence-image-button { display:block; width:100%; aspect-ratio:4/3; background:var(--evidence-soft); border:1px solid var(--evidence-border); border-radius:4px; overflow:hidden; cursor:zoom-in; }
+.evidence-image-button img { width:100%; height:100%; object-fit:contain; }
+.evidence-images figcaption { font-size:12px; color:var(--evidence-muted); margin-top:6px; line-height:1.6; }
+.evidence-image-error { padding:32px 12px; background:var(--evidence-soft); color:var(--evidence-muted); text-align:center; }
+.evidence-more { min-height:44px; padding:8px 12px; margin-top:12px; border:1px solid var(--evidence-border); border-radius:4px; }
+.evidence-graph { display:block; width:100%; height:auto; margin:0 0 12px; }
+.evidence-graph path { stroke:var(--evidence-border); stroke-width:1.5; fill:none; }
+.evidence-graph rect { fill:var(--evidence-soft); stroke:var(--evidence-border); }
+.evidence-graph [data-evidence=true] rect { stroke:var(--tcode-primary-strong, #7bd0ff); }
+.evidence-graph text { font-size:11px; fill:var(--evidence-text); }
+.evidence-graph text.evidence-graph-type { font-size:11px; fill:var(--evidence-muted); }
+.evidence-relations,.evidence-issues { list-style:none; margin:0; padding:0; }
+.evidence-relations li { display:grid; grid-template-columns:70px minmax(0,1fr); gap:10px; padding:12px 0; border-top:1px solid var(--evidence-border); line-height:1.65; }
+.evidence-relations li>span { font-size:12px; color:var(--evidence-muted); }
+.evidence-relations p { margin:0; }
+.evidence-relations button { text-align:left; min-height:32px; text-decoration:underline; color:var(--tcode-primary-strong, #7bd0ff); overflow-wrap:anywhere; }
+.evidence-issues li { display:flex; align-items:baseline; gap:10px; padding:12px 0; border-bottom:1px solid var(--evidence-border); line-height:1.65; }
+.evidence-issues b { font-size:11px; color:var(--evidence-muted); flex-shrink:0; }
+.evidence-issues [data-severity=error] b { color:#d34f46; }
+.evidence-issues [data-severity=warn] b { color:#b77b16; }
+.evidence-maintenance { padding:0 0 16px; margin-bottom:16px; border-bottom:1px solid var(--evidence-border); font-size:13px; line-height:1.65; }
+.evidence-progress-count { color:var(--tcode-primary-strong, #7bd0ff); font-variant-numeric:tabular-nums; }
+.evidence-maintenance-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.evidence-maintenance-actions button { min-height:44px; padding:8px 12px; border:1px solid var(--evidence-border); border-radius:4px; background:var(--evidence-soft); }
+.evidence-maintenance-actions button:disabled { opacity:.55; cursor:wait; }
+@media (max-width:400px) { .evidence-panel-body { padding:12px; } .evidence-tabs button { gap:3px; } }

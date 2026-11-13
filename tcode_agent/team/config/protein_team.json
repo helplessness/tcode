@@ -1,0 +1,249 @@
+{
+  "team_key": "protein_orchestrator",
+  "execution_domain": "protein",
+  "workspace_strategy": "protein_run",
+  "description": "蛋白质设计固定专家团队 - 1个常驻执行主管 + 8个领域专家，由 protein_orchestrator Manager 调度",
+  "_config_guide": {
+    "each_worker_fields": {
+      "name": "worker 唯一 slug（小写），用于 assign_task(worker_name=...)",
+      "role": "角色描述（显示用）",
+      "agent_name": "对应的 builtin agent 名称，决定默认 prompt；可设为 null 使用 prompt_override",
+      "permission_preset": "权限预设: readonly | developer | full",
+      "permission": "（可选）完全自定义权限字典，覆盖 permission_preset。格式同 AgentInfo.permission",
+      "prompt_override": "（可选）覆盖 agent_name 的默认 prompt，填入字符串即可",
+      "enabled": "是否启用该 worker。false 时不会 bootstrap，旧 session 中残留的同名 worker 也不能再被 assign_task/team_chat 调度。默认 true。",
+      "visible": "是否在前端团队/子代理面板显示。false 时仍可被 Manager 使用，但不显示。默认 true。",
+      "resident": "打开该团队时是否作为默认常驻成员自动展开。默认 false。",
+      "deletable": "是否允许 Manager 删除，固定成员设为 false",
+      "peer_whitelist": "允许该 worker 主动联系的其他 worker 名单。只有当前端开关打开时才生效。"
+    },
+    "shared_memory": "每个 worker 拥有独立的持久化记忆，跨所有 protein_orchestrator session 累积。记忆文件 key 为 'protein_orchestrator:<worker_name>'，存储在 .tcode/workers/protein_orchestrator__<worker_name>_memory.json"
+  },
+  "peer_communication": {
+    "enabled_default": false,
+    "allowed_reasons": ["missing_fact", "need_review", "conflict_check"],
+    "max_messages_per_pair_per_session": 3,
+    "round_timeout_seconds": 180
+  },
+  "workers": [
+    {
+      "name": "generalist",
+      "role": "蛋白通用执行主管",
+      "agent_name": "",
+      "enabled": true,
+      "visible": true,
+      "resident": true,
+      "permission_preset": "developer",
+      "permission": {
+        "*": "allow",
+        "todo_write": "deny",
+        "todo_read": "deny",
+        "create_worker": "deny",
+        "assign_task": "deny",
+        "terminate_worker": "deny"
+      },
+      "prompt_override": "You are the resident execution generalist for the protein team.\n\nRole:\n- Handle execution-heavy tasks that do not need full team planning.\n- Operate like a stable build-style worker inside the protein team.\n- When a task contains repeatable, independent sub-steps, you may use `task` to spin up short-lived helper subagents in parallel.\n- After helper work is done, consolidate the result and report back clearly.\n\nWhat you should do:\n- local execution, file preparation, format conversion, artifact collation, result cleanup\n- preparing inputs/outputs for design or evaluation tools\n- collecting scattered evidence and turning it into structured notes or tables\n- taking on ambiguous execution tasks before they are worth distributing to specialists\n\nRules:\n- You are not the top-level planner; if a task needs domain planning, cross-specialist sequencing, or final decisions, hand the result back to the orchestrator.\n- Do not create persistent workers.\n- Temporary helpers must be short-lived and disposable.\n- Reuse the shared execution memory to avoid repeating the same preparation work.\n- Be explicit about files produced, commands run, and unresolved blockers.\n",
+      "steps": 70,
+      "deletable": false,
+      "resident_generalist": true,
+      "peer_whitelist": ["requirements", "design", "structure", "scoring", "experiment", "report"]
+    },
+    {
+      "name": "requirements",
+      "role": "蛋白质需求工程师",
+      "agent_name": "protein_requirements",
+      "permission_preset": "developer",
+      "permission": {
+        "*": "allow",
+        "task": "deny",
+        "todo_write": "deny",
+        "todo_read": "deny",
+        "create_worker": "deny",
+        "assign_task": "deny",
+        "terminate_worker": "deny"
+      },
+      "prompt_override": "You are a protein design requirements engineer.\n\nConvert user intent into a strict design specification with:\n- Functional target\n- Stability/solubility constraints\n- Expression host constraints\n- Safety/compliance constraints\n- Success metrics and stop criteria\n",
+      "steps": 40,
+      "deletable": false,
+      "peer_whitelist": ["design", "risk", "report"]
+    },
+    {
+      "name": "paper_generalist",
+      "role": "文献证据抽取与入库助理",
+      "agent_name": "paper_generalist",
+      "permission_preset": "developer",
+      "permission": {
+        "*": "deny",
+        "bash": "allow",
+        "read": "allow",
+        "glob": "allow",
+        "webfetch": "allow",
+        "skill": "allow",
+        "memory_read": "allow",
+        "team_memory_read": "allow",
+        "team_memory_write": "allow",
+        "paper_prepare_workspace": "allow",
+        "paper_collect_helper_results": "allow",
+        "paper_library_lookup_pdf": "allow",
+        "paper_library_ingest_pdf": "allow",
+        "paper_library_get_record": "allow",
+        "paper_save_cards": "allow",
+        "paper_write_artifact": "allow",
+        "task": "deny"
+      },
+      "steps": 70,
+      "deletable": false,
+      "peer_whitelist": ["requirements", "design", "scoring", "experiment", "report"]
+    },
+    {
+      "name": "design",
+      "role": "蛋白质序列设计师",
+      "agent_name": "protein_design",
+      "permission_preset": "developer",
+      "permission": {
+        "*": "allow",
+        "task": "deny",
+        "todo_write": "deny",
+        "todo_read": "deny",
+        "create_worker": "deny",
+        "assign_task": "deny",
+        "terminate_worker": "deny"
+      },
+      "prompt_override": "You are a sequence design engineer for proteins.\n\nProduce candidate design sets with rationale, expected gains, and key risks.\nAlways output candidates in a structured table-like format.\n",
+      "steps": 50,
+      "deletable": false,
+      "peer_whitelist": ["requirements", "structure", "scoring", "verifier"]
+    },
+    {
+      "name": "structure",
+      "role": "结构生物学工程师",
+      "agent_name": "protein_structure",
+      "permission_preset": "developer",
+      "permission": {
+        "*": "allow",
+        "task": "deny",
+        "todo_write": "deny",
+        "todo_read": "deny",
+        "create_worker": "deny",
+        "assign_task": "deny",
+        "terminate_worker": "deny"
+      },
+      "prompt_override": "You are a structural biology engineer.\n\nEvaluate fold plausibility, local geometry concerns, and structural failure modes.\nReport confidence and critical unknowns.\n",
+      "steps": 50,
+      "deletable": false,
+      "peer_whitelist": ["design", "verifier", "report"]
+    },
+    {
+      "name": "scoring",
+      "role": "蛋白质评分工程师",
+      "agent_name": "protein_scoring",
+      "permission_preset": "developer",
+      "permission": {
+        "*": "allow",
+        "task": "deny",
+        "todo_write": "deny",
+        "todo_read": "deny",
+        "create_worker": "deny",
+        "assign_task": "deny",
+        "terminate_worker": "deny"
+      },
+      "prompt_override": "You are a protein candidate scoring engineer.\n\nRank candidates using weighted criteria (activity, stability, expression, developability).\nExpose the weighting assumptions and sensitivity.\n",
+      "steps": 50,
+      "deletable": false,
+      "peer_whitelist": ["design", "structure", "experiment", "report", "verifier"]
+    },
+    {
+      "name": "experiment",
+      "role": "实验验证工程师",
+      "agent_name": "protein_experiment",
+      "permission_preset": "developer",
+      "permission": {
+        "*": "allow",
+        "task": "deny",
+        "todo_write": "deny",
+        "todo_read": "deny",
+        "create_worker": "deny",
+        "assign_task": "deny",
+        "terminate_worker": "deny"
+      },
+      "prompt_override": "You are an experimental validation engineer.\n\nTurn candidate rankings into executable assay plans with controls, readouts, and timeline.\nHighlight blockers and fallback plans.\n",
+      "steps": 40,
+      "deletable": false,
+      "peer_whitelist": ["scoring", "report", "risk"]
+    },
+    {
+      "name": "risk",
+      "role": "生物安全风险评估师",
+      "agent_name": "protein_risk",
+      "permission_preset": "developer",
+      "permission": {
+        "*": "allow",
+        "edit": "deny",
+        "write": "deny",
+        "bash": "deny",
+        "exec": "deny",
+        "process": "deny",
+        "process_runtime": "deny",
+        "skill_run": "deny",
+        "task": "deny",
+        "todo_write": "deny",
+        "todo_read": "deny",
+        "create_worker": "deny",
+        "assign_task": "deny",
+        "terminate_worker": "deny"
+      },
+      "prompt_override": "You are a biosafety and compliance risk reviewer.\n\nIdentify dual-use, regulatory, and operational risks. Provide mitigations and red-line constraints.\nYou are a read-only reviewer: do not generate candidate sequences, design experiments, execute computation, or modify files.\nReturn the structured JSON required by the Mandatory Biosafety Review Contract. If information is insufficient, use HUMAN_REVIEW_REQUIRED; never default to ALLOW.\n",
+      "steps": 30,
+      "deletable": false,
+      "peer_whitelist": ["requirements", "experiment", "verifier", "report"]
+    },
+    {
+      "name": "verifier",
+      "role": "独立复核师",
+      "agent_name": "protein_verifier",
+      "permission_preset": "developer",
+      "permission": {
+        "*": "allow",
+        "edit": "deny",
+        "write": "deny",
+        "bash": "deny",
+        "exec": "deny",
+        "process": "deny",
+        "process_runtime": "deny",
+        "skill_run": "deny",
+        "task": "deny",
+        "todo_write": "deny",
+        "todo_read": "deny",
+        "create_worker": "deny",
+        "assign_task": "deny",
+        "terminate_worker": "deny"
+      },
+      "prompt_override": "You are an independent verifier for protein design outputs.\n\nChallenge assumptions, find contradictions, and request missing evidence.\nReturn PASS/REVISE with clear reasons.\n",
+      "steps": 35,
+      "deletable": false,
+      "peer_whitelist": ["design", "structure", "scoring", "risk", "report"]
+    },
+    {
+      "name": "report",
+      "role": "技术报告师",
+      "agent_name": "protein_report",
+      "permission_preset": "developer",
+      "permission": {
+        "*": "allow",
+        "edit": "deny",
+        "write": "deny",
+        "bash": "deny",
+        "task": "deny",
+        "todo_write": "deny",
+        "todo_read": "deny",
+        "create_worker": "deny",
+        "assign_task": "deny",
+        "terminate_worker": "deny"
+      },
+      "prompt_override": "You are a technical reporting agent for protein design programs.\n\nProduce concise decision-ready reports with:\n- Top candidates and rationale\n- Key risks and mitigations\n- Next experiments\n- Open questions\n",
+      "steps": 30,
+      "deletable": false,
+      "peer_whitelist": ["requirements", "scoring", "experiment", "risk", "verifier"]
+    }
+  ]
+}

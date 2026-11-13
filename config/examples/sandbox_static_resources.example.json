@@ -1,0 +1,12 @@
+{
+  "mounts": [
+    {
+      "source": "/srv/tcode/resources/blastp/uniref100",
+      "target": "/workspace/.external/system/blast-db",
+      "read_only": true
+    }
+  ],
+  "env": {
+    "BLASTP_UNIREF100": "/workspace/.external/system/blast-db/uniref100"
+  }
+}

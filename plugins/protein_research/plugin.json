@@ -1,0 +1,24 @@
+{
+  "name": "protein-research",
+  "version": "0.1.0",
+  "apiVersion": "1.0",
+  "sdk": ">=1.5.0,<2.0.0",
+  "python": ">=3.11",
+  "runtime": "python",
+  "entry": "plugin.py:Plugin",
+  "description": "蛋白研究：输入检查、配体距离上下文与多来源证据整理；Agent选择研究路线，不提交计算。",
+  "author": "TCode",
+  "provides": [], "requires": [], "optional": [],
+  "permissions": [
+    {"scope": "filesystem.read", "patterns": ["./**"], "required": true,
+     "description": "仅通过宿主逐次授权读取当前工作区内的蛋白输入、已有评分和研究记录。"},
+    {"scope": "filesystem.write", "patterns": ["./outputs/plugin_analysis/**"], "required": true,
+     "description": "仅通过宿主发布新的、不可覆盖的分析产物，不修改输入。"}
+  ],
+  "scope": "workspace",
+  "configSchema": "config.schema.json",
+  "requestedTrust": "trusted",
+  "desktopRuntime": "trusted-worker",
+  "skills": ["skills"],
+  "contributes": ["tools"]
+}

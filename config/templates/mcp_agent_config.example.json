@@ -1,0 +1,170 @@
+{
+  "description": "高级：默认无需修改。只有需要调整不同 Agent 的 MCP 可见范围时才编辑 agents；服务地址和启用状态在 MCP 清单中配置。",
+  "agents": {
+    "build": {
+      "allowed_tools": "all",
+      "allowed_routed_servers": "all",
+      "description": "默认 build/chat agent 自动发现路由策略允许直连的 MCP；领域计算仍统一通过 Job Protocol 路由。"
+    },
+    "general": {
+      "allowed_tools": "all",
+      "allowed_routed_servers": "all",
+      "description": "通用 Agent 自动发现路由策略允许直连的 MCP，并通过 Job Protocol 路由领域计算任务。"
+    },
+    "protein_orchestrator": {
+      "allowed_tools": [
+        "job-protocol-mcp"
+      ],
+      "description": "蛋白质设计主协调器，通过 Job Protocol 访问主要生物计算工具。",
+      "allowed_routed_servers": "all"
+    },
+    "protein_requirements": {
+      "allowed_tools": [],
+      "description": "需求工程师通常不直接调用 MCP，专注规格整理。"
+    },
+    "protein_design": {
+      "allowed_tools": [
+        "job-protocol-mcp"
+      ],
+      "description": "设计专家：序列设计、结构生成与放置。",
+      "allowed_routed_servers": [
+        "ligandmpnn-mcp",
+        "boltz-mcp",
+        "placer-mcp",
+        "rfdiffusion-mcp"
+      ]
+    },
+    "protein_structure": {
+      "allowed_tools": [
+        "job-protocol-mcp"
+      ],
+      "description": "结构专家：结构评估与相互作用分析。",
+      "allowed_routed_servers": [
+        "boltz-mcp",
+        "plip-mcp",
+        "gnina-mcp",
+        "placer-mcp"
+      ]
+    },
+    "protein_scoring": {
+      "allowed_tools": [
+        "job-protocol-mcp"
+      ],
+      "description": "评分专家：候选打分与比较。",
+      "allowed_routed_servers": [
+        "gnina-mcp",
+        "plip-mcp",
+        "boltz-mcp"
+      ]
+    },
+    "protein_experiment": {
+      "allowed_tools": [
+        "job-protocol-mcp"
+      ],
+      "description": "实验专家：实验计划与模拟验证。",
+      "allowed_routed_servers": [
+        "gnina-mcp",
+        "plip-mcp",
+        "simulation-mcp",
+        "rfdiffusion-mcp"
+      ]
+    },
+    "protein_risk": {
+      "allowed_tools": [],
+      "description": "风险专家通常不直接调用 MCP。"
+    },
+    "protein_verifier": {
+      "allowed_tools": [
+        "job-protocol-mcp"
+      ],
+      "description": "复核专家可读取主要生物计算工具结果。",
+      "allowed_routed_servers": [
+        "boltz-mcp",
+        "gnina-mcp",
+        "plip-mcp",
+        "ligandmpnn-mcp",
+        "placer-mcp",
+        "simulation-mcp",
+        "rfdiffusion-mcp"
+      ]
+    },
+    "protein_report": {
+      "allowed_tools": [],
+      "description": "报告专家通常不直接调用 MCP。"
+    },
+    "worker_requirements": {
+      "allowed_tools": [],
+      "description": "固定 requirements worker 的 MCP 建议工具。"
+    },
+    "worker_design": {
+      "allowed_tools": [
+        "job-protocol-mcp"
+      ],
+      "description": "固定 design worker 的 MCP Job Protocol 路由范围。",
+      "allowed_routed_servers": [
+        "ligandmpnn-mcp",
+        "boltz-mcp",
+        "placer-mcp",
+        "rfdiffusion-mcp"
+      ]
+    },
+    "worker_structure": {
+      "allowed_tools": [
+        "job-protocol-mcp"
+      ],
+      "description": "固定 structure worker 的 MCP Job Protocol 路由范围。",
+      "allowed_routed_servers": [
+        "boltz-mcp",
+        "plip-mcp",
+        "gnina-mcp",
+        "placer-mcp"
+      ]
+    },
+    "worker_scoring": {
+      "allowed_tools": [
+        "job-protocol-mcp"
+      ],
+      "description": "固定 scoring worker 的 MCP Job Protocol 路由范围。",
+      "allowed_routed_servers": [
+        "gnina-mcp",
+        "plip-mcp",
+        "boltz-mcp"
+      ]
+    },
+    "worker_experiment": {
+      "allowed_tools": [
+        "job-protocol-mcp"
+      ],
+      "description": "固定 experiment worker 的 MCP Job Protocol 路由范围。",
+      "allowed_routed_servers": [
+        "gnina-mcp",
+        "plip-mcp",
+        "simulation-mcp",
+        "rfdiffusion-mcp"
+      ]
+    },
+    "worker_risk": {
+      "allowed_tools": [],
+      "description": "固定 risk worker 通常不直接调用 MCP。"
+    },
+    "worker_verifier": {
+      "allowed_tools": [
+        "job-protocol-mcp"
+      ],
+      "description": "固定 verifier worker 的 MCP Job Protocol 路由范围。",
+      "allowed_routed_servers": [
+        "boltz-mcp",
+        "gnina-mcp",
+        "plip-mcp",
+        "ligandmpnn-mcp",
+        "placer-mcp",
+        "simulation-mcp",
+        "rfdiffusion-mcp"
+      ]
+    },
+    "worker_report": {
+      "allowed_tools": [],
+      "description": "固定 report worker 通常不直接调用 MCP。"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light" class="studio-theme">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tcode Desktop</title>
+    <style>
+      #root:not(:empty) + .desktop-startup { display: none; }
+      .desktop-startup { padding: 40px; max-width: 640px; margin: auto; color: #20352a; font: 16px -apple-system, BlinkMacSystemFont, sans-serif; }
+    </style>
+  </head>
+  <body class="bg-[#0d1117] text-white">
+    <div id="root"></div>
+    <main class="desktop-startup" role="status">
+      <h1>正在加载 TCode 界面</h1>
+      <p>若加载没有完成，请重新加载。已保存的会话与交互界面仍保留在本地。</p>
+      <form action="/desktop.html" method="get"><button type="submit">重新加载界面</button></form>
+    </main>
+    <script type="module" src="/src/desktop-app/index.tsx"></script>
+  </body>
+</html>

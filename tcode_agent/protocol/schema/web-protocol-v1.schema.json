@@ -1,0 +1,1923 @@
+{
+  "$defs": {
+    "AsyncCompletionEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "async_completion",
+          "title": "Kind",
+          "type": "string"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "origin_turn_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Origin Turn Id"
+        },
+        "origin_request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Origin Request Id"
+        },
+        "identifier": {
+          "title": "Identifier",
+          "type": "string"
+        },
+        "job_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Job Id"
+        },
+        "target_server": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Server"
+        },
+        "target_tool": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Tool"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "issue_state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Issue State"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message"
+        },
+        "result_summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Result Summary"
+        },
+        "error_summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Summary"
+        },
+        "output_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Path"
+        },
+        "output_abs_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Abs Path"
+        },
+        "artifacts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Artifacts",
+          "type": "array"
+        },
+        "can_continue": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Can Continue"
+        },
+        "continuation_policy": {
+          "anyOf": [
+            {
+              "enum": [
+                "notify",
+                "auto",
+                "store_only"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Continuation Policy"
+        },
+        "delivery_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Delivery Status"
+        },
+        "continuation_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Continuation Status"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Created At"
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Updated At"
+        },
+        "read_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Read At"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "session_id",
+        "identifier",
+        "status"
+      ],
+      "title": "AsyncCompletionEvent",
+      "type": "object"
+    },
+    "CanvasContentBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "canvas",
+          "title": "Type",
+          "type": "string"
+        },
+        "schema": {
+          "const": "tcode.canvas.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "kind": {
+          "const": "svg",
+          "title": "Kind",
+          "type": "string"
+        },
+        "canvas_id": {
+          "pattern": "^canvas_[0-9a-f]{32}$",
+          "title": "Canvas Id",
+          "type": "string"
+        },
+        "revision_id": {
+          "pattern": "^rev_[0-9a-f]{32}$",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "fallback": {
+          "maxLength": 512,
+          "title": "Fallback",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "schema",
+        "kind",
+        "canvas_id",
+        "revision_id",
+        "session_id",
+        "title",
+        "fallback"
+      ],
+      "title": "CanvasContentBlock",
+      "type": "object"
+    },
+    "ChatToolEvent": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ToolUsingEvent"
+        },
+        {
+          "$ref": "#/$defs/ToolResultEvent"
+        },
+        {
+          "$ref": "#/$defs/PermissionRequestEvent"
+        },
+        {
+          "$ref": "#/$defs/QuestionRequestEvent"
+        },
+        {
+          "$ref": "#/$defs/QuestionTimeoutEvent"
+        },
+        {
+          "$ref": "#/$defs/UsageStatusEvent"
+        }
+      ],
+      "title": "ChatToolEvent"
+    },
+    "GuidanceMessageMetadata": {
+      "additionalProperties": false,
+      "description": "追加指导在公开消息协议中的安全投影。",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "sequence": {
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "mode": {
+          "enum": [
+            "steer",
+            "queue"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "target_turn_id": {
+          "title": "Target Turn Id",
+          "type": "string"
+        },
+        "applied_safe_point": {
+          "title": "Applied Safe Point",
+          "type": "string"
+        },
+        "contract_revision_id": {
+          "default": "",
+          "title": "Contract Revision Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "sequence",
+        "mode",
+        "target_turn_id",
+        "applied_safe_point"
+      ],
+      "title": "GuidanceMessageMetadata",
+      "type": "object"
+    },
+    "LegacyRuntimeSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        },
+        "counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Counts",
+          "type": "object"
+        },
+        "tasks": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Tasks",
+          "type": "array"
+        },
+        "recent_events": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Recent Events",
+          "type": "array"
+        }
+      },
+      "required": [
+        "total",
+        "counts",
+        "tasks",
+        "recent_events"
+      ],
+      "title": "LegacyRuntimeSummary",
+      "type": "object"
+    },
+    "PageContentBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "intelligent_page",
+          "title": "Type",
+          "type": "string"
+        },
+        "schema": {
+          "const": "tcode.intelligent-page.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "page_id": {
+          "pattern": "^page_[0-9a-f]{32}$",
+          "title": "Page Id",
+          "type": "string"
+        },
+        "revision_id": {
+          "pattern": "^rev_[0-9a-f]{32}$",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "fallback": {
+          "maxLength": 512,
+          "title": "Fallback",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "schema",
+        "page_id",
+        "revision_id",
+        "session_id",
+        "title",
+        "fallback"
+      ],
+      "title": "PageContentBlock",
+      "type": "object"
+    },
+    "PermissionRequestEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "permission",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "title": "Request Id",
+          "type": "string"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "tool_name": {
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": true,
+          "title": "Arguments",
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "session_id",
+        "tool_name",
+        "arguments"
+      ],
+      "title": "PermissionRequestEvent",
+      "type": "object"
+    },
+    "QuestionPayload": {
+      "additionalProperties": true,
+      "description": "问题工具允许业务侧扩展 metadata 等字段。",
+      "properties": {
+        "question": {
+          "title": "Question",
+          "type": "string"
+        },
+        "type": {
+          "default": "custom",
+          "title": "Type",
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Options",
+          "type": "array"
+        },
+        "allow_custom": {
+          "default": true,
+          "title": "Allow Custom",
+          "type": "boolean"
+        },
+        "display": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Display"
+        }
+      },
+      "required": [
+        "question"
+      ],
+      "title": "QuestionPayload",
+      "type": "object"
+    },
+    "QuestionRequestEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "question",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "title": "Request Id",
+          "type": "string"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "question": {
+          "$ref": "#/$defs/QuestionPayload"
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "session_id",
+        "question"
+      ],
+      "title": "QuestionRequestEvent",
+      "type": "object"
+    },
+    "QuestionTimeoutEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "question_timeout",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "title": "Request Id",
+          "type": "string"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "answer": {
+          "default": "",
+          "title": "Answer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "session_id"
+      ],
+      "title": "QuestionTimeoutEvent",
+      "type": "object"
+    },
+    "ResearchCompareBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "research_compare",
+          "title": "Type",
+          "type": "string"
+        },
+        "schema": {
+          "const": "tcode.research-compare.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "result_digest": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Result Digest",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "fallback": {
+          "maxLength": 512,
+          "title": "Fallback",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "schema",
+        "run_id",
+        "result_digest",
+        "session_id",
+        "title",
+        "fallback"
+      ],
+      "title": "ResearchCompareBlock",
+      "type": "object"
+    },
+    "SessionDetail": {
+      "additionalProperties": false,
+      "properties": {
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "parent_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Id"
+        },
+        "title": {
+          "default": "",
+          "title": "Title",
+          "type": "string"
+        },
+        "agent_name": {
+          "default": "",
+          "title": "Agent Name",
+          "type": "string"
+        },
+        "status": {
+          "default": "",
+          "title": "Status",
+          "type": "string"
+        },
+        "tenant_id": {
+          "default": "",
+          "title": "Tenant Id",
+          "type": "string"
+        },
+        "user_id": {
+          "default": "",
+          "title": "User Id",
+          "type": "string"
+        },
+        "workspace_id": {
+          "default": "",
+          "title": "Workspace Id",
+          "type": "string"
+        },
+        "workdir": {
+          "default": "",
+          "title": "Workdir",
+          "type": "string"
+        },
+        "workdir_name": {
+          "default": "",
+          "title": "Workdir Name",
+          "type": "string"
+        },
+        "created_at": {
+          "default": 0,
+          "title": "Created At",
+          "type": "number"
+        },
+        "updated_at": {
+          "default": 0,
+          "title": "Updated At",
+          "type": "number"
+        },
+        "is_archived": {
+          "default": false,
+          "title": "Is Archived",
+          "type": "boolean"
+        },
+        "archived_at": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Archived At"
+        },
+        "mode": {
+          "default": "general",
+          "title": "Mode",
+          "type": "string"
+        },
+        "research_id": {
+          "default": "",
+          "title": "Research Id",
+          "type": "string"
+        },
+        "mode_source": {
+          "default": "default",
+          "title": "Mode Source",
+          "type": "string"
+        },
+        "archive_cause": {
+          "default": "",
+          "title": "Archive Cause",
+          "type": "string"
+        },
+        "archive_locked": {
+          "default": false,
+          "title": "Archive Locked",
+          "type": "boolean"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/SessionMessage"
+          },
+          "title": "Messages",
+          "type": "array"
+        }
+      },
+      "required": [
+        "session_id"
+      ],
+      "title": "SessionDetail",
+      "type": "object"
+    },
+    "SessionMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant",
+            "system",
+            "tool"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Created At"
+        },
+        "tool_calls": {
+          "items": {
+            "$ref": "#/$defs/ToolCall"
+          },
+          "title": "Tool Calls",
+          "type": "array"
+        },
+        "parent_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Id"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        },
+        "finish": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Finish"
+        },
+        "usage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TokenUsage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "cost": {
+          "default": 0,
+          "title": "Cost",
+          "type": "number"
+        },
+        "process_notes": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Process Notes",
+          "type": "array"
+        },
+        "presentation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Presentation"
+        },
+        "content_blocks": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Content Blocks",
+          "type": "array"
+        },
+        "research_grounding": {
+          "additionalProperties": true,
+          "title": "Research Grounding",
+          "type": "object"
+        },
+        "verification": {
+          "additionalProperties": true,
+          "title": "Verification",
+          "type": "object"
+        },
+        "input_images": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Input Images",
+          "type": "array"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "summary": {
+          "default": false,
+          "title": "Summary",
+          "type": "boolean"
+        },
+        "compacted_at": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Compacted At"
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "content"
+      ],
+      "title": "SessionMessage",
+      "type": "object"
+    },
+    "SessionSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "parent_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Id"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "agent_name": {
+          "title": "Agent Name",
+          "type": "string"
+        },
+        "status": {
+          "default": "",
+          "title": "Status",
+          "type": "string"
+        },
+        "tenant_id": {
+          "default": "",
+          "title": "Tenant Id",
+          "type": "string"
+        },
+        "user_id": {
+          "default": "",
+          "title": "User Id",
+          "type": "string"
+        },
+        "workspace_id": {
+          "default": "",
+          "title": "Workspace Id",
+          "type": "string"
+        },
+        "workdir": {
+          "default": "",
+          "title": "Workdir",
+          "type": "string"
+        },
+        "workdir_name": {
+          "default": "",
+          "title": "Workdir Name",
+          "type": "string"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "number"
+        },
+        "updated_at": {
+          "title": "Updated At",
+          "type": "number"
+        },
+        "message_count": {
+          "title": "Message Count",
+          "type": "integer"
+        },
+        "message_preview": {
+          "default": "",
+          "title": "Message Preview",
+          "type": "string"
+        },
+        "async_completion_unread_count": {
+          "default": 0,
+          "title": "Async Completion Unread Count",
+          "type": "integer"
+        },
+        "usage": {
+          "$ref": "#/$defs/TokenUsage"
+        },
+        "task_runtime": {
+          "$ref": "#/$defs/SessionTaskRuntimeSummary"
+        },
+        "is_archived": {
+          "default": false,
+          "title": "Is Archived",
+          "type": "boolean"
+        },
+        "archived_at": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Archived At"
+        },
+        "mode": {
+          "default": "general",
+          "title": "Mode",
+          "type": "string"
+        },
+        "research_id": {
+          "default": "",
+          "title": "Research Id",
+          "type": "string"
+        },
+        "mode_source": {
+          "default": "default",
+          "title": "Mode Source",
+          "type": "string"
+        },
+        "archive_cause": {
+          "default": "",
+          "title": "Archive Cause",
+          "type": "string"
+        },
+        "archive_locked": {
+          "default": false,
+          "title": "Archive Locked",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "session_id",
+        "title",
+        "agent_name",
+        "created_at",
+        "updated_at",
+        "message_count",
+        "usage",
+        "task_runtime"
+      ],
+      "title": "SessionSummary",
+      "type": "object"
+    },
+    "SessionTaskRuntimeSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "session_outcome_status": {
+          "default": "",
+          "title": "Session Outcome Status",
+          "type": "string"
+        },
+        "session_outcome_updated_at": {
+          "default": 0,
+          "title": "Session Outcome Updated At",
+          "type": "number"
+        },
+        "total": {
+          "default": 0,
+          "title": "Total",
+          "type": "integer"
+        },
+        "active_total": {
+          "title": "Active Total",
+          "type": "integer"
+        },
+        "counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Counts",
+          "type": "object"
+        },
+        "active_counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Active Counts",
+          "type": "object"
+        },
+        "resolved_counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Resolved Counts",
+          "type": "object"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/TaskRuntimeItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "resolved_items": {
+          "items": {
+            "$ref": "#/$defs/TaskRuntimeItem"
+          },
+          "title": "Resolved Items",
+          "type": "array"
+        },
+        "recent_events": {
+          "items": {
+            "$ref": "#/$defs/TaskRuntimeEvent"
+          },
+          "title": "Recent Events",
+          "type": "array"
+        },
+        "updated_at": {
+          "title": "Updated At",
+          "type": "number"
+        },
+        "legacy_runtime": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LegacyRuntimeSummary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "session_id",
+        "active_total",
+        "counts",
+        "active_counts",
+        "updated_at"
+      ],
+      "title": "SessionTaskRuntimeSummary",
+      "type": "object"
+    },
+    "SessionUsageNode": {
+      "additionalProperties": false,
+      "properties": {
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "parent_id": {
+          "default": "",
+          "title": "Parent Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "agent_name": {
+          "title": "Agent Name",
+          "type": "string"
+        },
+        "status": {
+          "default": "",
+          "title": "Status",
+          "type": "string"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "number"
+        },
+        "updated_at": {
+          "title": "Updated At",
+          "type": "number"
+        },
+        "message_count": {
+          "title": "Message Count",
+          "type": "integer"
+        },
+        "own_usage": {
+          "$ref": "#/$defs/TokenUsage"
+        },
+        "total_usage": {
+          "$ref": "#/$defs/TokenUsage"
+        },
+        "own_cost": {
+          "title": "Own Cost",
+          "type": "number"
+        },
+        "cost": {
+          "title": "Cost",
+          "type": "number"
+        },
+        "by_agent": {
+          "additionalProperties": {
+            "$ref": "#/$defs/TokenUsage"
+          },
+          "title": "By Agent",
+          "type": "object"
+        },
+        "children": {
+          "items": {
+            "$ref": "#/$defs/SessionUsageNode"
+          },
+          "title": "Children",
+          "type": "array"
+        }
+      },
+      "required": [
+        "session_id",
+        "title",
+        "agent_name",
+        "created_at",
+        "updated_at",
+        "message_count",
+        "own_usage",
+        "total_usage",
+        "own_cost",
+        "cost",
+        "by_agent"
+      ],
+      "title": "SessionUsageNode",
+      "type": "object"
+    },
+    "SessionUsageSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "tenant_id": {
+          "default": "",
+          "title": "Tenant Id",
+          "type": "string"
+        },
+        "user_id": {
+          "default": "",
+          "title": "User Id",
+          "type": "string"
+        },
+        "workspace_id": {
+          "default": "",
+          "title": "Workspace Id",
+          "type": "string"
+        },
+        "total_usage": {
+          "$ref": "#/$defs/TokenUsage"
+        },
+        "cost": {
+          "title": "Cost",
+          "type": "number"
+        },
+        "by_agent": {
+          "additionalProperties": {
+            "$ref": "#/$defs/TokenUsage"
+          },
+          "title": "By Agent",
+          "type": "object"
+        },
+        "sessions": {
+          "items": {
+            "$ref": "#/$defs/SessionUsageNode"
+          },
+          "title": "Sessions",
+          "type": "array"
+        },
+        "verification_accounting": {
+          "additionalProperties": true,
+          "title": "Verification Accounting",
+          "type": "object"
+        }
+      },
+      "required": [
+        "total_usage",
+        "cost",
+        "by_agent",
+        "sessions"
+      ],
+      "title": "SessionUsageSummary",
+      "type": "object"
+    },
+    "TaskRuntimeEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "runtime_id": {
+          "title": "Runtime Id",
+          "type": "string"
+        },
+        "runtime_kind": {
+          "title": "Runtime Kind",
+          "type": "string"
+        },
+        "session_id": {
+          "default": "",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "phase": {
+          "title": "Phase",
+          "type": "string"
+        },
+        "source": {
+          "default": "",
+          "title": "Source",
+          "type": "string"
+        },
+        "previous_status": {
+          "default": "",
+          "title": "Previous Status",
+          "type": "string"
+        },
+        "title": {
+          "default": "",
+          "title": "Title",
+          "type": "string"
+        },
+        "external_id": {
+          "default": "",
+          "title": "External Id",
+          "type": "string"
+        },
+        "tool_name": {
+          "default": "",
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "number"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "title": "Metadata",
+          "type": "object"
+        }
+      },
+      "required": [
+        "event_id",
+        "runtime_id",
+        "runtime_kind",
+        "status",
+        "phase",
+        "created_at"
+      ],
+      "title": "TaskRuntimeEvent",
+      "type": "object"
+    },
+    "TaskRuntimeItem": {
+      "additionalProperties": false,
+      "properties": {
+        "runtime_id": {
+          "title": "Runtime Id",
+          "type": "string"
+        },
+        "runtime_kind": {
+          "title": "Runtime Kind",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "phase": {
+          "title": "Phase",
+          "type": "string"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        },
+        "parent_runtime_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Runtime Id"
+        },
+        "external_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "External Id"
+        },
+        "tool_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Name"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Created At"
+        },
+        "updated_at": {
+          "title": "Updated At",
+          "type": "number"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completed At"
+        },
+        "event_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Event Count"
+        },
+        "last_event_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Event Id"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "title": "Metadata",
+          "type": "object"
+        }
+      },
+      "required": [
+        "runtime_id",
+        "runtime_kind",
+        "status",
+        "phase",
+        "updated_at"
+      ],
+      "title": "TaskRuntimeItem",
+      "type": "object"
+    },
+    "TokenUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "prompt_tokens": {
+          "title": "Prompt Tokens",
+          "type": "integer"
+        },
+        "completion_tokens": {
+          "title": "Completion Tokens",
+          "type": "integer"
+        },
+        "total_tokens": {
+          "title": "Total Tokens",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens"
+      ],
+      "title": "TokenUsage",
+      "type": "object"
+    },
+    "ToolCall": {
+      "additionalProperties": false,
+      "properties": {
+        "tool_name": {
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": true,
+          "title": "Arguments",
+          "type": "object"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "state": {
+          "anyOf": [
+            {
+              "enum": [
+                "pending",
+                "running",
+                "completed",
+                "error",
+                "skipped",
+                "interrupted"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "State"
+        },
+        "output": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Metadata"
+        },
+        "start_time": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Time"
+        },
+        "end_time": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Time"
+        },
+        "compacted_at": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Compacted At"
+        }
+      },
+      "required": [
+        "tool_name",
+        "arguments"
+      ],
+      "title": "ToolCall",
+      "type": "object"
+    },
+    "ToolResult": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "output": {
+          "title": "Output",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "truncated": {
+          "default": false,
+          "title": "Truncated",
+          "type": "boolean"
+        },
+        "output_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Path"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        }
+      },
+      "required": [
+        "title",
+        "output"
+      ],
+      "title": "ToolResult",
+      "type": "object"
+    },
+    "ToolResultEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "tool_result",
+          "title": "Type",
+          "type": "string"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "message_id": {
+          "default": "",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "tool_call": {
+          "$ref": "#/$defs/ToolCall"
+        }
+      },
+      "required": [
+        "type",
+        "session_id",
+        "tool_call"
+      ],
+      "title": "ToolResultEvent",
+      "type": "object"
+    },
+    "ToolUsingEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "status",
+          "title": "Type",
+          "type": "string"
+        },
+        "status": {
+          "const": "using_tool",
+          "title": "Status",
+          "type": "string"
+        },
+        "session_id": {
+          "default": "",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "tool_name": {
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "tool_args": {
+          "additionalProperties": true,
+          "title": "Tool Args",
+          "type": "object"
+        },
+        "call_id": {
+          "default": "",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "message_id": {
+          "default": "",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "content": {
+          "default": "",
+          "title": "Content",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "status",
+        "tool_name",
+        "tool_args"
+      ],
+      "title": "ToolUsingEvent",
+      "type": "object"
+    },
+    "UsageStatusEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "status",
+          "title": "Type",
+          "type": "string"
+        },
+        "status": {
+          "const": "usage",
+          "title": "Status",
+          "type": "string"
+        },
+        "usage": {
+          "$ref": "#/$defs/TokenUsage"
+        }
+      },
+      "required": [
+        "type",
+        "status",
+        "usage"
+      ],
+      "title": "UsageStatusEvent",
+      "type": "object"
+    }
+  },
+  "title": "TCode Web Protocol",
+  "type": "object",
+  "$id": "https://tcode.local/schemas/web-protocol-1.0.0.json",
+  "x-contract-id": "tcode.web.protocol",
+  "x-protocol-version": "1.0.0",
+  "x-exported-models": [
+    "ResearchCompareBlock",
+    "CanvasContentBlock",
+    "PageContentBlock",
+    "TokenUsage",
+    "ToolCall",
+    "ToolResult",
+    "GuidanceMessageMetadata",
+    "SessionMessage",
+    "TaskRuntimeItem",
+    "TaskRuntimeEvent",
+    "LegacyRuntimeSummary",
+    "SessionTaskRuntimeSummary",
+    "SessionSummary",
+    "SessionDetail",
+    "SessionUsageNode",
+    "SessionUsageSummary",
+    "AsyncCompletionEvent",
+    "QuestionPayload",
+    "ToolUsingEvent",
+    "ToolResultEvent",
+    "PermissionRequestEvent",
+    "QuestionRequestEvent",
+    "QuestionTimeoutEvent",
+    "UsageStatusEvent",
+    "ChatToolEvent"
+  ]
+}

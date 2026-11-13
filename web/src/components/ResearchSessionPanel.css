@@ -1,0 +1,134 @@
+.research-session-panel {
+  color: #242720;
+}
+
+.research-session-panel section {
+  border-color: #d8d3c7 !important;
+  background: #fffdf8 !important;
+  box-shadow: 0 1px 2px rgb(40 42 35 / 4%);
+}
+
+.research-session-panel .research-overview-hero {
+  background: linear-gradient(135deg, #fffefb 0%, #f7f5ec 100%) !important;
+  border-color: #c9c3b4 !important;
+}
+
+.research-session-panel .research-project-title {
+  color: #11120f !important;
+  font-weight: 750 !important;
+  letter-spacing: -0.02em;
+}
+
+.research-session-panel .research-project-summary {
+  max-width: 72ch;
+  color: #4e5349 !important;
+  font-size: 0.9375rem;
+}
+
+.research-session-panel .research-metric,
+.research-session-panel article,
+.research-session-panel [class~="bg-[#171c20]"],
+.research-session-panel [class~="bg-[#121b20]"],
+.research-session-panel [class~="bg-[#101518]"] {
+  border: 1px solid #e1ddd2;
+  background: #f7f5ef !important;
+}
+
+.research-session-panel [class~="border-[#2a3136]"],
+.research-session-panel [class~="border-[#30383e]"],
+.research-session-panel [class~="border-[#355264]"],
+.research-session-panel [class~="border-[#35434c]"] {
+  border-color: #d8d3c7 !important;
+}
+
+.research-session-panel [class~="text-[#f1f5f9]"],
+.research-session-panel [class~="text-[#e6edf3]"],
+.research-session-panel [class~="text-[#d7dee4]"],
+.research-session-panel [class~="text-[#bdc8d1]"],
+.research-session-panel [class~="text-[#b9c6cf]"] {
+  color: #252820 !important;
+}
+
+.research-session-panel [class~="text-[#71808a]"],
+.research-session-panel [class~="text-[#8b99a4]"],
+.research-session-panel [class~="text-[#9faeb7]"],
+.research-session-panel [class~="text-[#596873]"] {
+  color: #666b61 !important;
+}
+
+.research-session-panel [class~="text-[#8ed5ff]"] {
+  color: #56653d !important;
+}
+
+.research-session-panel [class~="text-[#d2a978]"] {
+  color: #805820 !important;
+}
+
+.research-session-panel [class~="text-[#9ee6bb]"] {
+  color: #426037 !important;
+}
+
+.research-session-panel input,
+.research-session-panel textarea,
+.research-session-panel select {
+  border-color: #cfc9bb !important;
+  background: #ffffff !important;
+  color: #20231d !important;
+}
+
+.research-session-panel input::placeholder,
+.research-session-panel textarea::placeholder {
+  color: #83877e;
+}
+
+.research-session-panel input:focus,
+.research-session-panel textarea:focus,
+.research-session-panel select:focus {
+  border-color: #78865a !important;
+  box-shadow: 0 0 0 3px rgb(120 134 90 / 13%);
+}
+
+.research-session-panel button {
+  border-color: #c8c2b4 !important;
+  background: #fffefa;
+  color: #363a31 !important;
+}
+
+.research-session-panel button:hover:not(:disabled) {
+  border-color: #78865a !important;
+  background: #f3f2e9;
+  color: #1f2418 !important;
+}
+
+.research-session-panel .research-status-pill {
+  border: 1px solid #d4d9c6;
+  border-radius: 999px;
+  background: #f1f4e9;
+  padding: 0.25rem 0.6rem;
+  color: #526139 !important;
+  font-weight: 600;
+}
+
+.research-session-panel .research-budget-field {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.research-session-panel .research-budget-field > span {
+  color: #2f332b;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.research-session-panel .research-budget-field > small {
+  min-height: 1rem;
+  color: #73786e;
+  font-size: 0.6875rem;
+  line-height: 1rem;
+}
+
+.research-session-panel pre {
+  border-radius: 0.5rem;
+  background: #eeece5;
+  color: #3e4339 !important;
+}

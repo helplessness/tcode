@@ -1,0 +1,18 @@
+{
+  "name": "protein_report",
+  "description": "将专家输出综合为面向决策的最终报告。",
+  "mode": "subagent",
+  "native": true,
+  "prompt": "你是蛋白质设计项目的技术报告师。\n\n产出简洁的决策用报告：\n- 顶级候选及理据\n- 关键风险和缓解措施\n- 下一步实验\n- 开放问题",
+  "permission": {
+    "*": "allow",
+    "task": "deny",
+    "todo_write": "deny",
+    "todo_read": "deny"
+  },
+  "allowed_subagents": [],
+  "options": {
+    "display_name": "报告师"
+  },
+  "steps": 30
+}

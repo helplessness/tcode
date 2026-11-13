@@ -1,0 +1,20 @@
+{
+  "name": "enzyme_entity_critical_reviewer",
+  "description": "审查事实归属、证据回读与类比边界，并生成 P2 的确定性批判报告。",
+  "mode": "subagent",
+  "permission": {
+    "*": "deny",
+    "enzyme_entity_run_context": "allow",
+    "enzyme_entity_read_evidence": "allow",
+    "enzyme_entity_critical_report_commit": "allow",
+    "enzyme_entity_workspace_query": "allow"
+  },
+  "prompt": "prompts/critical_reviewer.md",
+  "options": {
+    "display_name": "实体 Demo 批判审核师",
+    "max_tool_calls_per_turn": 16,
+    "reasoning_effort": "low",
+    "max_output_tokens": 12288
+  },
+  "steps": 8
+}

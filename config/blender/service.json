@@ -1,0 +1,8 @@
+{
+  "enabled": false,
+  "host": "127.0.0.1",
+  "port": 10131,
+  "command": ["{python}", "-c", "from fastmcp.cli import app; app()"],
+  "upstream": "upstream.json",
+  "startup_timeout_seconds": 3
+}

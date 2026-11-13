@@ -1,0 +1,88 @@
+{
+  "enabled": true,
+  "mode": "hybrid",
+  "required_review_tools": {
+    "gnina-mcp": {
+      "tools": ["gnina_mcp_server"],
+      "reason": "分子对接结果需要人工确认",
+      "auto_review_conditions": {
+        "num_modes": {
+          "operator": "gt",
+          "value": 10
+        }
+      }
+    },
+    "simulation-mcp": {
+      "tools": ["simulation_run_mcp_server"],
+      "reason": "分子动力学模拟需要人工确认参数",
+      "auto_review_conditions": {
+        "steps": {
+          "operator": "gt",
+          "value": 10000
+        }
+      }
+    },
+    "boltz-mcp": {
+      "tools": ["boltz_mcp_server"],
+      "reason": "蛋白质结构预测需要人工确认",
+      "auto_review_conditions": {}
+    },
+    "rfdiffusion-mcp": {
+      "tools": ["rfdiffusion_mcp_server"],
+      "reason": "蛋白质生成需要人工确认",
+      "auto_review_conditions": {
+        "inference_num_designs": {
+          "operator": "gt",
+          "value": 20
+        }
+      }
+    }
+  },
+  "auto_review_rules": {
+    "file_modifications": {
+      "enabled": true,
+      "patterns": [
+        ".*\\.py$",
+        ".*\\.ts$",
+        ".*\\.js$"
+      ],
+      "max_modified_files": 5
+    },
+    "tool_output_threshold": {
+      "enabled": true,
+      "max_results": 10,
+      "confidence_threshold": 0.8
+    },
+    "user_request_keywords": {
+      "enabled": true,
+      "keywords": [
+        "review",
+        "check",
+        "verify",
+        "confirm",
+        "审核",
+        "确认",
+        "检查"
+      ]
+    }
+  },
+  "review_workflow": {
+    "states": [
+      "pending_review",
+      "approved",
+      "rejected",
+      "needs_revision"
+    ],
+    "default_state": "pending_review",
+    "auto_approve_labels": [
+      "docs",
+      "test",
+      "trivial"
+    ],
+    "timeout_hours": 24
+  },
+  "notification": {
+    "enabled": false,
+    "channels": []
+  }
+}

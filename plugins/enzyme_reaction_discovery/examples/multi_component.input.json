@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "reaction_id": "multi-component-salt-example",
+  "reactants": [
+    {
+      "smiles": "O=C[C@H](O)COP(=O)([O-])O.[Na+]",
+      "name": "sodium triose phosphate",
+      "role": "unknown"
+    }
+  ],
+  "products": [
+    {
+      "smiles": "C=CC(=O)[O-].[Na+]",
+      "name": "sodium unsaturated carboxylate",
+      "role": "target"
+    }
+  ],
+  "context": {
+    "single_enzyme_preferred": true,
+    "max_route_steps": 3
+  },
+  "component_assumptions": [],
+  "user_confirmed": false
+}

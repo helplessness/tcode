@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:tcode:enzyme-entity-demo:schema:critical-report:1.0",
+  "type": "object",
+  "required": ["schema_version", "run_id", "review_decision", "review_input_digest", "resolved_findings", "checks", "automated_checks", "limitations", "next_actions", "user_summary", "counts"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "run_id": {"type": "string"},
+    "review_decision": {"enum": ["PASS", "REVISE"]},
+    "review_input_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "resolved_findings": {
+      "type": "array",
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["check_id", "resolution"],
+        "properties": {
+          "check_id": {"enum": ["cofactor_not_activity", "family_attribution", "evidence_read", "fact_prediction_separation", "target_activity_unproven", "route_closure_and_auxiliary_steps"]},
+          "resolution": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["check_id", "status", "finding"],
+        "properties": {
+          "check_id": {"enum": ["cofactor_not_activity", "family_attribution", "evidence_read", "fact_prediction_separation", "target_activity_unproven", "route_closure_and_auxiliary_steps"]},
+          "status": {"enum": ["pass", "fail", "unknown"]},
+          "finding": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "automated_checks": {
+      "type": "object",
+      "required": ["all_cited_evidence_read", "unread_evidence_ids", "published_ontology_modified", "all_target_candidates_unvalidated", "all_target_routes_unvalidated", "route_planning_status", "route_assessments_complete", "route_gaps_explicit"],
+      "properties": {
+        "all_cited_evidence_read": {"type": "boolean"},
+        "unread_evidence_ids": {"type": "array", "items": {"type": "string"}},
+        "published_ontology_modified": {"const": false},
+        "all_target_candidates_unvalidated": {"type": "boolean"},
+        "all_target_routes_unvalidated": {"type": "boolean"},
+        "route_planning_status": {"enum": ["completed_with_hypotheses", "no_local_route"]},
+        "route_assessments_complete": {"type": "boolean"},
+        "route_gaps_explicit": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "limitations": {"type": "array", "items": {"type": "string"}},
+    "next_actions": {"type": "array", "items": {"type": "string"}},
+    "user_summary": {"type": "string", "minLength": 1},
+    "counts": {
+      "type": "object",
+      "required": ["mechanism_hypotheses", "baseline_candidates", "entity_expanded_candidates", "reported_fact_claims", "citation_evidence", "route_hypotheses", "auxiliary_steps"],
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    },
+    "reasoning_protocol": {"type": "string"},
+    "knowledge_backend": {"const": "ontology_assertion_evidence"}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,237 @@
+{
+  "template_key": "protein_design_loop",
+  "display_name": "蛋白设计执行循环（完整参考模板）",
+  "domain": "protein",
+  "enabled": false,
+  "description": "完整参考模板，当前已禁用。基于已批准的蛋白设计说明，通过持久化的制作者-检查者循环执行设计、复核、有限返工和人工升级。",
+  "input_contract": {
+    "required": [
+      "brief_path"
+    ],
+    "optional": [
+      "target_description",
+      "constraints",
+      "success_metrics",
+      "max_loop_iterations"
+    ]
+  },
+  "output_contract": {
+    "required": [
+      "verified_outcome",
+      "final_report"
+    ],
+    "optional": [
+      "evidence_summary",
+      "candidate_cards",
+      "screening_results",
+      "escalation_reason"
+    ]
+  },
+  "stage_defaults": {
+    "validators": [
+      {"type": "non_empty"},
+      {"type": "no_failure_signal"},
+      {"type": "expected_artifact_coverage"}
+    ],
+    "retry_policy": {
+      "max_attempts": 2
+    },
+    "failure_policy": {
+      "action": "fallback"
+    }
+  },
+  "stages": [
+    {
+      "stage_id": "workflow_bootstrap",
+      "depends_on": [],
+      "prompt_file": "workflow_bootstrap.md",
+      "label": "已批准设计说明启动整理",
+      "owner": "protein-generalist",
+      "call_type": "plugin_agent",
+      "description": "读取已批准的设计说明，在不改变范围的前提下整理目标、约束、成功标准和产物计划。",
+      "expected_artifacts": [
+        "loop_state",
+        "normalized_brief"
+      ],
+      "success_checks": [
+        "已确认 brief 的批准标记",
+        "已整理成功标准和停止条件"
+      ]
+    },
+    {
+      "stage_id": "evidence_review",
+      "depends_on": ["workflow_bootstrap"],
+      "label": "文献证据审查",
+      "owner": "paper_library_agent",
+      "call_type": "plugin_agent",
+      "description": "只抽取已批准路线所需的文献证据。",
+      "expected_artifacts": [
+        "evidence_summary"
+      ],
+      "success_checks": [
+        "所有结论都绑定来源，或明确标记为未知"
+      ],
+      "fallback_stage_ids": [
+        "workflow_bootstrap"
+      ]
+    },
+    {
+      "stage_id": "data_collection",
+      "depends_on": ["evidence_review"],
+      "label": "设计数据收集",
+      "owner": "data-collection",
+      "call_type": "plugin_agent",
+      "description": "收集并校验已批准路线所需的序列、结构、配体、同源性和注释输入。",
+      "expected_artifacts": [
+        "validated_design_inputs"
+      ],
+      "success_checks": [
+        "必需输入可追溯",
+        "关键缺口已明确列出"
+      ],
+      "fallback_stage_ids": [
+        "evidence_review"
+      ]
+    },
+    {
+      "stage_id": "computational_design",
+      "depends_on": ["data_collection"],
+      "label": "计算设计",
+      "owner": "computational-protein-designer",
+      "call_type": "plugin_agent",
+      "description": "按设计说明批准的计算设计路线生成或优化候选。",
+      "expected_artifacts": [
+        "computational_candidates"
+      ],
+      "success_checks": [
+        "候选来源已记录",
+        "硬约束已应用"
+      ],
+      "fallback_stage_ids": [
+        "data_collection"
+      ]
+    },
+    {
+      "stage_id": "rational_design",
+      "depends_on": ["computational_design"],
+      "label": "理性设计",
+      "owner": "rational-protein-designer",
+      "call_type": "plugin_agent",
+      "description": "当设计说明批准理性设计路线时，生成或评估理性突变。",
+      "expected_artifacts": [
+        "rational_candidates"
+      ],
+      "success_checks": [
+        "突变理由可追溯",
+        "受保护残基已遵守"
+      ],
+      "fallback_stage_ids": [
+        "data_collection"
+      ]
+    },
+    {
+      "stage_id": "virtual_screening",
+      "depends_on": ["rational_design"],
+      "label": "虚拟筛选",
+      "owner": "virtual-screening",
+      "call_type": "plugin_agent",
+      "description": "使用设计说明中定义的排序指标和淘汰指标评估已批准候选。",
+      "expected_artifacts": [
+        "screening_results",
+        "ranked_candidates"
+      ],
+      "success_checks": [
+        "排序指标已计算，或明确说明不可用",
+        "失败候选及原因已保留"
+      ],
+      "fallback_stage_ids": [
+        "computational_design"
+      ]
+    },
+    {
+      "stage_id": "review_gate",
+      "depends_on": ["virtual_screening"],
+      "label": "独立循环复核",
+      "owner": "protein-design-loop-verifier",
+      "call_type": "plugin_agent",
+      "description": "独立对照已批准设计说明和持久化证据，判断结果是 PASS、REVISE 还是 ESCALATE。",
+      "allowed_tools": [
+        "read",
+        "glob",
+        "grep",
+        "evidence_search",
+        "evidence_graph",
+        "evidence_doctor"
+      ],
+      "expected_artifacts": [
+        "verification_decision"
+      ],
+      "success_checks": [
+        "所有强制标准已检查",
+        "复核决策有证据支撑"
+      ],
+      "review_gate": true,
+      "fallback_stage_ids": [
+        "data_collection",
+        "computational_design",
+        "rational_design",
+        "virtual_screening"
+      ]
+    },
+    {
+      "stage_id": "decision_report",
+      "depends_on": ["review_gate"],
+      "label": "已复核决策报告",
+      "owner": "protein-generalist",
+      "call_type": "plugin_agent",
+      "description": "只在独立复核通过后生成最终报告。",
+      "expected_artifacts": [
+        "final_report"
+      ],
+      "success_checks": [
+        "报告说明证据、限制和后续实验建议"
+      ]
+    }
+  ],
+  "metadata": {
+    "version": "0.1.1",
+    "template_layout": "directory",
+    "prompt_dir": "prompts",
+    "aliases": [
+      "蛋白设计执行循环",
+      "蛋白设计循环",
+      "设计执行循环",
+      "执行蛋白设计说明",
+      "继续执行蛋白设计",
+      "protein_design_loop"
+    ],
+    "routing": {
+      "enabled": false,
+      "auto_start": false,
+      "summary": "当用户已有已批准的蛋白设计说明，需要继续执行设计、数据收集、候选生成、筛选、独立复核和最终报告时使用。",
+      "use_when": [
+        "用户要求按已批准的蛋白设计说明继续执行",
+        "用户希望进入蛋白设计的多阶段执行、筛选、复核和报告流程",
+        "工作区已有 protein_design_brief.md，且用户表达继续、执行、按方案推进"
+      ],
+      "do_not_use_when": [
+        "用户只是头脑风暴新的蛋白设计方向",
+        "用户只是询问某个工具或单独运行某个工具",
+        "用户正在修改代码、文档或 workflow 配置本身"
+      ],
+      "match_threshold": 0.36
+    },
+    "loop_enabled": true,
+    "auto_approve_revision": true,
+    "max_loop_iterations": 3,
+    "verification_stage_id": "review_gate",
+    "candidate_stage_ids": [
+      "computational_design",
+      "rational_design",
+      "virtual_screening"
+    ],
+    "recommended_review_stage_ids": [
+      "review_gate"
+    ]
+  }
+}

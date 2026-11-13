@@ -1,0 +1,542 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tcode.local/enzyme-reaction-discovery/candidate-ranking-v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "evidence_ledger",
+    "enzyme_candidates",
+    "knowledge_gaps",
+    "merge_policy"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_ledger": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidenceStatement"
+      }
+    },
+    "enzyme_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "enzyme_family",
+          "card_ids",
+          "score",
+          "confidence",
+          "supports",
+          "contradictions",
+          "hard_conflict",
+          "engineering_plausibility",
+          "sources"
+        ],
+        "properties": {
+          "name_basis": {"enum": ["established_name", "target_description", "uncertain", "designed_construct"]},
+          "proposal_rationale_status": {"const": "historical_unverified", "description": "只读原始提名假设；当前判断在supports、contradictions及ranking_reason中。"},
+          "name_evidence": {"type": "string", "minLength": 1, "maxLength": 240},
+          "specific_name": {"type": "string", "minLength": 1, "maxLength": 120},
+          "prior_specific_name": {"type": "string", "minLength": 1, "maxLength": 120, "description": "历史具体提名，不是本轮已选蛋白"},
+          "proposal_rationale": {"type":"object","properties":{"fit_reason":{"type":"string","minLength":1,"maxLength":400},"catalytic_events":{"type":"array","maxItems":3,"items":{"type":"string","minLength":1,"maxLength":160}},"route_role":{"enum":["single_enzyme","route_component","alternative"]},"main_uncertainty":{"type":"string","minLength":1,"maxLength":240}},"additionalProperties":false},
+          "chemistry_fit_score": {"type":"number","minimum":0,"maximum":100},
+          "ranking_factors": {"type":"array","minItems":1,"maxItems":3,"items":{"type":"object","required":["source","statement"],"properties":{"source":{"enum":["wiki","model_knowledge","inference"]},"statement":{"type":"string","minLength":1,"maxLength":96},"refs":{"type":"array","minItems":1,"maxItems":2,"uniqueItems":true,"items":{"type":"string","minLength":1,"maxLength":240}},"quote":{"type":"string","minLength":3,"maxLength":240},"comparison":{"type":"object","required":["peer_ids","relation"],"properties":{"peer_ids":{"type":"array","minItems":1,"maxItems":3,"uniqueItems":true,"items":{"type":"string","minLength":1,"maxLength":128}},"relation":{"enum":["higher","equal","lower","unresolved"]},"scope":{"enum":["overall","factor"],"description":"overall比较总适配分；factor只比较本条因素，不决定总名次。省略按overall兼容。"}},"additionalProperties":false,"description":"本条相对判断的同组对象及方向；复制候选/提名/卡/路线稳定ID，不用酶名。未知可填unresolved，不宣称相对名次。"}},"if":{"properties":{"source":{"const":"wiki"}}},"then":{"required":["refs","quote"]},"else":{"not":{"anyOf":[{"required":["refs"]},{"required":["quote"]}]}},"additionalProperties":false},"description":"发生排序证据归属问题时逐项标来源，最多3条短依据。wiki 必须附已读原文 refs/quote；model_knowledge 与 inference 不填 Wiki 引用。程序生成带来源标签的 ranking_reason，不自动改分或验证化学事实。"},
+          "ranking_reason": {"type":"string","minLength":1,"maxLength":400},
+          "candidate_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "candidate_role": {
+            "enum": [
+              "primary",
+              "route_component",
+              "diagnostic_control"
+            ]
+          },
+          "component_function": {"enum": ["oxidation", "dephosphorylation", "dehydration", "alternative_termination", "activation", "other"]},
+          "substrate_relation": {"enum": ["reported_exact", "mechanistic_analogy", "unresolved"]},
+          "native_reaction_quote": {"type": "string"},
+          "enzyme_family": {
+            "type": "string",
+            "minLength": 1
+          },
+          "card_ids": {
+            "type": "array",
+            "minItems": 0,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^ERD-CARD-[0-9]{3,}$"
+            }
+          },
+          "cofactor_classes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "confidence": {
+            "enum": [
+              "high",
+              "medium",
+              "low",
+              "unresolved"
+            ]
+          },
+          "supports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/claimRef"
+            }
+          },
+          "contradictions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/claimRef"
+            }
+          },
+          "hard_conflict": {
+            "type": "boolean"
+          },
+          "engineering_plausibility": {
+            "enum": [
+              "high",
+              "medium",
+              "low",
+              "unknown"
+            ]
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mechanism_ids": {
+            "type": "array",
+            "maxItems": 10,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^M(?:10|[1-9])$"
+            }
+          },
+          "knowledge_gaps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "enzyme_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "enzyme_id": {
+            "type": "string",
+            "pattern": "^(?:UniProt:(?:[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2})(?:-[1-9][0-9]*)?|EC:[1-7]\\.[0-9]+\\.[0-9]+\\.[0-9]+)$",
+            "description": "UniProt对应具体蛋白；EC对应有来源的命名酶活性，具体蛋白身份未确定。"
+          },
+          "ec_number": {
+            "type": "string",
+            "pattern": "^[1-7]\\.[0-9]+\\.[0-9]+\\.(?:[0-9]+|-)$"
+          },
+          "candidate_kind": {
+            "enum": [
+              "wiki_enzyme",
+              "model_enzyme",
+              "unmatched_capability"
+            ]
+          },
+          "identity_verification": {"type": "object", "required": ["status", "target_activity_status", "card_id", "enzyme_id", "refs", "name_quote", "organism_quote", "basis"], "properties": {"status": {"const": "wiki_identity_linked"}, "target_activity_status": {"const": "unverified"}, "card_id": {"type": "string", "pattern": "^ERD-CARD-[0-9]{3,}$"}, "enzyme_id": {"type": "string", "pattern": "^UniProt:"}, "ec_number": {"type": "string", "pattern": "^[1-7]\\.[0-9]+\\.[0-9]+\\.(?:[0-9]+|-)$"}, "refs": {"type": "array", "minItems": 1, "maxItems": 6, "items": {"type": "string"}}, "name_quote": {"type": "string", "minLength": 3}, "organism_quote": {"type": "string", "minLength": 1}, "basis": {"type": "string", "minLength": 1}}, "additionalProperties": false},
+          "user_provided_name": {"type": "string", "minLength": 1, "maxLength": 120},
+          "user_input_quote": {"type": "string", "maxLength": 240},
+          "verification_note": {
+            "type": "string",
+            "minLength": 1
+          },
+          "required_capability": {
+            "type": "string",
+            "minLength": 1
+          },
+          "proposal_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+          },
+          "identity_level": {
+            "enum": [
+              "protein",
+              "named_enzyme",
+              "family",
+              "capability"
+            ]
+          },
+          "evidence_scope": {
+            "enum": [
+              "wiki_prior",
+              "related_only",
+              "mixed_or_uncertain",
+              "unverified"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "candidate_kind"
+              ],
+              "properties": {
+                "candidate_kind": {
+                  "enum": [
+                    "model_enzyme",
+                    "unmatched_capability"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "verification_note"
+              ],
+              "properties": {
+                "card_ids": {
+                  "maxItems": 0
+                },
+                "engineering_plausibility": {
+                  "const": "unknown"
+                }
+              },
+              "if": {"required": ["identity_verification"]},
+              "then": {"required": ["enzyme_id", "candidate_kind", "identity_level"], "properties": {"candidate_kind": {"const": "model_enzyme"}, "identity_level": {"const": "protein"}}},
+              "else": {"not": {"anyOf": [{"required": ["enzyme_id"]}, {"required": ["ec_number"]}]}}
+            },
+            "else": {
+              "properties": {
+                "card_ids": {
+                  "minItems": 1
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "candidate_kind"
+              ],
+              "properties": {
+                "candidate_kind": {
+                  "const": "wiki_enzyme"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "verification_note"
+              ],
+              "properties": {
+                "identity_verification": {"type": "object", "required": ["status", "target_activity_status", "card_id", "enzyme_id", "refs", "name_quote", "organism_quote", "basis"], "properties": {"status": {"const": "wiki_identity_linked"}, "target_activity_status": {"const": "unverified"}, "card_id": {"type": "string", "pattern": "^ERD-CARD-[0-9]{3,}$"}, "enzyme_id": {"type": "string", "pattern": "^UniProt:"}, "ec_number": {"type": "string", "pattern": "^[1-7]\\.[0-9]+\\.[0-9]+\\.(?:[0-9]+|-)$"}, "refs": {"type": "array", "minItems": 1, "maxItems": 6, "items": {"type": "string"}}, "name_quote": {"type": "string", "minLength": 3}, "organism_quote": {"type": "string", "minLength": 1}, "basis": {"type": "string", "minLength": 1}}, "additionalProperties": false},
+                "user_provided_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "user_input_quote": {"type": "string", "maxLength": 240},
+                "verification_note": {
+                  "enum": [
+                    "Wiki 有既往反应依据；目标活性未验证",
+                    "仅有同类蛋白类比依据，不是本蛋白实测活性；目标活性未验证",
+                    "Wiki 证据含类比或归属待核对；目标活性未验证",
+                    "Wiki已核实酶活性/EC来源；具体蛋白身份未确定，目标活性另核实"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "candidate_kind"
+              ],
+              "properties": {
+                "candidate_kind": {
+                  "const": "model_enzyme"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "verification_note",
+                "enzyme_name"
+              ],
+              "properties": {
+                "identity_verification": {"type": "object", "required": ["status", "target_activity_status", "card_id", "enzyme_id", "refs", "name_quote", "organism_quote", "basis"], "properties": {"status": {"const": "wiki_identity_linked"}, "target_activity_status": {"const": "unverified"}, "card_id": {"type": "string", "pattern": "^ERD-CARD-[0-9]{3,}$"}, "enzyme_id": {"type": "string", "pattern": "^UniProt:"}, "ec_number": {"type": "string", "pattern": "^[1-7]\\.[0-9]+\\.[0-9]+\\.(?:[0-9]+|-)$"}, "refs": {"type": "array", "minItems": 1, "maxItems": 6, "items": {"type": "string"}}, "name_quote": {"type": "string", "minLength": 3}, "organism_quote": {"type": "string", "minLength": 1}, "basis": {"type": "string", "minLength": 1}}, "additionalProperties": false},
+                "user_provided_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "user_input_quote": {"type": "string", "maxLength": 240},
+                "verification_note": {
+                  "enum": [
+                    "用户提供的候选，未经过 Wiki 核实；输入声明未独立验证",
+                    "模型提出的具体酶，未经过 Wiki 核实",
+                    "Wiki 已关联蛋白身份；目标活性仍为未验证假说，旧反应注释不作目标活性证明",
+                    "模型提出的酶名线索，未经过 Wiki 核实",
+                    "模型提出的家族线索，未经过 Wiki 核实"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "candidate_kind"
+              ],
+              "properties": {
+                "candidate_kind": {
+                  "const": "unmatched_capability"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "verification_note",
+                "required_capability"
+              ],
+              "properties": {
+                "identity_verification": {"type": "object", "required": ["status", "target_activity_status", "card_id", "enzyme_id", "refs", "name_quote", "organism_quote", "basis"], "properties": {"status": {"const": "wiki_identity_linked"}, "target_activity_status": {"const": "unverified"}, "card_id": {"type": "string", "pattern": "^ERD-CARD-[0-9]{3,}$"}, "enzyme_id": {"type": "string", "pattern": "^UniProt:"}, "ec_number": {"type": "string", "pattern": "^[1-7]\\.[0-9]+\\.[0-9]+\\.(?:[0-9]+|-)$"}, "refs": {"type": "array", "minItems": 1, "maxItems": 6, "items": {"type": "string"}}, "name_quote": {"type": "string", "minLength": 3}, "organism_quote": {"type": "string", "minLength": 1}, "basis": {"type": "string", "minLength": 1}}, "additionalProperties": false},
+                "user_provided_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "user_input_quote": {"type": "string", "maxLength": 240},
+                "verification_note": {
+                  "const": "所需催化能力，尚未匹配具体酶，未经过 Wiki 核实"
+                }
+              },
+              "not": {
+                "required": [
+                  "enzyme_name"
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "candidate_kind"
+              ],
+              "properties": {
+                "candidate_kind": {
+                  "const": "unmatched_capability"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "candidate_role": {
+                  "const": "route_component"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "knowledge_gaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "read_card_reviews": {"type": "array", "maxItems": 24, "items": {"type": "object", "required": ["card_id", "decision", "reason"], "properties": {"card_id": {"type": "string", "minLength": 1, "maxLength": 80}, "decision": {"enum": ["considered", "analogy_only", "not_selected", "deferred"]}, "reason": {"type": "string", "minLength": 1, "maxLength": 240}, "comparison": {"type": "object", "required": ["shared_events", "target_gaps", "peer_ids", "basis"], "properties": {"shared_events": {"type": "array", "maxItems": 3, "items": {"type": "string", "maxLength": 120}}, "target_gaps": {"type": "array", "maxItems": 3, "items": {"type": "string", "maxLength": 120}}, "peer_ids": {"type": "array", "maxItems": 3, "uniqueItems": true, "items": {"type": "string"}}, "activation_inference": {"type": "string", "minLength": 1, "maxLength": 240}, "transfer_test": {"type": "string", "minLength": 1, "maxLength": 300}, "nomination_reason": {"type": "string", "minLength": 1, "maxLength": 240}, "basis": {"enum": ["target_conflict", "relative_fit", "coverage_limit"]}}, "additionalProperties": false}}, "additionalProperties": false}},
+    "unassessed_read_cards": {"type": "array", "maxItems": 64, "items": {"type": "string"}},
+    "mechanism_feedback": {"type":"array","maxItems":3,"items":{"type":"object","required":["feedback_id","status","candidate_ids","mechanism_ids","proposal","reason","evidence_refs"],"properties":{"feedback_id":{"type":"string","pattern":"^feedback-[1-3]$"},"status":{"const":"hypothesis_pending_review"},"candidate_ids":{"type":"array","minItems":1,"maxItems":4,"uniqueItems":true,"items":{"type":"string","minLength":1}},"mechanism_ids":{"type":"array","maxItems":3,"uniqueItems":true,"items":{"type":"string","pattern":"^M(?:10|[1-9])$"}},"proposal":{"type":"string","minLength":1,"maxLength":600},"reason":{"type":"string","minLength":1,"maxLength":400},"evidence_refs":{"type":"array","maxItems":6,"uniqueItems":true,"items":{"type":"string","minLength":1}}},"additionalProperties":false}},
+    "candidate_generation": {
+      "type": "object",
+      "required": ["mode", "draft", "draft_count", "draft_digest", "ranking_policy"],
+      "properties": {
+        "mode": {
+          "enum": ["chemistry_first_before_wiki_evidence", "awaiting_chemistry_first_draft", "legacy_direct_assembly"]
+        },
+        "draft": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "required": ["proposal_id", "enzyme_name", "identity_level", "fit_reason"],
+            "properties": {
+              "proposal_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"},
+              "enzyme_name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "enzyme_family": {"type": "string", "minLength": 1, "maxLength": 120},
+              "identity_level": {"enum": ["protein", "named_enzyme", "family"]},
+              "fit_reason": {"type": "string", "minLength": 1, "maxLength": 400}
+              ,"catalytic_events": {"type":"array","maxItems":3,"items":{"type":"string","minLength":1,"maxLength":160}}
+              ,"route_role": {"enum":["single_enzyme","route_component","alternative"]}
+              ,"main_uncertainty": {"type":"string","minLength":1,"maxLength":240}
+            },
+            "additionalProperties": false
+          }
+        },
+        "prior_wiki_candidates": {"type": "array", "items": {"type": "object", "required": ["card_id", "enzyme_name", "candidate_kind"], "properties": {"card_id": {"type": "string"}, "candidate_id": {"type": "string"}, "enzyme_name": {"type": "string"}, "candidate_kind": {"const": "wiki_enzyme"}, "identity_level": {"type": "string"}, "fit_reason": {"type": "string"}, "catalytic_events": {"type": "array", "maxItems": 3, "items": {"type": "string", "minLength": 1, "maxLength": 160}}, "route_role": {"enum": ["single_enzyme", "route_component", "alternative"]}, "main_uncertainty": {"type": "string", "minLength": 1, "maxLength": 240}}, "additionalProperties": false}},
+        "prior_candidates": {
+          "type": "array", "items": {
+            "type": "object", "required": ["proposal_id", "enzyme_name", "identity_level"],
+            "properties": {
+              "proposal_id": {"type": "string", "minLength": 1, "maxLength": 64},
+              "enzyme_name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "identity_level": {"enum": ["protein", "named_enzyme", "family"]},
+              "specific_name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "prior_specific_name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "name_evidence": {"type": "string", "minLength": 1, "maxLength": 240}
+              ,"fit_reason": {"type":"string","minLength":1,"maxLength":400}
+              ,"catalytic_events": {"type":"array","maxItems":3,"items":{"type":"string","minLength":1,"maxLength":160}}
+              ,"route_role": {"enum":["single_enzyme","route_component","alternative"]}
+              ,"main_uncertainty": {"type":"string","minLength":1,"maxLength":240}
+            }, "additionalProperties": false
+          }
+        },
+        "dispositions": {
+          "type": "array", "maxItems": 128,
+          "items": {
+            "type": "object", "required": ["proposal_id", "decision", "reason"],
+            "properties": {
+              "proposal_id": {"type": "string", "minLength": 1, "maxLength": 64},
+              "decision": {"enum": ["retained", "merged", "excluded", "unassessed"]},
+              "replacement_id": {"type": "string", "minLength": 1, "maxLength": 128},
+              "reason": {"type": "string", "minLength": 1, "maxLength": 300},
+              "identity_basis": {"type": "string", "minLength": 1, "maxLength": 240},
+              "scope_basis": {"type": "string", "minLength": 1, "maxLength": 300},
+              "exclusion_basis": {"enum": ["chemical_conflict", "target_mismatch", "insufficient_identity", "budget", "functional_overlap"]},
+              "identity_issue": {"enum": ["missing_name", "ambiguous_identity", "identity_conflict"]}
+            },
+            "additionalProperties": false
+          }
+        },
+        "draft_count": {"type": "integer", "minimum": 0, "maximum": 8},
+        "draft_digest": {"type": "string"},
+        "ranking_policy": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "merge_policy": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "evidenceStatement": {
+      "type": "object",
+      "required": [
+        "statement_id",
+        "kind",
+        "statement",
+        "source_refs"
+      ],
+      "properties": {
+        "statement_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "fact",
+            "inference",
+            "hypothesis",
+            "counterevidence",
+            "unknown"
+          ]
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "card_id": {
+          "type": "string",
+          "pattern": "^ERD-CARD-[0-9]{3,}$"
+        },
+        "field_path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "claimRef": {
+      "type": "object",
+      "required": [
+        "statement_id",
+        "kind",
+        "statement",
+        "source_refs"
+      ],
+      "properties": {
+        "statement_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "fact",
+            "inference",
+            "counterevidence",
+            "unknown",
+            "hypothesis"
+          ]
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "card_id": {
+          "type": "string",
+          "pattern": "^ERD-CARD-[0-9]{3,}$"
+        },
+        "field_path": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "hypothesis"
+              }
+            }
+          },
+          "else": {
+            "required": [
+              "card_id",
+              "field_path"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

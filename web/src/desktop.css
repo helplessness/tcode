@@ -1,0 +1,119 @@
+/* Desktop owns its shell and preferences; domain pages stay shared with Web. */
+html {
+  --tcode-bg:#f7f8f7; --tcode-surface:#fff; --tcode-surface-soft:#f3f5f3;
+  --tcode-surface-muted:#edf0ed; --tcode-border:#dfe4df; --tcode-border-strong:#c6cec6;
+  --tcode-text:#28332c; --tcode-text-muted:#647167; --tcode-text-dim:#707a72;
+  --tcode-primary:#486442; --tcode-primary-strong:#375532;
+  font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;
+}
+.studio-shell {grid-template-rows:58px minmax(0,1fr) var(--studio-dock) 26px}
+.studio-shell[data-focus=true] {grid-template-rows:58px minmax(0,1fr) 0 0}
+.studio-shell[data-page=settings] {grid-template-rows:0 minmax(0,1fr) 0 0}
+.studio-topbar {background:#f7f8f7;gap:24px;padding:0 20px}
+.studio-brand b {font-size:17px;letter-spacing:-.4px}
+.studio-brand span {background:#486442}
+.studio-breadcrumb {font-size:12px}
+.studio-tools>button,.studio-layout-menu summary {background:transparent;border-color:transparent;font-size:12px;padding:7px 10px}
+.studio-tools>button:hover,.studio-layout-menu summary:hover {background:#e9eee8}
+.desktop-actions>div {display:flex;flex-direction:column;gap:6px}
+.desktop-actions>div>button {text-align:left;border:0;padding:9px 10px}
+.desktop-actions>div>button:hover {background:#edf1ec}
+.studio-explorer {background:#eef1ed}
+.studio-explorer>header {height:44px;font-size:12px;border-bottom:0;padding:0 18px}
+.studio-resource-nav {height:auto;max-height:26%;min-height:72px;flex:0 1 auto;padding:0 12px 10px;overflow:auto}
+.studio-resource-nav>details>summary {font-size:11px;color:var(--tcode-text-muted);padding:6px}
+.studio-nav-group h2 {font-size:10px;font-weight:600;letter-spacing:1px;color:#727c73;padding:14px 9px 5px;margin:0}
+.studio-resource-nav button {display:flex;width:100%;font-size:12px;min-height:33px;padding:7px 10px;gap:10px;border-radius:6px}
+.studio-resource-nav button>span {width:19px;height:19px;display:grid;place-items:center;font-size:10px;color:#647661;border:1px solid #ced7cb;border-radius:4px}
+.studio-resource-nav button:hover {background:#e4eae1}
+.studio-resource-nav button[aria-current=page] {background:#dce6d7;color:#304e2c}
+.studio-sessions {height:auto;min-height:0;flex:1 1 auto}
+.studio-sessions [data-embedded=true]>div:first-child {padding:7px 8px}
+.studio-sessions .session-list-scroll {padding:6px 8px 10px}
+.studio-sessions .session-row {border:0;padding:7px 8px;border-radius:6px}
+.studio-sessions .session-row[aria-current=true] {background:#dce6d7}
+.studio-sessions .session-row[data-research-session=true] {box-shadow:inset 3px 0 0 #78865a}
+.studio-sessions .session-row-title {color:var(--tcode-text);font-weight:500}
+.studio-sessions .session-research-mark {display:inline-flex;margin-right:5px;padding:0 4px;border:1px solid #c7cfb8;border-radius:999px;background:#eef2e7;color:#526139;font-size:9px;font-weight:700;line-height:15px;vertical-align:1px}
+.studio-sessions .session-row-meta {margin-top:2px;color:var(--tcode-text-muted)}
+.studio-rail {z-index:50;padding:10px 5px;background:#e7ebe6;overflow:visible}
+.studio-rail button {position:relative;min-height:42px;padding:7px;gap:0;border-radius:8px;color:#667164}
+.studio-rail button:hover {background:#dce3da;color:#344e31}
+.studio-rail button[aria-current=page] {background:#fff;color:#486442;box-shadow:0 2px 8px #34442f12}
+.studio-rail button:last-child {margin-top:auto}
+.studio-rail-icon {width:21px;height:21px;flex:none;transition:transform .16s ease,color .16s ease}
+.studio-rail-label {position:absolute;left:calc(100% + 9px);top:50%;z-index:100;min-width:max-content;padding:5px 8px;border:1px solid #d4dbd1;border-radius:6px;background:#fff;color:#344238;font-size:11px;font-weight:500;line-height:1.2;opacity:0;pointer-events:none;transform:translate(-4px,-50%);transition:opacity .12s ease .1s,transform .12s ease .1s;box-shadow:0 6px 18px #34442f1c}
+.studio-rail-label{font-size:15px;padding:8px 12px}
+.studio-rail button:hover .studio-rail-label,.studio-rail button:focus-visible .studio-rail-label {opacity:1;transform:translate(0,-50%)}
+.studio-rail-new{transition:transform .16s cubic-bezier(.2,.8,.2,1),background .16s ease!important}
+.studio-rail-new:hover,.studio-rail-new:focus-visible{transform:scale(1.12)}
+.studio-rail-new:hover .studio-rail-icon,.studio-rail-new:focus-visible .studio-rail-icon{transform:scale(1.12)}
+.studio-rail-new:active{transform:scale(.96)}
+.studio-tabs {background:#fafbfa;min-height:39px}
+.studio-tabs>div[data-active=true] {background:#fff;border-top-color:#486442}
+.studio-context,.studio-execution {background:#fafbfa}
+.studio-status {background:#f0f3ef;color:#697467;font-size:10px}
+:is(button,summary,a,input,textarea,select):focus-visible {outline:2px solid #486442;outline-offset:2px}
+.desktop-login {background:#f3f5f1!important;gap:100px;padding:48px}
+.desktop-login form {background:#fff!important;border-color:#dce3d8!important;border-radius:14px;padding:36px;box-shadow:0 14px 50px #2637240a!important}
+.desktop-login input {background:#f9faf8!important;color:#28332c!important;border-color:#d5ded0!important;border-radius:6px}
+.desktop-login button[type=submit] {background:#486442!important;color:white!important;border:0;border-radius:6px}
+.desktop-login-intro {max-width:420px;color:#34442f}
+.desktop-login-intro>span {font-size:13px;font-weight:600;letter-spacing:1px}
+.desktop-login-intro h2 {font-size:44px;line-height:1.4;letter-spacing:-1.5px;font-weight:500;margin:36px 0 22px}
+.desktop-login-intro p {font-size:15px;line-height:1.9;color:#687462}
+.desktop-login-intro>div {font-size:11px;color:#73816c;margin-top:54px}
+
+/* Reusable feedback components; colors intentionally inherit the light theme. */
+.tcode-loading-state {display:grid;justify-items:center;gap:9px;padding:24px;color:var(--tcode-text-muted);font-size:12px;text-align:center}
+.tcode-loading-state::before {content:"";width:30px;height:6px;border-radius:999px;background:linear-gradient(90deg,#cbd4c8 0 28%,#698363 28% 56%,#cbd4c8 56% 84%);background-size:220% 100%;animation:tcode-loading-pulse 1.15s ease-in-out infinite}
+.tcode-download-button {display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:30px;border:1px solid #c8d3c5!important;border-radius:7px!important;background:#f8faf7!important;color:#3f6039!important;font-weight:600;text-decoration:none;box-shadow:0 1px 2px #2637240a;transition:background .15s ease,border-color .15s ease,box-shadow .15s ease,transform .12s ease}
+.tcode-download-button:hover {border-color:#91a88c!important;background:#eef4eb!important;box-shadow:0 3px 10px #26372412}
+.tcode-download-button:active {transform:translateY(1px);box-shadow:none}
+.tcode-download-button:disabled,.tcode-download-button[aria-disabled=true] {cursor:not-allowed;opacity:.5;box-shadow:none}
+.tcode-download-button.is-icon {width:30px;height:30px;min-height:30px;padding:0!important;border-radius:50%!important}
+@keyframes tcode-loading-pulse {0%{background-position:120% 0;opacity:.68}50%{opacity:1}100%{background-position:-120% 0;opacity:.68}}
+@media(prefers-reduced-motion:reduce){.tcode-loading-state::before{animation:none;background:#698363}.tcode-download-button,.studio-rail-new,.studio-rail-icon,.studio-rail-label{transition:none!important}.studio-rail-new:hover,.studio-rail-new:focus-visible,.studio-rail-new:active,.studio-rail-new:hover .studio-rail-icon,.studio-rail-new:focus-visible .studio-rail-icon{transform:none}}
+@media(max-width:780px){.studio-rail{overflow-x:auto;overflow-y:hidden}.studio-rail button:last-child{margin-top:0}.studio-rail-label{display:none}}
+@media(max-width:1050px){.desktop-login{gap:45px}.desktop-login-intro h2{font-size:36px}.studio-topbar{gap:12px}}
+html[data-compact=true] .studio-topbar{height:48px;padding-inline:14px}
+html[data-compact=true] .studio-explorer>header{height:36px}
+html[data-compact=true] .studio-resource-nav button{min-height:28px;padding:5px 8px}
+html[data-compact=true] .studio-sessions .session-row{padding:5px 7px}
+html[data-compact=true] .studio-tabs>div button{padding-block:7px}
+html[data-reduce-motion=true] *,html[data-reduce-motion=true] *::before,html[data-reduce-motion=true] *::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+
+/* Reading and approval surfaces share the desktop's existing neutral palette. */
+html{--tcode-popover-radius:12px;--tcode-popover-shadow:0 8px 28px #28332c14}
+:is(.studio-layout-menu>div,.studio-notices-menu,.session-context-menu,.companion-new-menu,.studio-chat-info-popover){border-radius:var(--tcode-popover-radius);box-shadow:var(--tcode-popover-shadow);max-height:calc(100dvh - 110px);overflow-y:auto;overscroll-behavior:contain}
+:is(.studio-layout-menu>div,.studio-chat-info-popover){padding:18px;font-size:13px;line-height:1.6}
+:is(.studio-notices-menu,.session-context-menu,.companion-new-menu){padding:6px}
+:is(.studio-notices-menu,.session-context-menu,.companion-new-menu) button{min-height:36px;padding:9px 12px;border-radius:7px;font-size:12px;transition:background .15s ease}
+.studio-layout-menu label{min-height:36px;font-size:13px}
+.studio-layout-menu small,.studio-layout-menu p{font-size:12px;line-height:1.6}
+.tcode-settings-window{border-radius:var(--tcode-popover-radius);box-shadow:var(--tcode-popover-shadow)}
+.studio-sessions .session-row-title{font-size:13px;line-height:1.5}
+.studio-sessions .session-row-meta{font-size:11px;line-height:1.6}
+.session-list-tools input,.session-list-tools select{height:34px;font-size:12px}
+.session-row-actions{opacity:1;width:28px;height:28px}
+.computer-use-panel>div{width:420px;max-height:min(720px,calc(100dvh - 100px))}
+.computer-panel-scroll{scrollbar-gutter:stable;scroll-padding-block:12px}
+.computer-panel-scroll:focus-visible{outline-offset:-3px}
+.computer-approval{gap:12px;padding:16px}
+.computer-approval strong{font-size:15px;line-height:1.5}
+.computer-approval span,.computer-approval label,.computer-panel-scroll p{font-size:13px;line-height:1.65}
+.computer-approval label{display:block}
+.computer-approval input[type=checkbox]{margin-right:8px;accent-color:var(--tcode-primary)}
+.computer-controls{border-top:1px solid var(--tcode-border);padding-top:12px;gap:8px}
+.computer-controls button{min-height:40px;flex:1;white-space:normal;line-height:1.5}
+.computer-controls button:first-child{font-weight:600}
+.computer-exact-action{line-height:1.65}
+@media(max-width:780px){
+  .studio-explorer{height:240px}
+  .studio-resource-nav{min-height:48px;max-height:88px}
+  .studio-work{min-height:calc(100dvh - 110px)}
+  .main-chat-transcript{gap:20px}
+  .desktop-login{padding:24px;gap:24px;flex-wrap:wrap}
+  .desktop-login-intro h2{font-size:28px;margin:16px 0}
+  .desktop-login form{width:100%;min-width:0;padding:24px}
+}

@@ -1,0 +1,17 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src data:">
+<title>TCode 电脑控制</title><style>
+:root{color-scheme:light dark;--text:#232936;--muted:#626b78;--surface:rgba(248,250,253,.54);--line:rgba(80,100,125,.16);--blue:#086ce0;--focus:#0756b6;--preview:rgba(255,255,255,.7)}
+*{box-sizing:border-box}html{background:transparent}body{margin:0;padding:7px;font:13px -apple-system,BlinkMacSystemFont,sans-serif;color:var(--text);background:var(--surface);border:1px solid rgba(255,255,255,.65);border-radius:12px;overflow:hidden}
+button{font:inherit;cursor:pointer;border:0;background:transparent;color:inherit;border-radius:6px;text-align:left;padding:8px 10px;min-height:32px;width:100%;transition:background-color 120ms ease,color 120ms ease}button:hover{background:var(--blue);color:#fff}button:active{background:var(--focus);color:#fff}button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;background:var(--blue);color:#fff}
+header{padding:9px 10px;border-radius:7px;background:rgba(110,130,155,.1);display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}header.running{background:var(--blue);color:white}header svg{width:18px;height:18px;flex-shrink:0}#status{margin-left:auto;font-size:11px;font-weight:400;white-space:nowrap}h2{margin:10px 10px 3px;font-size:11px;color:var(--muted);font-weight:500}
+#software{display:flex;gap:8px;align-items:center}#software span:first-child{flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}figure{margin:5px 0 6px;padding:5px;background:var(--preview);border:1px solid var(--line);border-radius:8px}figure img{display:block;width:100%;max-height:220px;object-fit:contain;border-radius:4px}hr{border:0;border-top:1px solid var(--line);margin:5px 8px}[hidden]{display:none!important}#content{max-height:500px;overflow:auto}
+@media(prefers-color-scheme:dark){:root{--text:#f1f3f7;--muted:#c0c8d3;--surface:rgba(29,34,43,.56);--line:rgba(218,229,244,.16);--preview:rgba(25,29,37,.7)}body{border-color:rgba(215,225,240,.2)}}
+@media(prefers-reduced-motion:reduce){button{transition:none}}
+@media(prefers-reduced-transparency:reduce){:root{--surface:#f4f6fa;--preview:#fff}}@media(prefers-reduced-transparency:reduce) and (prefers-color-scheme:dark){:root{--surface:#202631;--preview:#252c39}}
+</style></head><body><main id="content">
+<header id="heading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 17H3V4h18v9M7 21h5M9 17v4"/><path d="m14 11 7 5-4 1-2 4-1-10Z" fill="currentColor"/></svg><span>Computer Use</span><span id="status">暂无电脑操作</span></header>
+<h2>软件</h2><div id="preview-area"><button id="software" aria-controls="preview" aria-expanded="false"><span id="app">暂无正在操作的软件</span><span aria-hidden="true">›</span></button>
+<figure id="preview" hidden><img id="frame" alt="当前操作的软件画面" hidden></figure></div>
+<hr><button id="open">打开 TCode</button><hr><button id="quit">退出（停止本地服务）</button>
+</main><script src="tray-panel.js"></script></body></html>

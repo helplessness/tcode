@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tcode.local/schemas/outcome-v2.json",
+  "title": "TCode Outcome Contract v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "goal_id",
+    "version",
+    "title",
+    "intent",
+    "risk_level",
+    "proof_level",
+    "success_criteria",
+    "deliverables",
+    "constraints",
+    "completion_policy",
+    "metadata",
+    "compatibility_mode"
+  ],
+  "properties": {
+    "schema_version": {"const": "tcode.outcome/v2"},
+    "contract_id": {"type": "string", "minLength": 1},
+    "goal_id": {"type": "string", "minLength": 1},
+    "version": {"type": "integer", "minimum": 1},
+    "title": {"type": "string"},
+    "intent": {"type": "string", "minLength": 1},
+    "risk_level": {"enum": ["low", "medium", "high", "critical"]},
+    "proof_level": {"enum": ["P0", "P1", "P2", "P3", "P4"]},
+    "required_proof_level": {
+      "description": "Canonical minimum proof level; proof_level is retained as a compatibility alias.",
+      "enum": ["P0", "P1", "P2", "P3", "P4"]
+    },
+    "success_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "criterion_id",
+          "description",
+          "required",
+          "verifier_refs",
+          "expected_artifacts",
+          "parameters"
+        ],
+        "properties": {
+          "criterion_id": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "required": {"type": "boolean"},
+          "verifier_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "expected_artifacts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["path"],
+              "properties": {
+                "path": {"type": "string", "minLength": 1},
+                "required": {"type": "boolean"},
+                "size": {"type": "integer", "minimum": 0},
+                "sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+                "content_digest": {"type": "string"}
+              },
+              "additionalProperties": true
+            }
+          },
+          "parameters": {"type": "object"}
+        }
+      }
+    },
+    "deliverables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "kind", "required", "schema"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "kind": {"type": "string", "minLength": 1},
+          "required": {"type": "boolean"},
+          "schema": {"type": ["object", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "required": ["time_limit_ms", "cost_limit", "requested_effect_classes", "rules"],
+      "properties": {
+        "time_limit_ms": {"type": ["integer", "null"], "minimum": 0},
+        "cost_limit": {"type": ["number", "null"], "minimum": 0},
+        "requested_effect_classes": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rule", "required", "verification"],
+            "additionalProperties": false,
+            "properties": {
+              "rule": {"type": "string"},
+              "required": {"type": "boolean"},
+              "verification": {"type": "string"}
+            }
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "completion_policy": {
+      "type": "object",
+      "required": ["mode", "all_required_must_pass", "uncertain_requires_review"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {"type": "string"},
+        "all_required_must_pass": {"const": true},
+        "uncertain_requires_review": {"const": true}
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["created_at", "created_by", "template_ref"],
+      "additionalProperties": true,
+      "properties": {
+        "created_at": {"type": "string"},
+        "created_by": {"type": "string"},
+        "template_ref": {"type": ["string", "null"]}
+      }
+    },
+    "compatibility_mode": {"enum": ["legacy_v1_adapter", "native_v2"]}
+  }
+}

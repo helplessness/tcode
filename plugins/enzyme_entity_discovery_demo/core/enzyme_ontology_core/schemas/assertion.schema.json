@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "assertion",
+  "type": "object",
+  "required": [
+    "assertion_id",
+    "subject_id",
+    "object_id",
+    "predicate",
+    "revision",
+    "evidence_ids",
+    "polarity",
+    "state",
+    "review_status",
+    "epistemic_kind",
+    "qualifiers"
+  ],
+  "properties": {
+    "assertion_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "object_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "predicate": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "evidence_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "polarity": {
+      "enum": [
+        "supports",
+        "opposes"
+      ]
+    },
+    "state": {
+      "const": "active"
+    },
+    "review_status": {
+      "const": "curated"
+    },
+    "epistemic_kind": {
+      "enum": [
+        "card_reported",
+        "curator_inference"
+      ]
+    },
+    "qualifiers": {
+      "type": "object"
+    }
+  }
+}

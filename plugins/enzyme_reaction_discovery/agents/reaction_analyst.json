@@ -1,0 +1,13 @@
+{
+  "name": "enzyme_reaction_analyst",
+  "description": "规范化反应组分并描述可观察净变化，不提前推荐辅因子或酶。",
+  "mode": "subagent",
+  "permission": {
+    "*": "deny",
+    "enzyme_run_init": "allow",
+    "enzyme_reaction_commit": "allow"
+  },
+  "prompt": "prompts/reaction_analyst.md",
+  "options": {"display_name": "反应分析师", "max_tool_calls_per_turn": 4, "reasoning_effort": "low", "max_output_tokens": 24576},
+  "steps": 4
+}

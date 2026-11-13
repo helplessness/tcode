@@ -1,0 +1,934 @@
+{
+  "root": "/var/folders/tw/6hk0dh094m9cpx9lrvv18hlm0000gn/T/tcode-workflow-diagnostic-fzxx9hos",
+  "templates": [
+    {
+      "template_key": "diagnostic-acceptance",
+      "display_name": "中文诊断验收",
+      "domain": "general",
+      "description": "",
+      "input_contract": {},
+      "output_contract": {},
+      "stage_defaults": {},
+      "stages": [
+        {
+          "stage_id": "analysis",
+          "label": "已有分析结果",
+          "owner": "build",
+          "call_type": "agent",
+          "description": "",
+          "depends_on": [],
+          "allowed_tools": [],
+          "required_skills": [],
+          "input_contract": {},
+          "output_contract": {},
+          "expected_artifacts": [],
+          "success_checks": [],
+          "validators": [],
+          "retry_policy": {},
+          "timeout_policy": {},
+          "failure_policy": {},
+          "fallback_stage_ids": [],
+          "review_gate": false,
+          "metadata": {}
+        },
+        {
+          "stage_id": "review",
+          "label": "结果审核",
+          "owner": "build",
+          "call_type": "agent",
+          "description": "",
+          "depends_on": [
+            "analysis"
+          ],
+          "allowed_tools": [],
+          "required_skills": [],
+          "input_contract": {},
+          "output_contract": {},
+          "expected_artifacts": [],
+          "success_checks": [],
+          "validators": [],
+          "retry_policy": {},
+          "timeout_policy": {},
+          "failure_policy": {},
+          "fallback_stage_ids": [],
+          "review_gate": true,
+          "metadata": {}
+        }
+      ],
+      "metadata": {},
+      "enabled": true
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "wf-c7a591073d9f",
+      "template_key": "diagnostic-acceptance",
+      "session_id": "diagnostic-acceptance",
+      "status": "blocked",
+      "current_stage_id": "review",
+      "input_payload": {
+        "target_description": "runtime"
+      },
+      "stage_states": [
+        {
+          "stage_id": "analysis",
+          "label": "已有分析结果",
+          "owner": "build",
+          "call_type": "agent",
+          "status": "committed",
+          "started_at": 1791957687.289201,
+          "completed_at": 1791957687.290229,
+          "artifact_refs": {},
+          "result_summary": "已有分析结论：路线 A 值得进一步验证。",
+          "last_error": "",
+          "attempt": 1,
+          "draft_result": {
+            "response": "已有分析结论：路线 A 值得进一步验证。",
+            "artifact_refs": {},
+            "candidates": [],
+            "proposals": []
+          },
+          "committed_result": {
+            "response": "已有分析结论：路线 A 值得进一步验证。",
+            "artifact_refs": {},
+            "candidates": [],
+            "proposals": []
+          },
+          "validation_report": {
+            "ok": true,
+            "phase": "output",
+            "checks": [
+              {
+                "validator": "non_empty",
+                "ok": true,
+                "code": "",
+                "message": "Stage returned a non-empty result.",
+                "evidence": {},
+                "retryable": true
+              },
+              {
+                "validator": "no_failure_signal",
+                "ok": true,
+                "code": "",
+                "message": "No explicit failure signal was returned.",
+                "evidence": {},
+                "retryable": false
+              }
+            ],
+            "summary": "stage output validated and ready to commit"
+          },
+          "idempotency_key": "wf-c7a591073d9f:analysis:attempt:1",
+          "metadata": {
+            "allowed_tools": [],
+            "required_skills": [],
+            "depends_on": [],
+            "input_contract": {},
+            "output_contract": {},
+            "expected_artifacts": [],
+            "success_checks": [],
+            "validators": [],
+            "retry_policy": {},
+            "timeout_policy": {},
+            "failure_policy": {},
+            "fallback_stage_ids": [],
+            "review_gate": false,
+            "last_running_lease": {
+              "lease_id": "b98bf3db47954415958ad0d8666bedd9",
+              "started_at": 1791957687.289204,
+              "heartbeat_at": 1791957687.289204,
+              "expires_at": 1791959487.289204,
+              "ttl_seconds": 1800.0,
+              "actor_session_id": "",
+              "attempt": 1,
+              "idempotency_key": "wf-c7a591073d9f:analysis:attempt:1",
+              "finished_at": 1791957687.289732,
+              "finished_state": "validating"
+            },
+            "attempt_history": [
+              {
+                "lease_id": "b98bf3db47954415958ad0d8666bedd9",
+                "started_at": 1791957687.289204,
+                "heartbeat_at": 1791957687.289204,
+                "expires_at": 1791959487.289204,
+                "ttl_seconds": 1800.0,
+                "actor_session_id": "",
+                "attempt": 1,
+                "idempotency_key": "wf-c7a591073d9f:analysis:attempt:1",
+                "finished_at": 1791957687.289732,
+                "finished_state": "validating"
+              }
+            ]
+          }
+        },
+        {
+          "stage_id": "review",
+          "label": "结果审核",
+          "owner": "build",
+          "call_type": "agent",
+          "status": "failed",
+          "started_at": 1791957687.2907,
+          "completed_at": 1791957687.291782,
+          "artifact_refs": {},
+          "result_summary": "",
+          "last_error": "connection timeout while reading evidence",
+          "attempt": 1,
+          "draft_result": {
+            "response": "部分结果：已核对一条证据，第二条尚未读取。"
+          },
+          "committed_result": {},
+          "validation_report": {},
+          "idempotency_key": "wf-c7a591073d9f:review:attempt:1",
+          "metadata": {
+            "allowed_tools": [],
+            "required_skills": [],
+            "depends_on": [
+              "analysis"
+            ],
+            "input_contract": {},
+            "output_contract": {},
+            "expected_artifacts": [],
+            "success_checks": [],
+            "validators": [],
+            "retry_policy": {},
+            "timeout_policy": {},
+            "failure_policy": {},
+            "fallback_stage_ids": [],
+            "review_gate": true,
+            "last_running_lease": {
+              "lease_id": "eb3f77000eb14a85ac356394d1282e9a",
+              "started_at": 1791957687.290702,
+              "heartbeat_at": 1791957687.290702,
+              "expires_at": 1791959487.290702,
+              "ttl_seconds": 1800.0,
+              "actor_session_id": "",
+              "attempt": 1,
+              "idempotency_key": "wf-c7a591073d9f:review:attempt:1",
+              "finished_at": 1791957687.29128,
+              "finished_state": "validating"
+            },
+            "attempt_history": [
+              {
+                "lease_id": "eb3f77000eb14a85ac356394d1282e9a",
+                "started_at": 1791957687.290702,
+                "heartbeat_at": 1791957687.290702,
+                "expires_at": 1791959487.290702,
+                "ttl_seconds": 1800.0,
+                "actor_session_id": "",
+                "attempt": 1,
+                "idempotency_key": "wf-c7a591073d9f:review:attempt:1",
+                "finished_at": 1791957687.29128,
+                "finished_state": "validating"
+              }
+            ]
+          },
+          "diagnostic": {
+            "category": "runtime",
+            "title": "执行过程中遇到故障",
+            "message": "模型、工具或运行资源未能完成当前步骤。",
+            "suggestion": "请检查服务连接和运行资源，恢复后重试失败阶段；此故障不代表已有结论错误。",
+            "codes": [],
+            "technical_detail": "connection timeout while reading evidence",
+            "available_results": {
+              "committed": false,
+              "draft": true,
+              "artifacts": false
+            }
+          }
+        }
+      ],
+      "candidates": [],
+      "proposals": [],
+      "events": [
+        {
+          "event_id": "wfe-0af858aa183d",
+          "kind": "run_created",
+          "source": "workflow",
+          "stage_id": "",
+          "summary": "Created workflow run from template diagnostic-acceptance",
+          "payload": {
+            "template_key": "diagnostic-acceptance"
+          },
+          "created_at": 1791957687.288522
+        },
+        {
+          "event_id": "wfe-715c1c162312",
+          "kind": "stage_started",
+          "source": "workflow",
+          "stage_id": "analysis",
+          "summary": "Stage started: 已有分析结果",
+          "payload": {
+            "owner": "build",
+            "call_type": "agent"
+          },
+          "created_at": 1791957687.289217
+        },
+        {
+          "event_id": "wfe-8760e4381b32",
+          "kind": "stage_validating",
+          "source": "workflow",
+          "stage_id": "analysis",
+          "summary": "Stage validating: 已有分析结果",
+          "payload": {
+            "attempt": 1
+          },
+          "created_at": 1791957687.289739
+        },
+        {
+          "event_id": "wfe-80251eccf8a2",
+          "kind": "stage_committed",
+          "source": "workflow",
+          "stage_id": "analysis",
+          "summary": "Stage committed: 已有分析结果",
+          "payload": {
+            "next_stage_id": "review",
+            "artifact_keys": [],
+            "validation_summary": "stage output validated and ready to commit"
+          },
+          "created_at": 1791957687.290238
+        },
+        {
+          "event_id": "wfe-d1d33c554885",
+          "kind": "stage_started",
+          "source": "workflow",
+          "stage_id": "review",
+          "summary": "Stage started: 结果审核",
+          "payload": {
+            "owner": "build",
+            "call_type": "agent"
+          },
+          "created_at": 1791957687.290712
+        },
+        {
+          "event_id": "wfe-075edabf4218",
+          "kind": "stage_validating",
+          "source": "workflow",
+          "stage_id": "review",
+          "summary": "Stage validating: 结果审核",
+          "payload": {
+            "attempt": 1
+          },
+          "created_at": 1791957687.291287
+        },
+        {
+          "event_id": "wfe-5c1c6f410d86",
+          "kind": "stage_failed",
+          "source": "workflow",
+          "stage_id": "review",
+          "summary": "connection timeout while reading evidence",
+          "payload": {
+            "error": "connection timeout while reading evidence",
+            "fallback_candidates": [],
+            "invalid_fallback_stage_ids": [],
+            "exhausted_fallback_stage_ids": [],
+            "fallback_on_codes": [],
+            "observed_failure_codes": []
+          },
+          "created_at": 1791957687.291793
+        }
+      ],
+      "metadata": {
+        "template_display_name": "中文诊断验收",
+        "domain": "general",
+        "template_snapshot": {
+          "template_key": "diagnostic-acceptance",
+          "display_name": "中文诊断验收",
+          "domain": "general",
+          "description": "",
+          "input_contract": {},
+          "output_contract": {},
+          "stage_defaults": {},
+          "stages": [
+            {
+              "stage_id": "analysis",
+              "label": "已有分析结果",
+              "owner": "build",
+              "call_type": "agent",
+              "description": "",
+              "depends_on": [],
+              "allowed_tools": [],
+              "required_skills": [],
+              "input_contract": {},
+              "output_contract": {},
+              "expected_artifacts": [],
+              "success_checks": [],
+              "validators": [],
+              "retry_policy": {},
+              "timeout_policy": {},
+              "failure_policy": {},
+              "fallback_stage_ids": [],
+              "review_gate": false,
+              "metadata": {}
+            },
+            {
+              "stage_id": "review",
+              "label": "结果审核",
+              "owner": "build",
+              "call_type": "agent",
+              "description": "",
+              "depends_on": [
+                "analysis"
+              ],
+              "allowed_tools": [],
+              "required_skills": [],
+              "input_contract": {},
+              "output_contract": {},
+              "expected_artifacts": [],
+              "success_checks": [],
+              "validators": [],
+              "retry_policy": {},
+              "timeout_policy": {},
+              "failure_policy": {},
+              "fallback_stage_ids": [],
+              "review_gate": true,
+              "metadata": {}
+            }
+          ],
+          "metadata": {},
+          "enabled": true
+        },
+        "template_hash": "10e45acf9035a676c98c71345bf0097aba80d6de4619b6977cc46f9d50f950e6",
+        "template_version": "1",
+        "delivery_record": {
+          "schema": "tcode.workflow-delivery.v1",
+          "run_id": "wf-c7a591073d9f",
+          "template_key": "diagnostic-acceptance",
+          "status": "blocked",
+          "stage_summary": {
+            "completed": 1,
+            "total": 2
+          },
+          "attempts": 2,
+          "validation": {
+            "passed": 2,
+            "total": 2
+          },
+          "artifacts": [],
+          "unresolved": [
+            {
+              "stage_id": "review",
+              "status": "failed",
+              "reason": "connection timeout while reading evidence"
+            }
+          ],
+          "final_report": "",
+          "acceptance": "not_ready"
+        }
+      },
+      "version": 7,
+      "created_at": 1791957687.288528,
+      "updated_at": 1791957687.291886,
+      "acceptance_kind": "runtime",
+      "chat_text": "处理暂时已阻塞。\n问题类型：执行过程中遇到故障\n停在：`review`（结果审核），失败\n\n模型、工具或运行资源未能完成当前步骤。\n处理建议：请检查服务连接和运行资源，恢复后重试失败阶段；此故障不代表已有结论错误。\n具体情况：connection timeout while reading evidence\n已有结果已保留，可在运行详情查看；未通过校验的阶段输出保留为草稿。\n可查看结果的阶段：已有分析结果\n\n你可以直接在这里补充信息或给出调整意见；完整过程仍可在运行详情中查看。"
+    },
+    {
+      "run_id": "wf-a124ef7044ce",
+      "template_key": "diagnostic-acceptance",
+      "session_id": "diagnostic-acceptance",
+      "status": "blocked",
+      "current_stage_id": "review",
+      "input_payload": {
+        "target_description": "review"
+      },
+      "stage_states": [
+        {
+          "stage_id": "analysis",
+          "label": "已有分析结果",
+          "owner": "build",
+          "call_type": "agent",
+          "status": "committed",
+          "started_at": 1791957687.2927,
+          "completed_at": 1791957687.293556,
+          "artifact_refs": {},
+          "result_summary": "已有分析结论：路线 A 值得进一步验证。",
+          "last_error": "",
+          "attempt": 1,
+          "draft_result": {
+            "response": "已有分析结论：路线 A 值得进一步验证。",
+            "artifact_refs": {},
+            "candidates": [],
+            "proposals": []
+          },
+          "committed_result": {
+            "response": "已有分析结论：路线 A 值得进一步验证。",
+            "artifact_refs": {},
+            "candidates": [],
+            "proposals": []
+          },
+          "validation_report": {
+            "ok": true,
+            "phase": "output",
+            "checks": [
+              {
+                "validator": "non_empty",
+                "ok": true,
+                "code": "",
+                "message": "Stage returned a non-empty result.",
+                "evidence": {},
+                "retryable": true
+              },
+              {
+                "validator": "no_failure_signal",
+                "ok": true,
+                "code": "",
+                "message": "No explicit failure signal was returned.",
+                "evidence": {},
+                "retryable": false
+              }
+            ],
+            "summary": "stage output validated and ready to commit"
+          },
+          "idempotency_key": "wf-a124ef7044ce:analysis:attempt:1",
+          "metadata": {
+            "allowed_tools": [],
+            "required_skills": [],
+            "depends_on": [],
+            "input_contract": {},
+            "output_contract": {},
+            "expected_artifacts": [],
+            "success_checks": [],
+            "validators": [],
+            "retry_policy": {},
+            "timeout_policy": {},
+            "failure_policy": {},
+            "fallback_stage_ids": [],
+            "review_gate": false,
+            "last_running_lease": {
+              "lease_id": "8b7095bbb65643499501c9170f738626",
+              "started_at": 1791957687.292701,
+              "heartbeat_at": 1791957687.292701,
+              "expires_at": 1791959487.292701,
+              "ttl_seconds": 1800.0,
+              "actor_session_id": "",
+              "attempt": 1,
+              "idempotency_key": "wf-a124ef7044ce:analysis:attempt:1",
+              "finished_at": 1791957687.293136,
+              "finished_state": "validating"
+            },
+            "attempt_history": [
+              {
+                "lease_id": "8b7095bbb65643499501c9170f738626",
+                "started_at": 1791957687.292701,
+                "heartbeat_at": 1791957687.292701,
+                "expires_at": 1791959487.292701,
+                "ttl_seconds": 1800.0,
+                "actor_session_id": "",
+                "attempt": 1,
+                "idempotency_key": "wf-a124ef7044ce:analysis:attempt:1",
+                "finished_at": 1791957687.293136,
+                "finished_state": "validating"
+              }
+            ]
+          }
+        },
+        {
+          "stage_id": "review",
+          "label": "结果审核",
+          "owner": "build",
+          "call_type": "agent",
+          "status": "committed",
+          "started_at": 1791957687.294009,
+          "completed_at": 1791957687.29516,
+          "artifact_refs": {},
+          "result_summary": "REVISE\n待审核草稿：候选 A 尚缺少来源证据。",
+          "last_error": "",
+          "attempt": 1,
+          "draft_result": {
+            "response": "REVISE\n待审核草稿：候选 A 尚缺少来源证据。",
+            "artifact_refs": {},
+            "candidates": [],
+            "proposals": [
+              {
+                "proposal_type": "revision",
+                "source_stage_id": "review",
+                "summary": "候选 A 尚缺少来源证据。",
+                "payload": {
+                  "summary": "补充候选证据"
+                }
+              }
+            ]
+          },
+          "committed_result": {
+            "response": "REVISE\n待审核草稿：候选 A 尚缺少来源证据。",
+            "artifact_refs": {},
+            "candidates": [],
+            "proposals": [
+              {
+                "proposal_type": "revision",
+                "source_stage_id": "review",
+                "summary": "候选 A 尚缺少来源证据。",
+                "payload": {
+                  "summary": "补充候选证据"
+                }
+              }
+            ]
+          },
+          "validation_report": {
+            "ok": true,
+            "phase": "output",
+            "checks": [
+              {
+                "validator": "non_empty",
+                "ok": true,
+                "code": "",
+                "message": "Stage returned a non-empty result.",
+                "evidence": {},
+                "retryable": true
+              },
+              {
+                "validator": "no_failure_signal",
+                "ok": true,
+                "code": "",
+                "message": "No explicit failure signal was returned.",
+                "evidence": {},
+                "retryable": false
+              },
+              {
+                "validator": "review_decision",
+                "ok": true,
+                "code": "",
+                "message": "Review decision found.",
+                "evidence": {
+                  "decision": "REVISE"
+                },
+                "retryable": true
+              }
+            ],
+            "summary": "stage output validated and ready to commit"
+          },
+          "idempotency_key": "wf-a124ef7044ce:review:attempt:1",
+          "metadata": {
+            "allowed_tools": [],
+            "required_skills": [],
+            "depends_on": [
+              "analysis"
+            ],
+            "input_contract": {},
+            "output_contract": {},
+            "expected_artifacts": [],
+            "success_checks": [],
+            "validators": [],
+            "retry_policy": {},
+            "timeout_policy": {},
+            "failure_policy": {},
+            "fallback_stage_ids": [],
+            "review_gate": true,
+            "last_running_lease": {
+              "lease_id": "c90e309165734a26b75edd151d6fedce",
+              "started_at": 1791957687.2940109,
+              "heartbeat_at": 1791957687.2940109,
+              "expires_at": 1791959487.2940109,
+              "ttl_seconds": 1800.0,
+              "actor_session_id": "",
+              "attempt": 1,
+              "idempotency_key": "wf-a124ef7044ce:review:attempt:1",
+              "finished_at": 1791957687.294537,
+              "finished_state": "validating"
+            },
+            "attempt_history": [
+              {
+                "lease_id": "c90e309165734a26b75edd151d6fedce",
+                "started_at": 1791957687.2940109,
+                "heartbeat_at": 1791957687.2940109,
+                "expires_at": 1791959487.2940109,
+                "ttl_seconds": 1800.0,
+                "actor_session_id": "",
+                "attempt": 1,
+                "idempotency_key": "wf-a124ef7044ce:review:attempt:1",
+                "finished_at": 1791957687.294537,
+                "finished_state": "validating"
+              }
+            ],
+            "review_decision": "REVISE"
+          },
+          "diagnostic": {
+            "category": "review",
+            "title": "结果尚未通过审核",
+            "message": "当前结果的结论或证据未满足审核要求。",
+            "suggestion": "可查看已有结果与审核意见，修订相关结论或补充证据；未通过审核的内容仅作草稿。",
+            "codes": [],
+            "technical_detail": "",
+            "available_results": {
+              "committed": true,
+              "draft": true,
+              "artifacts": false
+            }
+          }
+        }
+      ],
+      "candidates": [],
+      "proposals": [
+        {
+          "proposal_id": "wfp-18ce72405004",
+          "proposal_type": "revision",
+          "source_stage_id": "review",
+          "status": "pending",
+          "proposed_by": "workflow",
+          "payload": {
+            "summary": "补充候选证据"
+          },
+          "summary": "候选 A 尚缺少来源证据。",
+          "raw_marker": "",
+          "metadata": {},
+          "created_at": 1791957687.295176,
+          "resolved_at": null,
+          "resolved_by": "",
+          "reason": ""
+        }
+      ],
+      "events": [
+        {
+          "event_id": "wfe-b1317945a760",
+          "kind": "run_created",
+          "source": "workflow",
+          "stage_id": "",
+          "summary": "Created workflow run from template diagnostic-acceptance",
+          "payload": {
+            "template_key": "diagnostic-acceptance"
+          },
+          "created_at": 1791957687.292333
+        },
+        {
+          "event_id": "wfe-c970051b535c",
+          "kind": "stage_started",
+          "source": "workflow",
+          "stage_id": "analysis",
+          "summary": "Stage started: 已有分析结果",
+          "payload": {
+            "owner": "build",
+            "call_type": "agent"
+          },
+          "created_at": 1791957687.292712
+        },
+        {
+          "event_id": "wfe-500368e61d98",
+          "kind": "stage_validating",
+          "source": "workflow",
+          "stage_id": "analysis",
+          "summary": "Stage validating: 已有分析结果",
+          "payload": {
+            "attempt": 1
+          },
+          "created_at": 1791957687.293141
+        },
+        {
+          "event_id": "wfe-9c00dae95d53",
+          "kind": "stage_committed",
+          "source": "workflow",
+          "stage_id": "analysis",
+          "summary": "Stage committed: 已有分析结果",
+          "payload": {
+            "next_stage_id": "review",
+            "artifact_keys": [],
+            "validation_summary": "stage output validated and ready to commit"
+          },
+          "created_at": 1791957687.293564
+        },
+        {
+          "event_id": "wfe-9eb87e46eac7",
+          "kind": "stage_started",
+          "source": "workflow",
+          "stage_id": "review",
+          "summary": "Stage started: 结果审核",
+          "payload": {
+            "owner": "build",
+            "call_type": "agent"
+          },
+          "created_at": 1791957687.294019
+        },
+        {
+          "event_id": "wfe-bedd403501a2",
+          "kind": "stage_validating",
+          "source": "workflow",
+          "stage_id": "review",
+          "summary": "Stage validating: 结果审核",
+          "payload": {
+            "attempt": 1
+          },
+          "created_at": 1791957687.294544
+        },
+        {
+          "event_id": "wfe-4f68fd1fa93a",
+          "kind": "stage_committed",
+          "source": "workflow",
+          "stage_id": "review",
+          "summary": "Stage committed: 结果审核",
+          "payload": {
+            "next_stage_id": "",
+            "artifact_keys": [],
+            "validation_summary": "stage output validated and ready to commit"
+          },
+          "created_at": 1791957687.29517
+        },
+        {
+          "event_id": "wfe-6b561862a217",
+          "kind": "proposal_created",
+          "source": "workflow",
+          "stage_id": "review",
+          "summary": "Proposal created: revision",
+          "payload": {
+            "proposal_id": "wfp-18ce72405004",
+            "proposal_type": "revision"
+          },
+          "created_at": 1791957687.295181
+        }
+      ],
+      "metadata": {
+        "template_display_name": "中文诊断验收",
+        "domain": "general",
+        "template_snapshot": {
+          "template_key": "diagnostic-acceptance",
+          "display_name": "中文诊断验收",
+          "domain": "general",
+          "description": "",
+          "input_contract": {},
+          "output_contract": {},
+          "stage_defaults": {},
+          "stages": [
+            {
+              "stage_id": "analysis",
+              "label": "已有分析结果",
+              "owner": "build",
+              "call_type": "agent",
+              "description": "",
+              "depends_on": [],
+              "allowed_tools": [],
+              "required_skills": [],
+              "input_contract": {},
+              "output_contract": {},
+              "expected_artifacts": [],
+              "success_checks": [],
+              "validators": [],
+              "retry_policy": {},
+              "timeout_policy": {},
+              "failure_policy": {},
+              "fallback_stage_ids": [],
+              "review_gate": false,
+              "metadata": {}
+            },
+            {
+              "stage_id": "review",
+              "label": "结果审核",
+              "owner": "build",
+              "call_type": "agent",
+              "description": "",
+              "depends_on": [
+                "analysis"
+              ],
+              "allowed_tools": [],
+              "required_skills": [],
+              "input_contract": {},
+              "output_contract": {},
+              "expected_artifacts": [],
+              "success_checks": [],
+              "validators": [],
+              "retry_policy": {},
+              "timeout_policy": {},
+              "failure_policy": {},
+              "fallback_stage_ids": [],
+              "review_gate": true,
+              "metadata": {}
+            }
+          ],
+          "metadata": {},
+          "enabled": true
+        },
+        "template_hash": "10e45acf9035a676c98c71345bf0097aba80d6de4619b6977cc46f9d50f950e6",
+        "template_version": "1",
+        "delivery_record": {
+          "schema": "tcode.workflow-delivery.v1",
+          "run_id": "wf-a124ef7044ce",
+          "template_key": "diagnostic-acceptance",
+          "status": "blocked",
+          "stage_summary": {
+            "completed": 2,
+            "total": 2
+          },
+          "attempts": 2,
+          "validation": {
+            "passed": 5,
+            "total": 5
+          },
+          "artifacts": [],
+          "unresolved": [],
+          "final_report": "",
+          "acceptance": "not_ready"
+        },
+        "pending_revision_proposal_ids": [
+          "wfp-18ce72405004"
+        ]
+      },
+      "version": 7,
+      "created_at": 1791957687.292336,
+      "updated_at": 1791957687.295275,
+      "acceptance_kind": "review",
+      "chat_text": "处理暂时已阻塞。\n问题类型：结果尚未通过审核\n停在：`review`（结果审核），已提交\n\n当前结果的结论或证据未满足审核要求。\n处理建议：可查看已有结果与审核意见，修订相关结论或补充证据；未通过审核的内容仅作草稿。\n已有结果已保留，可在运行详情查看；未通过校验的阶段输出保留为草稿。\n可查看结果的阶段：已有分析结果、结果审核\n\n阶段摘要：REVISE\n待审核草稿：候选 A 尚缺少来源证据。\n\n你可以直接在这里补充信息或给出调整意见；完整过程仍可在运行详情中查看。"
+    }
+  ],
+  "drafts": [
+    {
+      "draft_id": "wfd-123456789abc",
+      "name": "配置导入验收",
+      "goal": "中文诊断",
+      "status": "editing",
+      "revision": 1,
+      "template": {
+        "template_key": "diagnostic-acceptance",
+        "display_name": "中文诊断验收",
+        "domain": "general",
+        "description": "",
+        "input_contract": {},
+        "output_contract": {},
+        "stage_defaults": {},
+        "stages": [
+          {
+            "stage_id": "analysis",
+            "label": "已有分析结果",
+            "owner": "build",
+            "call_type": "agent",
+            "description": "",
+            "depends_on": [],
+            "allowed_tools": [],
+            "required_skills": [],
+            "input_contract": {},
+            "output_contract": {},
+            "expected_artifacts": [],
+            "success_checks": [],
+            "validators": [],
+            "retry_policy": {},
+            "timeout_policy": {},
+            "failure_policy": {},
+            "fallback_stage_ids": [],
+            "review_gate": false,
+            "metadata": {}
+          },
+          {
+            "stage_id": "review",
+            "label": "结果审核",
+            "owner": "build",
+            "call_type": "agent",
+            "description": "",
+            "depends_on": [
+              "analysis"
+            ],
+            "allowed_tools": [],
+            "required_skills": [],
+            "input_contract": {},
+            "output_contract": {},
+            "expected_artifacts": [],
+            "success_checks": [],
+            "validators": [],
+            "retry_policy": {},
+            "timeout_policy": {},
+            "failure_policy": {},
+            "fallback_stage_ids": [],
+            "review_gate": true,
+            "metadata": {}
+          }
+        ],
+        "metadata": {},
+        "enabled": true
+      }
+    }
+  ],
+  "configuration_error": "流程配置有误，尚未开始执行。请检查阶段字段、依赖关系和校验规则。定位详情：stages[0] 必须是阶段对象，不能忽略该项。"
+}

@@ -1,0 +1,39 @@
+.goal-mode-status { display:inline-flex; align-items:center; gap:6px; min-height:28px; padding:3px 8px; border:1px solid var(--tcode-border); border-radius:20px; color:var(--tcode-text); white-space:nowrap; cursor:pointer; }
+.goal-mode-help { display:inline-flex; align-items:center; justify-content:center; gap:5px; height:32px; padding:0 10px; border:1px solid var(--tcode-border); border-radius:18px; background:var(--tcode-surface); color:var(--tcode-text); font-size:12px; font-weight:600; white-space:nowrap; cursor:help; transition:background .15s,border-color .15s; }
+.goal-mode-help svg { width:19px; height:19px; color:var(--tcode-accent,var(--tcode-text)); }
+.goal-mode-help:hover { border-color:var(--tcode-accent,var(--tcode-text)); background:var(--tcode-bg); }
+.goal-mode-help:focus-visible { outline:2px solid var(--tcode-accent,var(--tcode-text)); outline-offset:2px; }
+.goal-mode-help-tip { position:fixed; z-index:10000; width:min(240px,calc(100vw - 24px));box-sizing:border-box; padding:10px 12px; border:1px solid var(--tcode-border); border-top:2px solid var(--tcode-accent,var(--tcode-text)); border-radius:10px; background:var(--tcode-surface); color:var(--tcode-text); box-shadow:0 8px 32px #0003; font-size:12px; line-height:1.5; }
+.goal-mode-help-tip::after { content:''; position:absolute; left:0; right:0; top:100%; height:10px; }
+.goal-mode-help-tip strong { display:block; font-size:13px; margin-bottom:4px; }
+.goal-mode-help-steps { display:flex; align-items:center; justify-content:space-between; gap:6px; margin:12px 0 8px; padding:8px; border-radius:8px; background:var(--tcode-bg); font-size:12px; }
+.goal-mode-help-tip small { font-size:12px; color:var(--tcode-text-muted); }
+@media(pointer:coarse) { .goal-mode-help { min-height:44px; min-width:44px; } }
+@media(prefers-reduced-motion:reduce) { .goal-mode-help { transition:none; } }
+.goal-mode-status:hover { background:var(--tcode-surface); }
+.goal-mode-status:focus-visible { outline:2px solid var(--tcode-accent,#38bdf8); outline-offset:2px; }
+.goal-mode-status-dot { width:6px; height:6px; border-radius:50%; background:#34b981; }
+.goal-mode-status:is([data-status=paused],[data-status=stopped]) .goal-mode-status-dot { background:var(--tcode-text-muted); }
+.goal-mode-status[data-attention=true] .goal-mode-status-dot { background:#e6a23c; }
+.goal-mode-overlay .research-dialog { width:min(480px,calc(100vw - 24px)); height:fit-content; max-height:calc(100dvh - 48px); margin:auto 24px auto auto; }
+.goal-mode-overlay .research-dialog::backdrop { background:#0003; backdrop-filter:none; }
+.goal-mode-overlay .research-dialog-header { padding:16px 20px; border-top:0; }
+.goal-mode-overlay .research-dialog-header h2 { font-size:18px; }
+.goal-mode-overlay .research-dialog-header button { min-height:32px; padding:4px 12px; font-size:12px; }
+.goal-mode-overlay .research-dialog-content { flex:0 1 auto; padding:20px; font-size:14px; line-height:1.6; }
+.goal-mode-overlay .research-dialog-content :is(input,textarea) { border:1px solid var(--tcode-border); background:var(--tcode-bg); color:var(--tcode-text); font-size:14px!important; }
+.goal-mode-overlay textarea { min-height:88px; resize:vertical; }
+.goal-mode-overlay .research-dialog-content button { min-height:36px; border-color:var(--tcode-border); border-radius:8px; }
+.goal-mode-overlay .research-dialog-content button:disabled { opacity:.5; cursor:not-allowed; }
+.goal-mode-overlay [role=alert] { color:var(--tcode-danger,#b42318); }
+.goal-mode-intro { color:var(--tcode-text-muted); font-size:12px; }
+.goal-mode-metrics { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.goal-mode-metrics > div { display:flex; flex-direction:column; gap:6px; border-radius:12px; padding:12px; background:var(--tcode-bg); border:1px solid var(--tcode-border); }
+.goal-mode-metrics span,.goal-mode-section h3 { color:var(--tcode-text-muted); font-size:12px; font-weight:500; }
+.goal-mode-metrics strong { font-size:16px; font-weight:600; }
+.goal-mode-metrics small { color:var(--tcode-text-muted); font-size:12px; }
+.goal-mode-section { overflow-wrap:anywhere; }
+.goal-mode-section h3 { margin-bottom:6px; }
+.goal-mode-section summary { cursor:pointer; }
+.goal-mode-notice { padding:10px 12px; border-left:2px solid #e6a23c; background:var(--tcode-bg); border-radius:4px; overflow-wrap:anywhere; }
+@media(max-width:600px) { .goal-mode-overlay .research-dialog { margin:auto; max-height:calc(100dvh - 24px); } .goal-mode-status { padding:3px 5px; font-size:10px; } }

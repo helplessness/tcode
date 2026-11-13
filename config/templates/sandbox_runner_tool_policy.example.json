@@ -1,0 +1,86 @@
+{
+  "read": {"images": ["tcode-executor:py312"], "networks": ["none"], "require_read_only": true, "allow_root": false},
+  "write": {"images": ["tcode-executor:py312"], "networks": ["none"], "require_read_only": true, "allow_root": false},
+  "edit": {"images": ["tcode-executor:py312"], "networks": ["none"], "require_read_only": true, "allow_root": false},
+  "glob": {"images": ["tcode-executor:py312"], "networks": ["none"], "require_read_only": true, "allow_root": false},
+  "grep": {"images": ["tcode-executor:py312"], "networks": ["none"], "require_read_only": true, "allow_root": false},
+  "browser": {
+    "images": [
+      "tcode-browser:playwright"
+    ],
+    "networks": [
+      "egress"
+    ],
+    "require_read_only": true,
+    "allow_root": false
+  },
+  "bash": {
+    "images": [
+      "tcode-executor:py312",
+      "tcode-tools-blast:latest"
+    ],
+    "networks": [
+      "none",
+      "egress"
+    ],
+    "allow_root": true
+  },
+  "exec": {
+    "images": [
+      "tcode-executor:py312",
+      "tcode-tools-blast:latest"
+    ],
+    "networks": [
+      "none",
+      "egress"
+    ],
+    "allow_root": true
+  },
+  "plugin_runtime": {
+    "images": [
+      "tcode-executor:py312"
+    ],
+    "networks": [
+      "none"
+    ],
+    "require_read_only": true,
+    "allow_root": false
+  },
+  "plugin_network": {
+    "images": [
+      "tcode-executor:py312"
+    ],
+    "networks": [
+      "egress"
+    ],
+    "require_read_only": true,
+    "allow_root": false
+  },
+  "skill_run#default": {
+    "images": [
+      "tcode-executor:py312"
+    ],
+    "networks": [
+      "none",
+      "egress"
+    ]
+  },
+  "skill_run#document.pdf": {
+    "images": [
+      "tcode-executor:py312"
+    ],
+    "networks": [
+      "none",
+      "egress"
+    ]
+  },
+  "skill_run#bio.blast.local": {
+    "images": [
+      "tcode-tools-blast:latest"
+    ],
+    "networks": [
+      "none",
+      "egress"
+    ]
+  }
+}

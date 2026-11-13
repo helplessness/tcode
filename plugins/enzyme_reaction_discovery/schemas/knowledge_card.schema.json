@@ -1,0 +1,265 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Markdown 解析后的只读兼容视图；不需要手工填写 JSON。",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "card_id",
+    "card_version",
+    "source_format",
+    "source_path",
+    "identity",
+    "wiki",
+    "classification",
+    "mechanism",
+    "evidence",
+    "known_limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "card_id": {
+      "type": "string",
+      "pattern": "^ERD-CARD-[0-9]{3,}$"
+    },
+    "card_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_format": {
+      "const": "markdown"
+    },
+    "source_path": {
+      "type": "string",
+      "pattern": "^cards/.+\\.md$"
+    },
+    "identity": {
+      "type": "object",
+      "required": [
+        "identity_level",
+        "enzyme_id",
+        "display_name",
+        "english_name",
+        "organism",
+        "ec_class",
+        "enzyme_family",
+        "aliases"
+      ],
+      "properties": {
+        "identity_level": {
+          "enum": ["protein", "named_enzyme"]
+        },
+        "enzyme_id": {
+          "type": "string",
+          "pattern": "^(?:UniProt:(?:[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2})(?:-[1-9][0-9]*)?|EC:[1-7]\\.[0-9]+\\.[0-9]+\\.[0-9]+)$"
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "english_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "organism": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ec_class": {
+          "type": "string",
+          "pattern": "^(?:[1-7]\\.[0-9]+\\.[0-9]+\\.(?:[0-9]+|-)|未注明)$"
+        },
+        "enzyme_family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "wiki": {
+      "type": "object",
+      "required": [
+        "summary",
+        "functional_roles",
+        "known_reactions"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "functional_roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "known_reactions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "reaction_id",
+              "name",
+              "activity_type",
+              "markdown",
+              "attribution",
+              "mechanistic_role",
+              "scope",
+              "evidence_refs",
+              "activity_status",
+              "mechanism_status"
+            ],
+            "properties": {
+              "reaction_id": {
+                "enum": [
+                  "NATIVE",
+                  "RELATED"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "activity_type": {
+                "enum": [
+                  "native",
+                  "representative"
+                ]
+              },
+              "markdown": {
+                "type": "string",
+                "minLength": 1
+              },
+              "attribution": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mechanistic_role": {
+                "type": "string",
+                "minLength": 1
+              },
+              "scope": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              },
+              "activity_status": {
+                "enum": [
+                  "curated_protein_annotation",
+                  "curated_enzyme_activity",
+                  "related_protein_only"
+                ]
+              },
+              "mechanism_status": {
+                "const": "see_source_scope"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "classification": {
+      "type": "object",
+      "required": [
+        "cofactor_classes",
+        "cofactor_notes",
+        "transformation_tags"
+      ],
+      "properties": {
+        "cofactor_classes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "cofactor_notes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "transformation_tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "mechanism": {
+      "type": "object",
+      "required": [
+        "summary"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "evidence_id",
+          "title",
+          "url",
+          "verification_status"
+        ],
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https://"
+          },
+          "verification_status": {
+            "const": "curated_source_link"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "known_limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,20 @@
+{
+  "repository": "https://github.com/wheresryan22/anatomy",
+  "commit": "1482e8469b0a9e0d8cc18ea2740a01423d29ae80",
+  "license": "MIT",
+  "files": {
+    "LICENSE": "87c078ab9d90a3044f359e6b563d4e6afea7aa060897cf4f21618687b3856796",
+    "kit/audit.mjs": "74e605b5d549c1f31c8a1104db7560057105cf86809bf6ced00e4ac79194c8e2",
+    "kit/iso-kit.mjs": "6d3ecc725d30c3b0346da309cf61dfa5a65017c23620bbd4093009d4fb104018",
+    "kit/iso-kit.ts": "e9fc988c61a11bfac1f097e62419915ea86b2130ab091f1b50c0e019c907e253",
+    "kit/iso.css": "ef19bac5a42ba9be42b56b2c1cf7fc7e21d332a8060765e9ca1d987b8ab23924",
+    "kit/lathe.mjs": "a4e7e974b1a37e603ad2b76363b6f9815cc101dfff0ad277a5d4e8f1dc56fccb",
+    "kit/tube.mjs": "bcb3cc360f6d83e6a5753f4c464b4587ab7965028b05a5d58e285abce58667c9",
+    "references/craft.md": "38761fa9b81d66b30e50b05488501d4815830d3627f153d60f76ca783f598936",
+    "references/kit.md": "684672e069fdb52735efabc3f4310dedd840d0c8066a8dc7784be2b7e656be71",
+    "references/motion.md": "dda401ca1b4661a5f0b7c1e33dac6e7e4b8c13d51ca5d9312123a5c02dab320b",
+    "references/upstream-readme.md": "a1bc269d3d1b75a230a2ae54cb43c63c19a0a3a067f6a7bb0baf5a7785e3de16",
+    "references/upstream-skill.md": "3423ada45a05033bb6e320dfc3b3ac832569969a5afb059bbfc9096c5cf0c71b",
+    "references/verify.md": "fb81437fc5d75094a34432eb6f545644aa228e15173a27d08b3cace912033561"
+  }
+}

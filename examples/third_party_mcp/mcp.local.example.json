@@ -1,0 +1,14 @@
+{
+  "job-protocol-mcp": {
+    "url": "http://127.0.0.1:10121/mcp",
+    "transport": "streamable-http",
+    "invocation_mode": "direct",
+    "enabled": true
+  },
+  "community-lookup-mcp": {
+    "url": "https://compute.example.org/mcp",
+    "transport": "streamable-http",
+    "invocation_mode": "direct",
+    "enabled": false
+  }
+}

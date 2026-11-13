@@ -1,0 +1,246 @@
+name: Protocol v2
+
+on:
+  pull_request:
+    paths:
+      - "tcode_agent/protocol/**"
+      - "tcode_agent/adapters/**"
+      - "tcode_agent/agui/**"
+      - "tcode_agent/external_harness/**"
+      - "tcode_agent/harness/**"
+      - "tcode_agent/mcp/**"
+      - "config/templates/mcp_agent_config.example.json"
+      - "tcode_agent/presentation/media.py"
+      - "tcode_agent/runtime/agent_backend.py"
+      - "tcode_agent/runtime/gateway.py"
+      - "tcode_agent/runtime/interaction_store.py"
+      - "tcode_agent/runtime/run_coordinator.py"
+      - "tcode_agent/runtime/model_policy.py"
+      - "tcode_agent/server/**"
+      - "tcode_agent/server/agui_api.py"
+      - "tcode_agent/server/mcp_apps_api.py"
+      - "tcode_agent/server/chat_event_presenter.py"
+      - "tcode_agent/server/static/**"
+      - "tcode_agent/session/events.py"
+      - "scripts/generate_web_protocol.py"
+      - "scripts/verify_release_artifacts.py"
+      - "scripts/validate_agui_release.sh"
+      - "web/src/protocol/**"
+      - "web/src/api/**"
+      - "web/src/components/McpAppHost.tsx"
+      - "web/src/components/StructuredContentBlocks.tsx"
+      - "web/src/utils/contentBlocks*"
+      - "web/package.json"
+      - "web/package-lock.json"
+      - "packages/tcode-agui-client/**"
+      - "examples/agui-copilotkit/**"
+      - "examples/agui-http-agent/**"
+      - "examples/mcp_apps_server/**"
+      - "examples/agent-backend-adapter/**"
+      - "examples/harness-adapter/**"
+      - "docs/agui/**"
+      - "docs/README.md"
+      - "README.md"
+      - "LICENSE"
+      - "pyproject.toml"
+      - "MANIFEST.in"
+      - "VERSION"
+      - ".github/workflows/protocol-v2.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tcode_agent/protocol/**"
+      - "tcode_agent/adapters/**"
+      - "tcode_agent/agui/**"
+      - "tcode_agent/external_harness/**"
+      - "tcode_agent/harness/**"
+      - "tcode_agent/mcp/**"
+      - "config/templates/mcp_agent_config.example.json"
+      - "tcode_agent/presentation/media.py"
+      - "tcode_agent/runtime/agent_backend.py"
+      - "tcode_agent/runtime/gateway.py"
+      - "tcode_agent/runtime/interaction_store.py"
+      - "tcode_agent/runtime/run_coordinator.py"
+      - "tcode_agent/runtime/model_policy.py"
+      - "tcode_agent/server/**"
+      - "tcode_agent/server/agui_api.py"
+      - "tcode_agent/server/mcp_apps_api.py"
+      - "tcode_agent/server/chat_event_presenter.py"
+      - "tcode_agent/server/static/**"
+      - "tcode_agent/session/events.py"
+      - "scripts/generate_web_protocol.py"
+      - "scripts/verify_release_artifacts.py"
+      - "scripts/validate_agui_release.sh"
+      - "web/src/protocol/**"
+      - "web/src/api/**"
+      - "web/src/components/McpAppHost.tsx"
+      - "web/src/components/StructuredContentBlocks.tsx"
+      - "web/src/utils/contentBlocks*"
+      - "web/package.json"
+      - "web/package-lock.json"
+      - "packages/tcode-agui-client/**"
+      - "examples/agui-copilotkit/**"
+      - "examples/agui-http-agent/**"
+      - "examples/mcp_apps_server/**"
+      - "examples/agent-backend-adapter/**"
+      - "examples/harness-adapter/**"
+      - "docs/agui/**"
+      - "docs/README.md"
+      - "README.md"
+      - "LICENSE"
+      - "pyproject.toml"
+      - "MANIFEST.in"
+      - "VERSION"
+      - ".github/workflows/protocol-v2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]' -e examples/harness-adapter
+      - run: python scripts/generate_web_protocol.py --check
+      - run: >-
+          PYTHONPATH=.:examples/agent-backend-adapter
+          python examples/agent-backend-adapter/test_backend.py
+      - run: >-
+          PYTHONPATH=.:examples/harness-adapter
+          python -m pytest -q
+          examples/harness-adapter/tests/test_adapter.py
+      - name: Installed Harness Adapter discovery and conformance
+        run: |
+          smoke_dir="$(mktemp -d)"
+          export TCODE_WORKDIR="$smoke_dir"
+          tcode runtimes discover --json
+          tcode runtimes enable example-harness --json
+          tcode runtimes inspect example-harness --json
+          tcode runtimes doctor example-harness --json
+          tcode runtimes conformance example-harness --fixture --json
+
+  web:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ..
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ..
+      - run: npm ci
+      - run: npm run check:protocol
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      # Mol* vendor assets are generated from the locked npm package, not tracked.
+      - run: diff -qr -x vendor dist ../tcode_agent/server/static
+
+  examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            packages/tcode-agui-client/package-lock.json
+            examples/agui-copilotkit/package-lock.json
+            examples/agui-http-agent/package-lock.json
+      - run: npm ci
+        working-directory: packages/tcode-agui-client
+      - run: npm run typecheck && npm test && npm run build
+        working-directory: packages/tcode-agui-client
+      - run: npm ci
+        working-directory: examples/agui-copilotkit
+      - run: npm run build
+        working-directory: examples/agui-copilotkit
+      - run: npm ci
+        working-directory: examples/agui-http-agent
+      - run: npm run build
+        working-directory: examples/agui-http-agent
+
+  python-package:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: python -m pip install build twine
+      - run: python -m build --outdir build/release-dist
+      - run: >-
+          python -m build examples/harness-adapter
+          --outdir build/harness-adapter-dist
+      - run: python -m twine check build/release-dist/*
+      - run: python -m twine check build/harness-adapter-dist/*
+      - name: Verify Python archive contents
+        run: |
+          wheel="$(find build/release-dist -maxdepth 1 -name '*.whl' -print -quit)"
+          sdist="$(find build/release-dist -maxdepth 1 -name '*.tar.gz' -print -quit)"
+          python scripts/verify_release_artifacts.py --wheel "$wheel" --sdist "$sdist"
+      - name: Install wheel outside the checkout
+        run: |
+          wheel="$(find build/release-dist -maxdepth 1 -name '*.whl' -print -quit)"
+          python -m pip install --force-reinstall "$wheel"
+          cd "$RUNNER_TEMP"
+          python -c "import tcode_agent; print(tcode_agent.__version__)"
+          tcode --help
+          tcode-server --help
+
+  npm-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: packages/tcode-agui-client/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install packaging
+      - run: npm ci
+        working-directory: packages/tcode-agui-client
+      - run: npm run typecheck && npm test
+        working-directory: packages/tcode-agui-client
+      - name: Build and verify npm tarball
+        working-directory: packages/tcode-agui-client
+        run: |
+          mkdir -p ../../build/release-dist
+          tarball="$(npm pack --pack-destination ../../build/release-dist --silent)"
+          python ../../scripts/verify_release_artifacts.py \
+            --npm-tarball "../../build/release-dist/$tarball"
+      - name: Install npm tarball in a clean project
+        run: |
+          tarball="$GITHUB_WORKSPACE/$(find build/release-dist -maxdepth 1 -name '*.tgz' -print -quit)"
+          smoke_dir="$(mktemp -d)"
+          cd "$smoke_dir"
+          npm init --yes >/dev/null
+          npm install --ignore-scripts "$tarball"
+          node --input-type=module -e \
+            "import { createTCodeAgent, TCodeGatewayClient } from '@tcode-ai/ag-ui-client'; if (!createTCodeAgent || !TCodeGatewayClient) process.exit(1)"

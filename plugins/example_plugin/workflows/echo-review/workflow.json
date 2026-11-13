@@ -1,0 +1,85 @@
+{
+  "template_key": "echo-review",
+  "display_name": "示例回显与复核",
+  "domain": "example",
+  "description": "演示第三方插件如何携带由宿主安全执行的两阶段声明式 Workflow。",
+  "enabled": true,
+  "input_contract": {
+    "required": ["text"]
+  },
+  "output_contract": {
+    "required": ["review_summary"]
+  },
+  "stages": [
+    {
+      "stage_id": "prepare_echo",
+      "depends_on": [],
+      "label": "生成回显结果",
+      "owner": "build",
+      "call_type": "agent",
+      "description": "调用示例回显工具并形成可复核的结构化结果。",
+      "prompt_file": "prepare_echo.md",
+      "allowed_tools": ["example_echo"],
+      "required_skills": [],
+      "input_contract": {
+        "required": ["text"]
+      },
+      "output_contract": {
+        "required": ["echo_text"]
+      },
+      "expected_artifacts": [],
+      "success_checks": ["回显结果非空"],
+      "validators": [
+        {"type": "non_empty"},
+        {"type": "no_failure_signal"}
+      ],
+      "retry_policy": {
+        "max_attempts": 2
+      },
+      "failure_policy": {
+        "action": "block"
+      },
+      "fallback_stage_ids": [],
+      "review_gate": false,
+      "metadata": {}
+    },
+    {
+      "stage_id": "review_echo",
+      "depends_on": ["prepare_echo"],
+      "label": "复核回显结果",
+      "owner": "build",
+      "call_type": "agent",
+      "description": "统计并复核上一阶段结果，输出简洁的审核摘要。",
+      "prompt_file": "review_echo.md",
+      "allowed_tools": ["example_count"],
+      "required_skills": [],
+      "input_contract": {},
+      "output_contract": {
+        "required": ["review_summary"]
+      },
+      "expected_artifacts": [],
+      "success_checks": ["审核摘要非空"],
+      "validators": [
+        {"type": "non_empty"},
+        {"type": "no_failure_signal"}
+      ],
+      "retry_policy": {
+        "max_attempts": 1
+      },
+      "failure_policy": {
+        "action": "block"
+      },
+      "fallback_stage_ids": [],
+      "review_gate": true,
+      "metadata": {}
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "prompt_dir": "prompts",
+    "routing": {
+      "enabled": true,
+      "auto_start": false
+    }
+  }
+}

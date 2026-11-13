@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/helplessness/tcode/blob/main/config/tcode.schema.json",
+  "title": "TCode configuration",
+  "description": "TCode 的模型、运行时、权限、学习与向量检索配置。未列出的高级字段仍由当前运行时兼容。",
+  "type": "object",
+  "required": ["model", "provider"],
+  "properties": {
+    "$schema": {"type": "string", "description": "编辑器使用的 JSON Schema 路径。"},
+    "model": {"type": "string", "pattern": "^[^/]+/.+$", "description": "默认文本模型，格式为 provider-id/model-id。"},
+    "vision_model": {"type": "string", "pattern": "^[^/]+/.+$", "description": "默认视觉模型；不处理图片时可删除。"},
+    "runtime": {
+      "type": "object",
+      "description": "模型调用的全局运行参数。",
+      "properties": {"llm_timeout_seconds": {"type": "number", "exclusiveMinimum": 0, "description": "单次模型请求的超时秒数。"}},
+      "additionalProperties": true
+    },
+    "command_policy": {
+      "type": "object",
+      "description": "内置命令、网络与文件工具的宿主策略。",
+      "properties": {
+        "mode": {"enum": ["enforce", "audit"], "description": "enforce 实际阻止违规操作；audit 只记录判定。"},
+        "allow_workspace_write": {"type": "boolean", "description": "是否允许写入当前工作区。"},
+        "allow_network": {"type": "boolean", "description": "是否允许工具访问网络。"},
+        "allow_dependency_install": {"type": "boolean", "description": "是否允许工具安装依赖。"},
+        "allow_system_operations": {"type": "boolean", "description": "是否允许系统级操作。"},
+        "allow_background_process": {"type": "boolean", "description": "是否允许启动后台进程。"},
+        "allow_external_read": {"type": "boolean", "description": "是否允许读取工作区以外的文件。"},
+        "allow_external_write": {"type": "boolean", "description": "是否允许写入工作区以外的文件。"}
+      },
+      "additionalProperties": true
+    },
+    "learning": {
+      "type": "object",
+      "description": "从任务中提炼反思、技能草稿和自适应提示的本地学习设置。",
+      "properties": {
+        "enabled": {"type": "boolean", "description": "学习功能总开关。"},
+        "reflection": {"$ref": "#/$defs/reflection"},
+        "compaction_flush": {"$ref": "#/$defs/compactionFlush"},
+        "skill_drafts": {"$ref": "#/$defs/skillDrafts"},
+        "adaptive_hints": {"$ref": "#/$defs/adaptiveHints"}
+      },
+      "additionalProperties": true
+    },
+    "provider": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "按 provider ID 登记的模型服务；ID 必须与 model 字段前缀一致。",
+      "additionalProperties": {"$ref": "#/$defs/provider"}
+    },
+    "embeddings": {
+      "type": "object",
+      "description": "向量嵌入与语义检索服务设置。",
+      "properties": {
+        "enabled": {"type": "boolean", "description": "是否启用向量检索。"},
+        "provider": {"type": "string", "description": "嵌入服务类型，例如 ollama 或 openai_compatible。"},
+        "model": {"type": "string", "description": "嵌入模型名称。"},
+        "options": {
+          "type": "object",
+          "description": "嵌入服务连接选项；生产环境优先使用环境变量字段。",
+          "properties": {
+            "baseURL": {"type": "string", "format": "uri", "description": "嵌入服务基础地址。"},
+            "baseURLEnv": {"type": "string", "description": "保存嵌入服务地址的环境变量名。"},
+            "apiKeyEnv": {"type": "string", "description": "保存嵌入服务密钥的环境变量名。"},
+            "modelRevision": {"type": "string", "description": "用于固定远程嵌入模型版本的修订标识。"}
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "reflection": {
+      "type": "object",
+      "description": "任务反思生成和保留规则。",
+      "properties": {
+        "enabled": {"type": "boolean", "description": "是否记录任务反思。"},
+        "ttl_days": {"type": "integer", "minimum": 0, "description": "反思记录保留天数。"},
+        "max_per_scope": {"type": "integer", "minimum": 1, "description": "每个作用域最多保留的反思数量。"},
+        "min_tool_calls": {"type": "integer", "minimum": 0, "description": "生成反思所需的最少工具调用数。"},
+        "min_response_chars": {"type": "integer", "minimum": 0, "description": "生成反思所需的最少回复字符数。"}
+      },
+      "additionalProperties": true
+    },
+    "compactionFlush": {
+      "type": "object",
+      "description": "上下文压缩时写入长期存储的规则。",
+      "properties": {
+        "enabled": {"type": "boolean", "description": "是否在压缩时保存可复用信息。"},
+        "ttl_days": {"type": "integer", "minimum": 0, "description": "压缩学习记录保留天数。"}
+      },
+      "additionalProperties": true
+    },
+    "skillDrafts": {
+      "type": "object",
+      "description": "根据重复成功任务生成技能草稿的规则。",
+      "properties": {
+        "enabled": {"type": "boolean", "description": "是否生成技能草稿。"},
+        "min_success_count": {"type": "integer", "minimum": 1, "description": "生成草稿所需的最少成功次数。"},
+        "min_tool_count": {"type": "integer", "minimum": 0, "description": "生成草稿所需的最少工具数量。"}
+      },
+      "additionalProperties": true
+    },
+    "adaptiveHints": {
+      "type": "object",
+      "description": "把历史经验加入后续上下文的规则。",
+      "properties": {
+        "enabled": {"type": "boolean", "description": "是否注入自适应提示。"},
+        "min_confidence": {"type": "number", "minimum": 0, "maximum": 1, "description": "经验进入上下文所需的最低置信度。"},
+        "max_reflections": {"type": "integer", "minimum": 0, "description": "单次最多注入的反思数量。"},
+        "max_hints": {"type": "integer", "minimum": 0, "description": "单次最多注入的提示数量。"},
+        "window_days": {"type": "integer", "minimum": 1, "description": "只检索最近多少天的经验。"}
+      },
+      "additionalProperties": true
+    },
+    "provider": {
+      "type": "object",
+      "required": ["options", "models"],
+      "description": "单个模型服务及其可用模型。",
+      "properties": {
+        "npm": {"type": "string", "description": "兼容层类型；OpenAI-compatible 服务使用 @ai-sdk/openai-compatible。"},
+        "name": {"type": "string", "description": "Provider 的显示名称或默认模型名。"},
+        "options": {
+          "type": "object",
+          "description": "服务地址、密钥来源与超时。",
+          "properties": {
+            "baseURL": {"type": "string", "format": "uri", "description": "服务基础地址；公开模板不要填写私网地址。"},
+            "baseURLEnv": {"type": "string", "description": "保存服务地址的环境变量名。"},
+            "apiKeyEnv": {"type": "string", "description": "保存 API 密钥的环境变量名。"},
+            "timeoutSeconds": {"type": "number", "exclusiveMinimum": 0, "description": "该 Provider 的请求超时秒数。"},
+            "apiMode": {
+              "type": "string",
+              "enum": ["chat_completions", "responses", "auto"],
+              "description": "OpenAI 系接口协议：chat_completions（默认，/v1/chat/completions）、responses（/v1/responses）或 auto（优先 responses，端点不存在时回退）。"
+            }
+          },
+          "additionalProperties": true
+        },
+        "models": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "按模型 ID 登记的模型能力。",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "name": {"type": "string", "description": "模型显示名称。"},
+              "supports_images": {"type": "boolean", "description": "模型是否接受图片输入。"},
+              "input_modalities": {"type": "array", "items": {"type": "string"}, "description": "模型接受的输入类型。"}
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

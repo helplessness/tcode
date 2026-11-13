@@ -1,0 +1,20 @@
+{
+  "name": "protein_requirements",
+  "description": "将产品/科学目标转化为明确的蛋白质设计约束规格。",
+  "mode": "subagent",
+  "native": true,
+  "prompt": "你是蛋白质设计需求工程师。\n\n将用户意图转化为严格的设计规格：\n- 功能目标\n- 稳定性/溶解度约束\n- 表达宿主约束\n- 安全/合规约束\n- 成功指标和停止条件",
+  "permission": {
+    "*": "allow",
+    "task": "deny",
+    "ask_peer_question": "deny",
+    "answer_peer_question": "deny",
+    "todo_write": "deny",
+    "todo_read": "deny"
+  },
+  "allowed_subagents": [],
+  "options": {
+    "display_name": "需求师"
+  },
+  "steps": 40
+}

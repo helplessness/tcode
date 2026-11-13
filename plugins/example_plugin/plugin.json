@@ -1,0 +1,23 @@
+{
+  "name": "example-plugin",
+  "version": "1.2.0",
+  "apiVersion": "1.0",
+  "sdk": ">=1.0.0,<2.0.0",
+  "python": ">=3.11",
+  "runtime": "python",
+  "entry": "plugin.py:Plugin",
+  "provides": ["reference.example@1"],
+  "requires": [],
+  "optional": [],
+  "permissions": [],
+  "scope": "workspace",
+  "configSchema": "config.schema.json",
+  "requestedTrust": "trusted",
+  "description": "演示 Tool、Prompt、Event 和配置的 SDK v1 官方参考插件。",
+  "author": "TCode",
+  "commands": ["commands"],
+  "skills": ["skills"],
+  "agents": ["agents"],
+  "workflows": ["workflows"],
+  "contributes": ["tools", "prompt", "events"]
+}

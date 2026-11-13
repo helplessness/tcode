@@ -1,0 +1,19 @@
+{
+  "name": "enzyme_screener",
+  "description": "以 Wiki 事实比较自主机制假说，提出候选家族及有依据的竞争路线。",
+  "mode": "subagent",
+  "permission": {
+    "*": "deny",
+    "enzyme_screen_context": "allow",
+    "enzyme_screen_items_stage": "allow",
+    "enzyme_screen_commit": "allow"
+  },
+  "prompt": "prompts/enzyme_screener.md",
+  "options": {
+    "display_name": "候选酶筛选师",
+    "max_tool_calls_per_turn": 28,
+    "reasoning_effort": "low",
+    "max_output_tokens": 24576
+  },
+  "steps": 28
+}

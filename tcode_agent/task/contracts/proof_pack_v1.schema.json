@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tcode.local/schemas/proof-pack-v1.json",
+  "title": "TCode Proof Pack v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "proof_pack_id",
+    "contract",
+    "outcome",
+    "deliverables",
+    "evidence",
+    "reproducibility",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_version": {"const": "tcode.proof-pack/v1"},
+    "proof_pack_id": {"type": "string", "minLength": 1},
+    "contract": {"type": "object"},
+    "outcome": {
+      "type": "object",
+      "required": [
+        "status",
+        "verdict",
+        "validator",
+        "achieved_proof_level",
+        "criterion_results"
+      ],
+      "properties": {
+        "status": {
+          "enum": ["UNVERIFIED", "READY", "ACTIVE", "VERIFYING", "SATISFIED", "WAITING", "BLOCKED", "FAILED", "CANCELLED"]
+        },
+        "verdict": {"enum": ["pass", "repair", "partial", "blocked"]},
+        "validator": {"type": "string"},
+        "achieved_proof_level": {"enum": ["P0", "P1", "P2", "P3", "P4"]},
+        "criterion_results": {"type": "array"}
+      },
+      "additionalProperties": true
+    },
+    "deliverables": {"type": "array"},
+    "evidence": {"type": "object"},
+    "reproducibility": {"type": "object"},
+    "generated_at": {"type": "string"}
+  }
+}

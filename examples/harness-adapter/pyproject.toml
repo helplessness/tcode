@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tcode-example-harness-adapter"
+version = "0.1.0"
+description = "Reference external CLI Harness Adapter for TCode"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = ["tcode-agent>=0.0.1,<1"]
+
+[project.entry-points."tcode.harness_adapters"]
+example-harness = "example_harness.provider:provider"
+
+[project.scripts]
+tcode-example-harness = "example_harness.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["example_harness*"]

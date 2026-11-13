@@ -1,0 +1,85 @@
+{
+  "template_key": "community-smoke-review",
+  "display_name": "第三方插件回显与复核",
+  "domain": "community-test",
+  "description": "验证未知社区插件能够携带由宿主解释执行的两阶段声明式 Workflow。",
+  "enabled": true,
+  "input_contract": {
+    "required": ["text"]
+  },
+  "output_contract": {
+    "required": ["review_summary"]
+  },
+  "stages": [
+    {
+      "stage_id": "create_echo",
+      "depends_on": [],
+      "label": "生成第三方回显",
+      "owner": "build",
+      "call_type": "agent",
+      "description": "调用第三方回显工具生成可复核结果。",
+      "prompt_file": "create_echo.md",
+      "allowed_tools": ["community_smoke_echo"],
+      "required_skills": [],
+      "input_contract": {
+        "required": ["text"]
+      },
+      "output_contract": {
+        "required": ["echo_text"]
+      },
+      "expected_artifacts": [],
+      "success_checks": ["回显结果非空"],
+      "validators": [
+        {"type": "non_empty"},
+        {"type": "no_failure_signal"}
+      ],
+      "retry_policy": {
+        "max_attempts": 2
+      },
+      "failure_policy": {
+        "action": "block"
+      },
+      "fallback_stage_ids": [],
+      "review_gate": false,
+      "metadata": {}
+    },
+    {
+      "stage_id": "review_echo",
+      "depends_on": ["create_echo"],
+      "label": "复核第三方回显",
+      "owner": "build",
+      "call_type": "agent",
+      "description": "调用第三方统计工具检查上一阶段结果。",
+      "prompt_file": "review_echo.md",
+      "allowed_tools": ["community_smoke_count"],
+      "required_skills": [],
+      "input_contract": {},
+      "output_contract": {
+        "required": ["review_summary"]
+      },
+      "expected_artifacts": [],
+      "success_checks": ["复核摘要非空"],
+      "validators": [
+        {"type": "non_empty"},
+        {"type": "no_failure_signal"}
+      ],
+      "retry_policy": {
+        "max_attempts": 1
+      },
+      "failure_policy": {
+        "action": "block"
+      },
+      "fallback_stage_ids": [],
+      "review_gate": true,
+      "metadata": {}
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "prompt_dir": "prompts",
+    "routing": {
+      "enabled": true,
+      "auto_start": false
+    }
+  }
+}

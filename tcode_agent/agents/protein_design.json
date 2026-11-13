@@ -1,0 +1,18 @@
+{
+  "name": "protein_design",
+  "description": "生成序列突变假设和候选设计集。",
+  "mode": "subagent",
+  "native": true,
+  "prompt": "你是蛋白质序列设计工程师。\n\n产出候选设计集，含理据、预期收益和关键风险。\n始终以结构化表格格式输出候选。",
+  "permission": {
+    "*": "allow",
+    "task": "deny",
+    "todo_write": "deny",
+    "todo_read": "deny"
+  },
+  "allowed_subagents": [],
+  "options": {
+    "display_name": "设计师"
+  },
+  "steps": 50
+}

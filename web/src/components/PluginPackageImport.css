@@ -1,0 +1,47 @@
+.plugin-package-import {
+  background: var(--tcode-surface, #171f24);
+  color: var(--tcode-text, #f5f7fa);
+  border-color: var(--tcode-border-strong, #65717c);
+}
+.plugin-package-import :is(label, p, input, button) { color: inherit; }
+.plugin-package-import :is(input, button) {
+  background: var(--tcode-surface, #171f24);
+  border-color: var(--tcode-border-strong, #65717c);
+}
+.plugin-package-import button:hover:not(:disabled) { background: var(--tcode-surface-muted, #29353e); }
+.plugin-package-import [role="alert"] { color: var(--tcode-danger, #ffd0cb); }
+
+.plugin-management { background:var(--tcode-bg,#f6f7f5); color:var(--tcode-text,#171c1a); border-left:1px solid var(--tcode-border,#d9dfd8); font-size:14px; }
+.plugin-management-header { flex:0 0 auto; padding:16px; background:var(--tcode-surface,#fff); border-bottom:1px solid var(--tcode-border,#d9dfd8); }
+.plugin-management-title { margin:0; font-size:19px; font-weight:650; letter-spacing:-.02em; }
+.plugin-management-subtitle { margin:4px 0 0; font-size:12px; color:var(--tcode-text-secondary,#4b554e); }
+.plugin-management-toolbar { display:flex; justify-content:space-between; gap:8px; margin-top:14px; }
+.plugin-action { min-height:36px; padding:7px 12px; border:1px solid var(--tcode-border-strong,#bdc8be); border-radius:9px; background:var(--tcode-surface,#fff); color:var(--tcode-text,#171c1a); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; }
+.plugin-action:hover:not(:disabled) { background:var(--tcode-surface-muted,#edf1eb); }
+.plugin-action:active:not(:disabled) { box-shadow:inset 0 1px 3px #0002; }
+.plugin-action:disabled { opacity:.45; cursor:not-allowed; }
+.plugin-action-primary { background:var(--tcode-primary-strong,#48613c); border-color:var(--tcode-primary-strong,#48613c); color:#fff; }
+.plugin-action-primary:hover:not(:disabled) { background:var(--tcode-primary-strong,#48613c); filter:brightness(.93); }
+.plugin-action-danger { color:var(--tcode-danger,#a83232); border-color:color-mix(in srgb,var(--tcode-danger,#a83232) 40%,transparent); }
+.plugin-management :is(button,summary):focus-visible { outline:2px solid var(--tcode-primary-strong,#48613c); outline-offset:3px; }
+.plugin-management nav button { min-height:36px; color:var(--tcode-text,#171c1a); border:1px solid transparent; }
+.plugin-management nav button[aria-pressed=true] { background:var(--tcode-surface-muted,#e9eee5); border-color:var(--tcode-border-strong,#bdc8be); }
+.plugin-management-list { overscroll-behavior:contain; }
+.plugin-card { margin-bottom:10px; padding:16px; border:1px solid var(--tcode-border,#d9dfd8); border-radius:12px; background:var(--tcode-surface,#fff); }
+.plugin-card-heading { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.plugin-card h3 { min-width:0; flex:1 1 180px; overflow-wrap:anywhere; margin:0; font-size:14px; line-height:1.45; font-weight:650; }
+.plugin-state { padding:2px 7px; border-radius:5px; font-size:12px; color:var(--tcode-text-secondary,#4b554e); background:var(--tcode-surface-muted,#edf1eb); }
+.plugin-state[data-active=true] { color:var(--tcode-primary-strong,#3d5b31); }
+.plugin-card-description,.plugin-card-note { margin:8px 0 0; font-size:13px; line-height:1.65; overflow-wrap:anywhere; }
+.plugin-card-note { color:var(--tcode-text-secondary,#4b554e); }
+.plugin-card-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.plugin-card-details { margin-top:12px; color:var(--tcode-text-secondary,#4b554e); font-size:12px; }
+.plugin-card-details summary,.plugin-diagnostics summary { cursor:pointer; padding:4px 0; }
+.plugin-card-details p { margin:8px 0 0; overflow-wrap:anywhere; }
+.plugin-install-body { max-height:min(56dvh,560px); overflow-y:auto; overscroll-behavior:contain; padding:2px; font-size:14px; border:0; }
+.plugin-management .plugin-message { flex:0 0 auto; padding:10px 12px; border-radius:9px; border:1px solid var(--tcode-border,#d9dfd8); color:var(--tcode-text,#171c1a); background:var(--tcode-surface,#fff); font-size:13px; }
+.plugin-management .plugin-message[data-tone=error],.plugin-diagnostics { color:var(--tcode-danger,#a83232); }
+.plugin-diagnostics { max-height:180px; overflow:auto; padding:10px 12px; border:1px solid color-mix(in srgb,var(--tcode-danger,#a83232) 35%,transparent); border-radius:10px; background:var(--tcode-surface,#fff); }
+.plugin-diagnostic-item { padding:10px 0; overflow-wrap:anywhere; }
+.plugin-empty { padding:24px 12px; text-align:center; line-height:1.7; color:var(--tcode-text-secondary,#4b554e); }
+@media(max-height:600px) { .plugin-management-header { padding:10px 14px; } .plugin-management-toolbar { margin-top:8px; } .plugin-install-body { max-height:40dvh; } }

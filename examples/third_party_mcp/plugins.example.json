@@ -1,0 +1,7 @@
+{
+  "auto_discover": false,
+  "plugins": [
+    {"name":"community-predict","path":"./examples/third_party_mcp/async-plugin","enabled":true,"config":{}},
+    {"name":"community-lookup","path":"./examples/third_party_mcp/direct-plugin","enabled":false,"config":{}}
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "blender": {
+      "command": "/Library/Frameworks/Python.framework/Versions/3.14/bin/uvx",
+      "args": ["--python", "3.12", "--from", "mcp-for-blender==2.2.4", "mcp-for-blender", "--host", "127.0.0.1", "--port", "9876"],
+      "env": {
+        "DISABLE_TELEMETRY": "true",
+        "BLENDER_MCP_SAFE_MODE": "1"
+      }
+    }
+  }
+}

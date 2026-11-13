@@ -1,0 +1,142 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+.desktop-venv/
+build/pyinstaller/
+build/release/
+dist/tcode-backend/
+desktop/release/
+desktop/assets/icon.icns
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# JavaScript dependencies
+node_modules/
+
+# Logs
+*.log
+*.pid
+
+# Environment variables
+.env
+.env.*
+!.env.example
+*.env
+*.token
+*.pem
+*.key
+*.p12
+*.pfx
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+*.db-wal
+*.db-shm
+tcode.local.json
+tcode.*.local.json
+mcp.local.json
+mcp.*.local.json
+/tcode.json
+/mcp.json
+/desktop-mcp.json
+/mcp_agent_config.json
+/mcp_exec_only.json
+/mcp_job_protocol_only.json
+/human_review.json
+/plugins.json
+/sandbox_runner_tool_policy.json
+/skill_routing.yaml
+/enzyme_ontology.toml
+# 本机模型、MCP、插件和运行环境配置；公开仓库只提交 *.example.* 模板。
+.tcode-local/
+/.tcode-local copy/
+/tests/
+# 生产运行配置可能包含密码、Token 和代理凭据，只提交 examples 下的模板。
+config/sandbox_production.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+*.sdf
+tmp/
+upload/
+runs/
+vendor/
+.tcode/
+/.tcode-asset-history/
+/outputs/
+/.ruff_cache/
+/web/tmp/
+workdirs/
+MCP_AGENT_INTEGRATION.md
+MCP_GNINA_FIX.md
+test_agent_created.txt
+testmcp.json
+server.log
+server.pid
+agent_workspace/
+/docs_my/
+
+# 首次公开时排除的研究数据、真实验收记录和私有评测。
+# 只忽略这些目录，不影响插件代码、Schema 或公开示例。
+/plugins/enzyme_entity_discovery_demo/knowledge/
+/plugins/enzyme_entity_discovery_demo/docs/
+/plugins/enzyme_entity_discovery_demo/evals/
+/plugins/enzyme_entity_discovery_demo/tests/
+/plugins/enzyme_reaction_discovery/knowledge/
+/plugins/enzyme_reaction_discovery/knowledge-drafts/
+/plugins/enzyme_reaction_discovery/docs/
+/plugins/enzyme_reaction_discovery/evals/
+/plugins/enzyme_reaction_discovery/tests/
+/plugins/enzyme_reaction_discovery/examples/ERD-CARD-001-羧乙基精氨酸合酶.md
+/plugins/protein_research/examples/
+/evals/fixtures/enzyme_retrieval_reliability_v1.json
+/tcode_agent/workflow/templates/private-wfd-*.json
+/docs/dsh/generated/
+
+# 本地发布备份不能进入仓库。
+/tcode-pre-public-backup.*/
+/tcode-pre-rewrite-backup.*/
+*.bundle

@@ -1,0 +1,18 @@
+{
+  "name": "protein_experiment",
+  "description": "为顶级候选设计湿实验验证方案。",
+  "mode": "subagent",
+  "native": true,
+  "prompt": "你是实验验证工程师。\n\n将候选排序转化为可执行的测定方案，含对照、读数和时间线。\n高亮阻断风险和后备方案。",
+  "permission": {
+    "*": "allow",
+    "task": "deny",
+    "todo_write": "deny",
+    "todo_read": "deny"
+  },
+  "allowed_subagents": [],
+  "options": {
+    "display_name": "实验师"
+  },
+  "steps": 40
+}

@@ -1,0 +1,330 @@
+{
+  "schema_version": 1,
+  "contract_id": "tcode.provider-api.internal.v1",
+  "api_version": "1.0-internal",
+  "status": "internal-evaluation",
+  "compatibility_commitment": "none",
+  "plugin_context_exposed": false,
+  "production_consumer_switched": false,
+  "default_plugin_invocation": "deny",
+  "capabilities": [
+    {
+      "id": "approval",
+      "service_key": "tcode.approval@1",
+      "phase": "DSH-406",
+      "disposition": "internal-only",
+      "exposure": "blocked",
+      "allowed_trust": [
+        "builtin"
+      ],
+      "adapter_status": "not-started",
+      "operations": [
+        {
+          "name": "ask",
+          "risk": "control",
+          "permission": "approval.ask",
+          "owner_required": true,
+          "additional_permissions": []
+        },
+        {
+          "name": "resolve",
+          "risk": "control",
+          "permission": "approval.resolve",
+          "owner_required": true,
+          "additional_permissions": []
+        }
+      ],
+      "kernel_invariants": [
+        "hard deny cannot be overridden",
+        "timeout or missing approver fails closed",
+        "approver identity and decision remain auditable"
+      ],
+      "blockers": [
+        "authenticated approver contract",
+        "durable wait/resolve state"
+      ],
+      "source_anchors": [
+        "tcode_agent/harness/policy.py",
+        "tcode_agent/server/state.py"
+      ],
+      "plugin_context_exposed": false,
+      "production_consumer_switched": false
+    },
+    {
+      "id": "host",
+      "service_key": "tcode.host@1",
+      "phase": "DSH-406",
+      "disposition": "internal-only",
+      "exposure": "blocked",
+      "allowed_trust": [
+        "builtin"
+      ],
+      "adapter_status": "boundary-evaluated",
+      "operations": [
+        {
+          "name": "compose",
+          "risk": "control",
+          "permission": "host.compose",
+          "owner_required": true,
+          "additional_permissions": []
+        }
+      ],
+      "kernel_invariants": [
+        "application and server objects are never plugin values",
+        "complete service graph is validated before host startup"
+      ],
+      "blockers": [
+        "stable CLI/Web/Worker composition input"
+      ],
+      "source_anchors": [
+        "tcode_agent/server/app.py",
+        "scripts/chat_cli.py"
+      ],
+      "plugin_context_exposed": false,
+      "production_consumer_switched": false
+    },
+    {
+      "id": "jobs",
+      "service_key": "tcode.jobs@1",
+      "phase": "DSH-BATCH3",
+      "disposition": "experimental",
+      "exposure": "adapter-only",
+      "allowed_trust": [
+        "builtin",
+        "trusted"
+      ],
+      "adapter_status": "task-runtime-v1-implemented",
+      "operations": [
+        {
+          "name": "submit",
+          "risk": "mutate",
+          "permission": "job.submit",
+          "owner_required": true,
+          "additional_permissions": []
+        },
+        {
+          "name": "read",
+          "risk": "read",
+          "permission": "job.read",
+          "owner_required": true,
+          "additional_permissions": []
+        },
+        {
+          "name": "cancel",
+          "risk": "control",
+          "permission": "job.cancel",
+          "owner_required": true,
+          "additional_permissions": []
+        }
+      ],
+      "kernel_invariants": [
+        "job owner and workspace visibility are enforced by the kernel",
+        "backend state mapping is lossless",
+        "workflow stage state is not replaced by job state"
+      ],
+      "blockers": [],
+      "source_anchors": [
+        "tcode_agent/runtime/jobs.py",
+        "tcode_agent/server/job_runtime_api.py"
+      ],
+      "plugin_context_exposed": false,
+      "production_consumer_switched": false
+    },
+    {
+      "id": "llm",
+      "service_key": "tcode.llm@1",
+      "phase": "DSH-307",
+      "disposition": "experimental",
+      "exposure": "adapter-only",
+      "allowed_trust": [
+        "builtin",
+        "trusted"
+      ],
+      "adapter_status": "host-adapter-v1-implemented",
+      "operations": [
+        {
+          "name": "complete",
+          "risk": "external-side-effect",
+          "permission": "llm.invoke",
+          "owner_required": true,
+          "additional_permissions": [
+            "secret.use.model-provider"
+          ]
+        },
+        {
+          "name": "stream",
+          "risk": "external-side-effect",
+          "permission": "llm.invoke",
+          "owner_required": true,
+          "additional_permissions": [
+            "secret.use.model-provider"
+          ]
+        }
+      ],
+      "kernel_invariants": [
+        "request owner identity and output budget are host supplied",
+        "provider secrets are not exposed through the contract",
+        "session persistence is not performed by the provider",
+        "cancellation propagates to the current provider call"
+      ],
+      "blockers": [
+        "host composition injection",
+        "stable provider error taxonomy",
+        "image request contract"
+      ],
+      "source_anchors": [
+        "tcode_agent/providers/base.py",
+        "tcode_agent/runtime/provider_api.py"
+      ],
+      "plugin_context_exposed": false,
+      "production_consumer_switched": false
+    },
+    {
+      "id": "sandbox",
+      "service_key": "tcode.sandbox@1",
+      "phase": "DSH-406",
+      "disposition": "internal-only",
+      "exposure": "blocked",
+      "allowed_trust": [
+        "builtin"
+      ],
+      "adapter_status": "existing-internal-protocol",
+      "operations": [
+        {
+          "name": "execute",
+          "risk": "external-side-effect",
+          "permission": "sandbox.execute",
+          "owner_required": true,
+          "additional_permissions": []
+        }
+      ],
+      "kernel_invariants": [
+        "routing policy and permission ceiling remain in the kernel",
+        "provider cannot self-attest isolation",
+        "owner path and network policy are independently verified"
+      ],
+      "blockers": [
+        "isolation attestation",
+        "capability-safe file/network contract"
+      ],
+      "source_anchors": [
+        "tcode_agent/runtime/sandbox/base.py",
+        "tcode_agent/harness/policy.py"
+      ],
+      "plugin_context_exposed": false,
+      "production_consumer_switched": false
+    },
+    {
+      "id": "session_persistence",
+      "service_key": "tcode.session.persistence@1",
+      "phase": "DSH-BATCH3",
+      "disposition": "internal-only",
+      "exposure": "blocked",
+      "allowed_trust": [
+        "builtin"
+      ],
+      "adapter_status": "canonical-event-v1-implemented",
+      "operations": [
+        {
+          "name": "append",
+          "risk": "mutate",
+          "permission": "session.persist",
+          "owner_required": true,
+          "additional_permissions": []
+        },
+        {
+          "name": "snapshot",
+          "risk": "mutate",
+          "permission": "session.persist",
+          "owner_required": true,
+          "additional_permissions": []
+        }
+      ],
+      "kernel_invariants": [
+        "sequence version and owner checks are mandatory",
+        "tool call and result pairing is preserved",
+        "recovery remains deterministic"
+      ],
+      "blockers": [],
+      "source_anchors": [
+        "tcode_agent/session/events.py",
+        "tcode_agent/session/store_sqlite.py"
+      ],
+      "plugin_context_exposed": false,
+      "production_consumer_switched": false
+    },
+    {
+      "id": "session_projection",
+      "service_key": "tcode.session.projection@1",
+      "phase": "DSH-BATCH3",
+      "disposition": "experimental",
+      "exposure": "read-only-candidate",
+      "allowed_trust": [
+        "builtin",
+        "trusted"
+      ],
+      "adapter_status": "event-projection-v1-implemented",
+      "operations": [
+        {
+          "name": "get",
+          "risk": "read",
+          "permission": "session.read",
+          "owner_required": true,
+          "additional_permissions": []
+        },
+        {
+          "name": "list",
+          "risk": "read",
+          "permission": "session.read",
+          "owner_required": true,
+          "additional_permissions": []
+        }
+      ],
+      "kernel_invariants": [
+        "tenant user and workspace filters are mandatory",
+        "message content metadata workdir and private reasoning are excluded",
+        "projection access cannot mutate persistence"
+      ],
+      "blockers": [],
+      "source_anchors": [
+        "tcode_agent/session/manager.py",
+        "tcode_agent/runtime/provider_api.py"
+      ],
+      "plugin_context_exposed": false,
+      "production_consumer_switched": false
+    },
+    {
+      "id": "telemetry",
+      "service_key": "tcode.telemetry@1",
+      "phase": "DSH-406",
+      "disposition": "experimental",
+      "exposure": "adapter-only",
+      "allowed_trust": [
+        "builtin",
+        "trusted"
+      ],
+      "adapter_status": "redaction-gateway-v1-implemented",
+      "operations": [
+        {
+          "name": "export",
+          "risk": "external-side-effect",
+          "permission": "telemetry.export",
+          "owner_required": true,
+          "additional_permissions": []
+        }
+      ],
+      "kernel_invariants": [
+        "redaction happens before exporter invocation",
+        "core correlation fields cannot be replaced",
+        "exporter backpressure cannot block execution"
+      ],
+      "blockers": [],
+      "source_anchors": [
+        "tcode_agent/runtime/telemetry.py",
+        "tcode_agent/runtime/artifacts.py"
+      ],
+      "plugin_context_exposed": false,
+      "production_consumer_switched": false
+    }
+  ]
+}

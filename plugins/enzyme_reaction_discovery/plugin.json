@@ -1,0 +1,58 @@
+{
+  "name": "enzyme-reaction-discovery",
+  "version": "3.10.4",
+  "apiVersion": "1.0",
+  "sdk": ">=1.0.0,<2.0.0",
+  "python": ">=3.11",
+  "runtime": "python",
+  "entry": "plugin.py:Plugin",
+  "provides": [],
+  "requires": [],
+  "optional": [],
+  "permissions": [
+    {
+      "scope": "model.embedding",
+      "patterns": ["configured"],
+      "description": "仅调用项目 embeddings 配置的模型 API；不开放网页、浏览器、任意网络地址或历史记忆。",
+      "required": false
+    },
+    {
+      "scope": "filesystem.read",
+      "patterns": [
+        "./plugins/enzyme_reaction_discovery/knowledge/**",
+        "./plugins/enzyme_reaction_discovery/schemas/**",
+        "./plugins/enzyme_reaction_discovery/.cache/**",
+        "./.tcode/plugins/enzyme_reaction_discovery/**"
+      ],
+      "description": "读取插件自带的封闭知识库、共享知识索引、JSON Schema 与当前 Workspace 的运行快照。",
+      "required": true
+    },
+    {
+      "scope": "filesystem.write",
+      "patterns": [
+        "./plugins/enzyme_reaction_discovery/.cache/**",
+        "./.tcode/plugins/enzyme_reaction_discovery/**"
+      ],
+      "description": "仅更新插件 .cache 下的共享知识索引及当前 Workspace 下隔离的运行产物，不允许修改知识卡或源码。",
+      "required": true
+    }
+  ],
+  "scope": "workspace",
+  "configSchema": "config.schema.json",
+  "requestedTrust": "trusted",
+  "desktopRuntime": "trusted-worker",
+  "description": "从离线 Markdown Wiki 派生机制片段，以目标事件图和反事实桥接筛选候选酶与路线；四阶段运行。",
+  "author": "TCode",
+  "skills": [
+    "skills"
+  ],
+  "agents": [
+    "agents"
+  ],
+  "workflows": [
+    "workflows"
+  ],
+  "contributes": [
+    "tools"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "community-smoke-plugin",
+  "version": "0.1.0",
+  "apiVersion": "1.0",
+  "sdk": ">=1.0.0,<2.0.0",
+  "python": ">=3.11",
+  "runtime": "python",
+  "entry": "plugin.py:Plugin",
+  "provides": ["community.smoke-test@1"],
+  "requires": [],
+  "optional": [],
+  "permissions": [],
+  "scope": "workspace",
+  "configSchema": "config.schema.json",
+  "requestedTrust": "isolated",
+  "description": "用于验证第三方 Tool 与声明式 Workflow 安装、隔离、调用和卸载链路的社区测试插件。",
+  "author": "TCode Community Example",
+  "workflows": ["workflows"],
+  "contributes": ["tools"]
+}

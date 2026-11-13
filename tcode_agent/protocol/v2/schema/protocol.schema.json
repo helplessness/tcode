@@ -1,0 +1,3332 @@
+{
+  "$defs": {
+    "ActivityDeltaEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "activity.delta",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "activity_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Activity Id",
+          "type": "string"
+        },
+        "phase": {
+          "default": "",
+          "maxLength": 160,
+          "title": "Phase",
+          "type": "string"
+        },
+        "status": {
+          "default": "running",
+          "maxLength": 80,
+          "title": "Status",
+          "type": "string"
+        },
+        "message": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Message",
+          "type": "string"
+        },
+        "tool_name": {
+          "default": "",
+          "maxLength": 300,
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "tool_call_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Tool Call Id",
+          "type": "string"
+        },
+        "current": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current"
+        },
+        "total": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total"
+        },
+        "unit": {
+          "default": "",
+          "maxLength": 80,
+          "title": "Unit",
+          "type": "string"
+        },
+        "stream": {
+          "default": "",
+          "maxLength": 80,
+          "title": "Stream",
+          "type": "string"
+        },
+        "data": {
+          "additionalProperties": true,
+          "maxProperties": 128,
+          "title": "Data",
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "activity_id"
+      ],
+      "title": "ActivityDeltaEvent",
+      "type": "object"
+    },
+    "ActivityFinishedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "activity.finished",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "activity_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Activity Id",
+          "type": "string"
+        },
+        "phase": {
+          "default": "",
+          "maxLength": 160,
+          "title": "Phase",
+          "type": "string"
+        },
+        "status": {
+          "default": "running",
+          "maxLength": 80,
+          "title": "Status",
+          "type": "string"
+        },
+        "message": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Message",
+          "type": "string"
+        },
+        "tool_name": {
+          "default": "",
+          "maxLength": 300,
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "tool_call_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Tool Call Id",
+          "type": "string"
+        },
+        "current": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current"
+        },
+        "total": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total"
+        },
+        "unit": {
+          "default": "",
+          "maxLength": 80,
+          "title": "Unit",
+          "type": "string"
+        },
+        "stream": {
+          "default": "",
+          "maxLength": 80,
+          "title": "Stream",
+          "type": "string"
+        },
+        "data": {
+          "additionalProperties": true,
+          "maxProperties": 128,
+          "title": "Data",
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "activity_id"
+      ],
+      "title": "ActivityFinishedEvent",
+      "type": "object"
+    },
+    "ActivitySnapshotEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "activity.snapshot",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "activity_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Activity Id",
+          "type": "string"
+        },
+        "phase": {
+          "default": "",
+          "maxLength": 160,
+          "title": "Phase",
+          "type": "string"
+        },
+        "status": {
+          "default": "running",
+          "maxLength": 80,
+          "title": "Status",
+          "type": "string"
+        },
+        "message": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Message",
+          "type": "string"
+        },
+        "tool_name": {
+          "default": "",
+          "maxLength": 300,
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "tool_call_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Tool Call Id",
+          "type": "string"
+        },
+        "current": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current"
+        },
+        "total": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total"
+        },
+        "unit": {
+          "default": "",
+          "maxLength": 80,
+          "title": "Unit",
+          "type": "string"
+        },
+        "stream": {
+          "default": "",
+          "maxLength": 80,
+          "title": "Stream",
+          "type": "string"
+        },
+        "data": {
+          "additionalProperties": true,
+          "maxProperties": 128,
+          "title": "Data",
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "activity_id"
+      ],
+      "title": "ActivitySnapshotEvent",
+      "type": "object"
+    },
+    "ArtifactContent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "artifact",
+          "title": "Type",
+          "type": "string"
+        },
+        "artifact_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "uri": {
+          "default": "",
+          "maxLength": 4096,
+          "title": "Uri",
+          "type": "string"
+        },
+        "media_type": {
+          "default": "application/octet-stream",
+          "maxLength": 200,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "title": {
+          "default": "",
+          "maxLength": 500,
+          "title": "Title",
+          "type": "string"
+        },
+        "fallback": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Fallback",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "ArtifactContent",
+      "type": "object"
+    },
+    "ExtensionContent": {
+      "additionalProperties": false,
+      "description": "未知富内容的受控扩展点；客户端必须优先展示 fallback。",
+      "properties": {
+        "type": {
+          "const": "extension",
+          "title": "Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "data": {
+          "additionalProperties": true,
+          "maxProperties": 128,
+          "title": "Data",
+          "type": "object"
+        },
+        "fallback": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Fallback",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
+      "title": "ExtensionContent",
+      "type": "object"
+    },
+    "InteractionCancelledEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "interaction.cancelled",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "interaction_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Interaction Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "question",
+            "permission",
+            "review"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "reason": {
+          "default": "cancelled",
+          "maxLength": 2000,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "interaction_id",
+        "kind"
+      ],
+      "title": "InteractionCancelledEvent",
+      "type": "object"
+    },
+    "InteractionExpiredEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "interaction.expired",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "interaction_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Interaction Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "question",
+            "permission",
+            "review"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "resolution": {
+          "additionalProperties": true,
+          "maxProperties": 128,
+          "title": "Resolution",
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "interaction_id",
+        "kind"
+      ],
+      "title": "InteractionExpiredEvent",
+      "type": "object"
+    },
+    "InteractionRequestedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "interaction.requested",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "interaction_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Interaction Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "question",
+            "permission",
+            "review"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "prompt": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Prompt",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "maxProperties": 128,
+          "title": "Payload",
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "interaction_id",
+        "kind"
+      ],
+      "title": "InteractionRequestedEvent",
+      "type": "object"
+    },
+    "InteractionResolvedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "interaction.resolved",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "interaction_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Interaction Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "question",
+            "permission",
+            "review"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "resolution": {
+          "additionalProperties": true,
+          "maxProperties": 128,
+          "title": "Resolution",
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "interaction_id",
+        "kind"
+      ],
+      "title": "InteractionResolvedEvent",
+      "type": "object"
+    },
+    "JsonPatchOperation": {
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "enum": [
+            "add",
+            "remove",
+            "replace",
+            "move",
+            "copy",
+            "test"
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "path": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "value": {
+          "default": null,
+          "title": "Value"
+        },
+        "from": {
+          "default": "",
+          "maxLength": 4096,
+          "title": "From",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "path"
+      ],
+      "title": "JsonPatchOperation",
+      "type": "object"
+    },
+    "MessageDeltaEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "message.delta",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "message_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Message Id",
+          "type": "string"
+        },
+        "delta": {
+          "maxLength": 256000,
+          "title": "Delta",
+          "type": "string"
+        },
+        "stream_epoch": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Stream Epoch",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "message_id",
+        "delta"
+      ],
+      "title": "MessageDeltaEvent",
+      "type": "object"
+    },
+    "MessageFinishedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "message.finished",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "message": {
+          "$ref": "#/$defs/RuntimeMessage"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "message"
+      ],
+      "title": "MessageFinishedEvent",
+      "type": "object"
+    },
+    "MessageStartedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "message.started",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "message_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Message Id",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant",
+            "system",
+            "tool"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "parent_message_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Parent Message Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "message_id",
+        "role"
+      ],
+      "title": "MessageStartedEvent",
+      "type": "object"
+    },
+    "MessagesSnapshotEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "messages.snapshot",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/RuntimeMessage"
+          },
+          "maxItems": 10000,
+          "title": "Messages",
+          "type": "array"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence"
+      ],
+      "title": "MessagesSnapshotEvent",
+      "type": "object"
+    },
+    "ProtocolError": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "request_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "details": {
+          "additionalProperties": true,
+          "maxProperties": 32,
+          "title": "Details",
+          "type": "object"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "ProtocolError",
+      "type": "object"
+    },
+    "RunCancelledEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "run.cancelled",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "reason": {
+          "default": "cancelled",
+          "maxLength": 2000,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence"
+      ],
+      "title": "RunCancelledEvent",
+      "type": "object"
+    },
+    "RunErrorEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "run.error",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "code": {
+          "default": "run_failed",
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "message"
+      ],
+      "title": "RunErrorEvent",
+      "type": "object"
+    },
+    "RunFinishedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "run.finished",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "outcome": {
+          "default": "completed",
+          "enum": [
+            "completed",
+            "partial",
+            "blocked"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "result": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Result",
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence"
+      ],
+      "title": "RunFinishedEvent",
+      "type": "object"
+    },
+    "RunInterruptedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "run.interrupted",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "reason": {
+          "default": "interaction_required",
+          "maxLength": 2000,
+          "title": "Reason",
+          "type": "string"
+        },
+        "interaction_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Interaction Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence"
+      ],
+      "title": "RunInterruptedEvent",
+      "type": "object"
+    },
+    "RunStartedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "run.started",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "agent_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Agent Id",
+          "type": "string"
+        },
+        "parent_run_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Parent Run Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence"
+      ],
+      "title": "RunStartedEvent",
+      "type": "object"
+    },
+    "RuntimeCapabilities": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol_version": {
+          "default": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "event_types": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 128,
+          "title": "Event Types",
+          "type": "array"
+        },
+        "content_types": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Content Types",
+          "type": "array"
+        },
+        "supports_replay": {
+          "default": true,
+          "title": "Supports Replay",
+          "type": "boolean"
+        },
+        "supports_state_delta": {
+          "default": true,
+          "title": "Supports State Delta",
+          "type": "boolean"
+        },
+        "supports_interactions": {
+          "default": true,
+          "title": "Supports Interactions",
+          "type": "boolean"
+        },
+        "max_replay_events": {
+          "default": 2048,
+          "maximum": 100000,
+          "minimum": 1,
+          "title": "Max Replay Events",
+          "type": "integer"
+        }
+      },
+      "title": "RuntimeCapabilities",
+      "type": "object"
+    },
+    "RuntimeEvent": {
+      "discriminator": {
+        "mapping": {
+          "activity.delta": "#/$defs/ActivityDeltaEvent",
+          "activity.finished": "#/$defs/ActivityFinishedEvent",
+          "activity.snapshot": "#/$defs/ActivitySnapshotEvent",
+          "interaction.cancelled": "#/$defs/InteractionCancelledEvent",
+          "interaction.expired": "#/$defs/InteractionExpiredEvent",
+          "interaction.requested": "#/$defs/InteractionRequestedEvent",
+          "interaction.resolved": "#/$defs/InteractionResolvedEvent",
+          "message.delta": "#/$defs/MessageDeltaEvent",
+          "message.finished": "#/$defs/MessageFinishedEvent",
+          "message.started": "#/$defs/MessageStartedEvent",
+          "messages.snapshot": "#/$defs/MessagesSnapshotEvent",
+          "run.cancelled": "#/$defs/RunCancelledEvent",
+          "run.error": "#/$defs/RunErrorEvent",
+          "run.finished": "#/$defs/RunFinishedEvent",
+          "run.interrupted": "#/$defs/RunInterruptedEvent",
+          "run.started": "#/$defs/RunStartedEvent",
+          "state.delta": "#/$defs/StateDeltaEvent",
+          "state.snapshot": "#/$defs/StateSnapshotEvent",
+          "subagent.error": "#/$defs/SubagentErrorEvent",
+          "subagent.finished": "#/$defs/SubagentFinishedEvent",
+          "subagent.started": "#/$defs/SubagentStartedEvent",
+          "tool.args": "#/$defs/ToolArgsEvent",
+          "tool.args_finished": "#/$defs/ToolArgsFinishedEvent",
+          "tool.result": "#/$defs/ToolResultEvent",
+          "tool.started": "#/$defs/ToolStartedEvent"
+        },
+        "propertyName": "type"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/RunStartedEvent"
+        },
+        {
+          "$ref": "#/$defs/RunFinishedEvent"
+        },
+        {
+          "$ref": "#/$defs/RunErrorEvent"
+        },
+        {
+          "$ref": "#/$defs/RunCancelledEvent"
+        },
+        {
+          "$ref": "#/$defs/RunInterruptedEvent"
+        },
+        {
+          "$ref": "#/$defs/MessageStartedEvent"
+        },
+        {
+          "$ref": "#/$defs/MessageDeltaEvent"
+        },
+        {
+          "$ref": "#/$defs/MessageFinishedEvent"
+        },
+        {
+          "$ref": "#/$defs/ToolStartedEvent"
+        },
+        {
+          "$ref": "#/$defs/ToolArgsEvent"
+        },
+        {
+          "$ref": "#/$defs/ToolArgsFinishedEvent"
+        },
+        {
+          "$ref": "#/$defs/ToolResultEvent"
+        },
+        {
+          "$ref": "#/$defs/ActivitySnapshotEvent"
+        },
+        {
+          "$ref": "#/$defs/ActivityDeltaEvent"
+        },
+        {
+          "$ref": "#/$defs/ActivityFinishedEvent"
+        },
+        {
+          "$ref": "#/$defs/InteractionRequestedEvent"
+        },
+        {
+          "$ref": "#/$defs/InteractionResolvedEvent"
+        },
+        {
+          "$ref": "#/$defs/InteractionCancelledEvent"
+        },
+        {
+          "$ref": "#/$defs/InteractionExpiredEvent"
+        },
+        {
+          "$ref": "#/$defs/SubagentStartedEvent"
+        },
+        {
+          "$ref": "#/$defs/SubagentFinishedEvent"
+        },
+        {
+          "$ref": "#/$defs/SubagentErrorEvent"
+        },
+        {
+          "$ref": "#/$defs/StateSnapshotEvent"
+        },
+        {
+          "$ref": "#/$defs/StateDeltaEvent"
+        },
+        {
+          "$ref": "#/$defs/MessagesSnapshotEvent"
+        }
+      ],
+      "title": "RuntimeEvent"
+    },
+    "RuntimeMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "message_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Message Id",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant",
+            "system",
+            "tool"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "content": {
+          "default": "",
+          "maxLength": 1000000,
+          "title": "Content",
+          "type": "string"
+        },
+        "content_blocks": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "artifact": "#/$defs/ArtifactContent",
+                "extension": "#/$defs/ExtensionContent",
+                "text": "#/$defs/TextContent"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/TextContent"
+              },
+              {
+                "$ref": "#/$defs/ArtifactContent"
+              },
+              {
+                "$ref": "#/$defs/ExtensionContent"
+              }
+            ]
+          },
+          "maxItems": 256,
+          "title": "Content Blocks",
+          "type": "array"
+        },
+        "tool_calls": {
+          "items": {
+            "$ref": "#/$defs/RuntimeToolCall"
+          },
+          "maxItems": 256,
+          "title": "Tool Calls",
+          "type": "array"
+        },
+        "parent_message_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Parent Message Id",
+          "type": "string"
+        },
+        "presentation": {
+          "default": "",
+          "maxLength": 100,
+          "title": "Presentation",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        }
+      },
+      "required": [
+        "message_id",
+        "role"
+      ],
+      "title": "RuntimeMessage",
+      "type": "object"
+    },
+    "RuntimeToolCall": {
+      "additionalProperties": false,
+      "properties": {
+        "tool_call_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Tool Call Id",
+          "type": "string"
+        },
+        "tool_name": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": true,
+          "maxProperties": 512,
+          "title": "Arguments",
+          "type": "object"
+        },
+        "state": {
+          "default": "pending",
+          "enum": [
+            "pending",
+            "running",
+            "completed",
+            "error",
+            "skipped",
+            "interrupted"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "result": {
+          "default": null,
+          "title": "Result"
+        },
+        "error": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Error",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        }
+      },
+      "required": [
+        "tool_call_id",
+        "tool_name"
+      ],
+      "title": "RuntimeToolCall",
+      "type": "object"
+    },
+    "StateDeltaEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "state.delta",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "patch": {
+          "items": {
+            "$ref": "#/$defs/JsonPatchOperation"
+          },
+          "maxItems": 256,
+          "title": "Patch",
+          "type": "array"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence"
+      ],
+      "title": "StateDeltaEvent",
+      "type": "object"
+    },
+    "StateSnapshotEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "state.snapshot",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "state": {
+          "additionalProperties": true,
+          "maxProperties": 256,
+          "title": "State",
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence"
+      ],
+      "title": "StateSnapshotEvent",
+      "type": "object"
+    },
+    "SubagentErrorEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "subagent.error",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "subagent_run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Subagent Run Id",
+          "type": "string"
+        },
+        "message": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Message",
+          "type": "string"
+        },
+        "data": {
+          "additionalProperties": true,
+          "maxProperties": 128,
+          "title": "Data",
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "subagent_run_id"
+      ],
+      "title": "SubagentErrorEvent",
+      "type": "object"
+    },
+    "SubagentFinishedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "subagent.finished",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "subagent_run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Subagent Run Id",
+          "type": "string"
+        },
+        "result": {
+          "additionalProperties": true,
+          "maxProperties": 128,
+          "title": "Result",
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "subagent_run_id"
+      ],
+      "title": "SubagentFinishedEvent",
+      "type": "object"
+    },
+    "SubagentStartedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "subagent.started",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "subagent_run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Subagent Run Id",
+          "type": "string"
+        },
+        "agent_id": {
+          "default": "subagent",
+          "maxLength": 200,
+          "title": "Agent Id",
+          "type": "string"
+        },
+        "parent_run_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Parent Run Id",
+          "type": "string"
+        },
+        "data": {
+          "additionalProperties": true,
+          "maxProperties": 128,
+          "title": "Data",
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "subagent_run_id"
+      ],
+      "title": "SubagentStartedEvent",
+      "type": "object"
+    },
+    "TextContent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "text",
+          "title": "Type",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 1000000,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "text"
+      ],
+      "title": "TextContent",
+      "type": "object"
+    },
+    "ToolArgsEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "tool.args",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "tool_call_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Tool Call Id",
+          "type": "string"
+        },
+        "delta": {
+          "maxLength": 256000,
+          "title": "Delta",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "tool_call_id",
+        "delta"
+      ],
+      "title": "ToolArgsEvent",
+      "type": "object"
+    },
+    "ToolArgsFinishedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "tool.args_finished",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "tool_call_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Tool Call Id",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": true,
+          "maxProperties": 512,
+          "title": "Arguments",
+          "type": "object"
+        },
+        "arguments_digest": {
+          "default": "",
+          "maxLength": 128,
+          "title": "Arguments Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "tool_call_id"
+      ],
+      "title": "ToolArgsFinishedEvent",
+      "type": "object"
+    },
+    "ToolResultEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "tool.result",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "tool_call_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Tool Call Id",
+          "type": "string"
+        },
+        "tool_name": {
+          "default": "",
+          "maxLength": 300,
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "message_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Message Id",
+          "type": "string"
+        },
+        "result": {
+          "default": null,
+          "title": "Result"
+        },
+        "error": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Error",
+          "type": "string"
+        },
+        "state": {
+          "default": "completed",
+          "enum": [
+            "completed",
+            "error",
+            "skipped",
+            "interrupted"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "tool_call_id"
+      ],
+      "title": "ToolResultEvent",
+      "type": "object"
+    },
+    "ToolStartedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "tcode.agent.events",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2.0.0",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "tool.started",
+          "title": "Type",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "run_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "causation_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Causation Id",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "maxProperties": 64,
+          "title": "Metadata",
+          "type": "object"
+        },
+        "tool_call_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Tool Call Id",
+          "type": "string"
+        },
+        "tool_name": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "message_id": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Message Id",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": true,
+          "maxProperties": 512,
+          "title": "Arguments",
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol",
+        "protocol_version",
+        "type",
+        "event_id",
+        "session_id",
+        "run_id",
+        "sequence",
+        "tool_call_id",
+        "tool_name"
+      ],
+      "title": "ToolStartedEvent",
+      "type": "object"
+    }
+  },
+  "title": "TCode Agent Events v2",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tcode.local/schemas/agent-events-v2.json",
+  "x-contract-id": "tcode.agent.events",
+  "x-protocol-version": "2.0.0",
+  "x-exported-models": [
+    "TextContent",
+    "ArtifactContent",
+    "ExtensionContent",
+    "RuntimeToolCall",
+    "RuntimeMessage",
+    "RuntimeCapabilities",
+    "ProtocolError",
+    "JsonPatchOperation",
+    "RunStartedEvent",
+    "RunFinishedEvent",
+    "RunErrorEvent",
+    "RunCancelledEvent",
+    "RunInterruptedEvent",
+    "MessageStartedEvent",
+    "MessageDeltaEvent",
+    "MessageFinishedEvent",
+    "ToolStartedEvent",
+    "ToolArgsEvent",
+    "ToolArgsFinishedEvent",
+    "ToolResultEvent",
+    "ActivitySnapshotEvent",
+    "ActivityDeltaEvent",
+    "ActivityFinishedEvent",
+    "InteractionRequestedEvent",
+    "InteractionResolvedEvent",
+    "InteractionCancelledEvent",
+    "InteractionExpiredEvent",
+    "SubagentStartedEvent",
+    "SubagentFinishedEvent",
+    "SubagentErrorEvent",
+    "StateSnapshotEvent",
+    "StateDeltaEvent",
+    "MessagesSnapshotEvent",
+    "RuntimeEvent"
+  ],
+  "x-event-examples": {
+    "run.started": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "run.started",
+      "agent_id": "build"
+    },
+    "run.finished": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "run.finished",
+      "outcome": "completed",
+      "result": {}
+    },
+    "run.error": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "run.error",
+      "code": "run_failed",
+      "message": "执行失败"
+    },
+    "run.cancelled": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "run.cancelled",
+      "reason": "用户取消"
+    },
+    "run.interrupted": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "run.interrupted",
+      "reason": "interaction_required",
+      "interaction_id": "interaction_1"
+    },
+    "message.started": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "message.started",
+      "message_id": "message_1",
+      "role": "assistant"
+    },
+    "message.delta": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "message.delta",
+      "message_id": "message_1",
+      "delta": "你好",
+      "stream_epoch": 1
+    },
+    "message.finished": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "message.finished",
+      "message": {
+        "message_id": "message_1",
+        "role": "assistant",
+        "content": "你好"
+      }
+    },
+    "tool.started": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "tool.started",
+      "tool_call_id": "tool_1",
+      "tool_name": "read",
+      "arguments": {
+        "path": "README.md"
+      }
+    },
+    "tool.args": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "tool.args",
+      "tool_call_id": "tool_1",
+      "delta": "{\"path\":"
+    },
+    "tool.args_finished": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "tool.args_finished",
+      "tool_call_id": "tool_1",
+      "arguments": {
+        "path": "README.md"
+      },
+      "arguments_digest": "sha256:example"
+    },
+    "tool.result": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "tool.result",
+      "tool_call_id": "tool_1",
+      "tool_name": "read",
+      "result": "content",
+      "state": "completed"
+    },
+    "activity.snapshot": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "activity.snapshot",
+      "activity_id": "activity_1",
+      "phase": "tool_progress",
+      "status": "running",
+      "message": "已处理 1/2 项",
+      "current": 1,
+      "total": 2,
+      "unit": "items"
+    },
+    "activity.delta": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "activity.delta",
+      "activity_id": "activity_1",
+      "phase": "tool_progress",
+      "status": "running",
+      "message": "已处理 1/2 项",
+      "current": 2,
+      "total": 2,
+      "unit": "items"
+    },
+    "activity.finished": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "activity.finished",
+      "activity_id": "activity_1",
+      "phase": "tool_progress",
+      "status": "completed",
+      "message": "已处理 1/2 项",
+      "current": 2,
+      "total": 2,
+      "unit": "items"
+    },
+    "interaction.requested": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "interaction.requested",
+      "interaction_id": "interaction_1",
+      "kind": "question",
+      "prompt": "是否继续？",
+      "payload": {
+        "options": [
+          "继续",
+          "停止"
+        ]
+      }
+    },
+    "interaction.resolved": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "interaction.resolved",
+      "interaction_id": "interaction_1",
+      "kind": "question",
+      "resolution": {
+        "answer": "继续"
+      }
+    },
+    "interaction.cancelled": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "interaction.cancelled",
+      "interaction_id": "interaction_1",
+      "kind": "question",
+      "reason": "run_cancelled"
+    },
+    "interaction.expired": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "interaction.expired",
+      "interaction_id": "interaction_1",
+      "kind": "question",
+      "resolution": {
+        "answer": "默认值"
+      }
+    },
+    "subagent.started": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "subagent.started",
+      "subagent_run_id": "subrun_1",
+      "agent_id": "researcher"
+    },
+    "subagent.finished": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "subagent.finished",
+      "subagent_run_id": "subrun_1",
+      "result": {
+        "summary": "完成"
+      }
+    },
+    "subagent.error": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "subagent.error",
+      "subagent_run_id": "subrun_1",
+      "message": "子任务失败"
+    },
+    "state.snapshot": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "state.snapshot",
+      "state": {
+        "phase": "running"
+      }
+    },
+    "state.delta": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "state.delta",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/phase",
+          "value": "completed"
+        }
+      ]
+    },
+    "messages.snapshot": {
+      "protocol": "tcode.agent.events",
+      "protocol_version": "2.0.0",
+      "event_id": "evt_example",
+      "session_id": "session_example",
+      "run_id": "run_example",
+      "sequence": 1,
+      "timestamp": "2026-09-07T12:00:00.000Z",
+      "causation_id": "message_user",
+      "metadata": {},
+      "type": "messages.snapshot",
+      "messages": [
+        {
+          "message_id": "message_1",
+          "role": "assistant",
+          "content": "你好"
+        }
+      ]
+    }
+  },
+  "description": "Normalized runtime events shared by TCode WebSocket, AG-UI adapters, client SDKs and durable projections."
+}

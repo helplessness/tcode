@@ -1,0 +1,8 @@
+{
+  "community-lookup-mcp": {
+    "url": "http://127.0.0.1:10230/mcp",
+    "transport": "streamable-http",
+    "invocation_mode": "direct",
+    "enabled": true
+  }
+}

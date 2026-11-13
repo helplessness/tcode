@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tcode.local/schemas/workflow-template-v1.schema.json",
+  "title": "TCode Plugin Workflow Template v1",
+  "type": "object",
+  "required": ["template_key", "display_name", "domain", "stages"],
+  "properties": {
+    "template_key": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$"
+    },
+    "display_name": {"type": "string", "minLength": 1, "maxLength": 200},
+    "domain": {"type": "string", "minLength": 1, "maxLength": 100},
+    "description": {"type": "string", "maxLength": 4000},
+    "enabled": {"type": "boolean"},
+    "input_contract": {"$ref": "#/$defs/inputContract"},
+    "output_contract": {"type": "object"},
+    "stage_defaults": {"type": "object"},
+    "metadata": {"$ref": "#/$defs/templateMetadata"},
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/$defs/stage"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "inputContract": {
+      "type": "object",
+      "properties": {
+        "required": {"type": "array", "items": {"$ref": "#/$defs/inputField"}},
+        "optional": {"type": "array", "items": {"$ref": "#/$defs/inputField"}}
+      },
+      "additionalProperties": true
+    },
+    "inputField": {
+      "oneOf": [
+        {"type": "string", "minLength": 1},
+        {
+          "type": "object",
+          "properties": {
+            "field": {"type": "string", "minLength": 1},
+            "source": {"const": "user_request"}
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "stringList": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "templateMetadata": {
+      "type": "object",
+      "properties": {
+        "version": {"type": ["string", "number"]},
+        "prompt_dir": {"type": "string", "minLength": 1},
+        "routing": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "auto_start": {"const": false}
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "humanConfirmation": {
+      "type": "object",
+      "required": ["required"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "title": {"type": "string", "minLength": 1, "maxLength": 200},
+        "reason": {"type": "string", "maxLength": 1200},
+        "on_approve": {"const": "continue"},
+        "on_reject": {"enum": ["block", "fallback"]},
+        "fallback_stage_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"on_reject": {"const": "fallback"}},
+            "required": ["on_reject"]
+          },
+          "then": {"required": ["fallback_stage_id"]}
+        }
+      ],
+      "additionalProperties": false
+    },
+    "stageMetadata": {
+      "type": "object",
+      "properties": {
+        "human_confirmation": {"$ref": "#/$defs/humanConfirmation"}
+      },
+      "additionalProperties": true
+    },
+    "stage": {
+      "type": "object",
+      "required": ["stage_id", "depends_on", "label", "owner", "call_type"],
+      "properties": {
+        "stage_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$"
+        },
+        "depends_on": {"$ref": "#/$defs/stringList"},
+        "label": {"type": "string", "minLength": 1, "maxLength": 200},
+        "owner": {"type": "string", "minLength": 1, "maxLength": 128},
+        "call_type": {"enum": ["agent", "subagent"]},
+        "description": {"type": "string", "maxLength": 4000},
+        "prompt_file": {"type": "string", "minLength": 1},
+        "allowed_tools": {"$ref": "#/$defs/stringList"},
+        "required_skills": {"$ref": "#/$defs/stringList"},
+        "input_contract": {"type": "object"},
+        "output_contract": {"type": "object"},
+        "expected_artifacts": {"$ref": "#/$defs/stringList"},
+        "success_checks": {"$ref": "#/$defs/stringList"},
+        "validators": {"type": "array", "items": {"type": "object"}},
+        "retry_policy": {"type": "object"},
+        "timeout_policy": {"type": "object"},
+        "failure_policy": {"type": "object"},
+        "fallback_stage_ids": {"$ref": "#/$defs/stringList"},
+        "review_gate": {"type": "boolean"},
+        "metadata": {"$ref": "#/$defs/stageMetadata"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

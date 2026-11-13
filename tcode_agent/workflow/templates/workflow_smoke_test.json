@@ -1,0 +1,96 @@
+{
+  "template_key": "workflow_smoke_test",
+  "display_name": "Workflow 最小测试",
+  "domain": "test",
+  "enabled": true,
+  "description": "用于手动验证 workflow 创建、步骤衔接、主界面旁白和最终报告的双步骤最小流程。",
+  "input_contract": {
+    "required": [
+      "target_description"
+    ],
+    "optional": []
+  },
+  "output_contract": {
+    "required": [
+      "final_report"
+    ],
+    "optional": []
+  },
+  "stage_defaults": {
+    "validators": [
+      {"type": "non_empty"},
+      {"type": "no_failure_signal"}
+    ],
+    "retry_policy": {
+      "max_attempts": 2
+    },
+    "failure_policy": {
+      "action": "block"
+    }
+  },
+  "stages": [
+    {
+      "stage_id": "smoke_prepare",
+      "depends_on": [],
+      "label": "准备测试输入",
+      "owner": "build",
+      "call_type": "agent",
+      "description": "读取测试目标并用一句话确认本次测试内容。",
+      "success_checks": [
+        "已明确复述测试目标"
+      ],
+      "metadata": {
+        "output_instructions": [
+          "不要调用任何工具。",
+          "读取 input_payload.target_description。",
+          "只返回一句简体中文：已收到测试目标：<目标>。"
+        ]
+      }
+    },
+    {
+      "stage_id": "decision_report",
+      "depends_on": [
+        "smoke_prepare"
+      ],
+      "label": "生成测试结果",
+      "owner": "build",
+      "call_type": "agent",
+      "description": "根据上一步的确认结果生成最简测试报告。",
+      "expected_artifacts": [
+        "final_report"
+      ],
+      "success_checks": [
+        "明确说明 workflow 测试成功"
+      ],
+      "metadata": {
+        "output_instructions": [
+          "不要调用任何工具。",
+          "返回简体中文 Markdown。",
+          "内容只包含标题“Workflow 测试成功”和一行已完成目标。"
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "aliases": [
+      "Workflow 最小测试",
+      "workflow 测试",
+      "冒烟测试",
+      "workflow_smoke_test"
+    ],
+    "routing": {
+      "enabled": true,
+      "auto_start": false,
+      "summary": "仅用于从 Workflow 管理界面手动创建并验证两步执行和主界面旁白。",
+      "use_when": [
+        "用户明确要手动测试 workflow 运行链路"
+      ],
+      "do_not_use_when": [
+        "任何真实业务任务",
+        "用户没有明确要求测试 workflow"
+      ],
+      "match_threshold": 1.0
+    }
+  }
+}

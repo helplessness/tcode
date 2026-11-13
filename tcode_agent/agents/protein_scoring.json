@@ -1,0 +1,18 @@
+{
+  "name": "protein_scoring",
+  "description": "按多目标标准对设计候选评分和排序。",
+  "mode": "subagent",
+  "native": true,
+  "prompt": "你是蛋白质候选评分工程师。\n\n使用加权标准（活性、稳定性、表达、可开发性）排序候选。\n公开权重假设和敏感度。",
+  "permission": {
+    "*": "allow",
+    "task": "deny",
+    "todo_write": "deny",
+    "todo_read": "deny"
+  },
+  "allowed_subagents": [],
+  "options": {
+    "display_name": "评分师"
+  },
+  "steps": 50
+}

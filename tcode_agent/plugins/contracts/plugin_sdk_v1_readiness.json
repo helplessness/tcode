@@ -1,0 +1,434 @@
+{
+  "schema_version": 1,
+  "contract_id": "tcode.plugin-sdk-v1.readiness",
+  "audit_date": "2026-08-21",
+  "audit_scope": "repository-static-readiness",
+  "ready_to_freeze_v1": true,
+  "decision": "freeze-v1",
+  "status": "pass",
+  "production_behavior_changed": true,
+  "release_scope": "official-or-explicit-trusted-host;unknown-isolated-worker",
+  "unknown_community_plugin_policy": "container-worker-explicit-capability-grants",
+  "worker_protocol": "tcode.plugin-worker.v2",
+  "final_legacy_cleanup_ready": true,
+  "final_cleanup_execution": {
+    "status": "completed-early",
+    "authorization": "explicit-user-risk-acceptance",
+    "observation_requirement_overridden": true,
+    "stable_release_observation_completed": false
+  },
+  "targets": {
+    "official_reference_plugins": 1,
+    "references_per_frozen_interface": 1,
+    "public_surfaces": [
+      "config",
+      "events",
+      "logger",
+      "memory",
+      "process",
+      "provider",
+      "prompt",
+      "tools",
+      "workspace",
+      "workflows"
+    ]
+  },
+  "reference_plugins": {
+    "scanned_count": 5,
+    "qualified_count": 4,
+    "qualified_names": [
+      "enzyme-entity-discovery-demo",
+      "enzyme-reaction-discovery",
+      "example-plugin",
+      "protein-research"
+    ],
+    "surface_coverage": {
+      "config": 4,
+      "events": 1,
+      "logger": 3,
+      "memory": 1,
+      "process": 0,
+      "provider": 1,
+      "prompt": 1,
+      "tools": 4,
+      "workspace": 0,
+      "workflows": 3
+    },
+    "surface_deficits": {},
+    "packages": [
+      {
+        "name": "enzyme-entity-discovery-demo",
+        "manifest": "plugins/enzyme_entity_discovery_demo/plugin.json",
+        "entry": "plugins/enzyme_entity_discovery_demo/plugin.py",
+        "declared_contributions": [
+          "tools"
+        ],
+        "used_public_surfaces": [
+          "config",
+          "logger",
+          "tools",
+          "workflows"
+        ],
+        "private_runtime_imports": [],
+        "package_errors": [],
+        "public_sdk_only": true,
+        "reference_qualified": true
+      },
+      {
+        "name": "enzyme-reaction-discovery",
+        "manifest": "plugins/enzyme_reaction_discovery/plugin.json",
+        "entry": "plugins/enzyme_reaction_discovery/plugin.py",
+        "declared_contributions": [
+          "tools"
+        ],
+        "used_public_surfaces": [
+          "config",
+          "logger",
+          "tools",
+          "workflows"
+        ],
+        "private_runtime_imports": [],
+        "package_errors": [],
+        "public_sdk_only": true,
+        "reference_qualified": true
+      },
+      {
+        "name": "example-plugin",
+        "manifest": "plugins/example_plugin/plugin.json",
+        "entry": "plugins/example_plugin/plugin.py",
+        "declared_contributions": [
+          "events",
+          "prompt",
+          "tools"
+        ],
+        "used_public_surfaces": [
+          "config",
+          "events",
+          "logger",
+          "memory",
+          "prompt",
+          "provider",
+          "tools",
+          "workflows"
+        ],
+        "private_runtime_imports": [],
+        "package_errors": [],
+        "public_sdk_only": true,
+        "reference_qualified": true
+      },
+      {
+        "name": "paper-research-workflow",
+        "manifest": "plugins/paper_research_workflow/plugin.json",
+        "entry": "plugins/paper_research_workflow/plugin.py",
+        "declared_contributions": [
+          "events",
+          "prompt",
+          "tools"
+        ],
+        "used_public_surfaces": [
+          "config",
+          "events",
+          "prompt",
+          "tools",
+          "workspace"
+        ],
+        "private_runtime_imports": [
+          "line 25: tcode_agent.agent.agents",
+          "line 26: tcode_agent.mcp.manager_auto",
+          "line 30: tcode_agent.presentation",
+          "line 31: tcode_agent.runtime",
+          "line 3270: tcode_agent.tools.builtin.task",
+          "line 32: tcode_agent.runtime.sandbox",
+          "line 40: tcode_agent.session.manager",
+          "line 41: tcode_agent.team.catalog",
+          "line 42: tcode_agent.team.fixed_workers",
+          "line 43: tcode_agent.team.registry",
+          "line 44: tcode_agent.tools.base",
+          "line 45: tcode_agent.tools.path_policy",
+          "line 46: tcode_agent.types",
+          "line 6507: tcode_agent.server.wiki_shares",
+          "line 6518: tcode_agent.server",
+          "line 6519: tcode_agent.server.auth"
+        ],
+        "package_errors": [],
+        "public_sdk_only": false,
+        "reference_qualified": false
+      },
+      {
+        "name": "protein-research",
+        "manifest": "plugins/protein_research/plugin.json",
+        "entry": "plugins/protein_research/plugin.py",
+        "declared_contributions": [
+          "tools"
+        ],
+        "used_public_surfaces": [
+          "config",
+          "tools"
+        ],
+        "private_runtime_imports": [],
+        "package_errors": [],
+        "public_sdk_only": true,
+        "reference_qualified": true
+      }
+    ]
+  },
+  "summary": {
+    "gate_count": 18,
+    "pass": 17,
+    "partial": 0,
+    "blocked": 1,
+    "not_started": 0,
+    "required_blocker_count": 0
+  },
+  "required_blockers": [],
+  "gates": [
+    {
+      "id": "community_registry_supply_chain",
+      "title": "自有社区注册表与供应链",
+      "status": "pass",
+      "required_for_freeze": true,
+      "summary": "注册表已固定版本、SDK/Python 范围、SHA-256、Ed25519、权限与审核/撤销状态。",
+      "evidence": [
+        "tcode_agent/plugin_sdk/community.py",
+        "tcode_agent/plugin_sdk/package.py",
+        "tests/test_plugin_sdk_v1.py"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "contract_test_and_doctor",
+      "title": "Contract Test 与 Plugin Doctor",
+      "status": "pass",
+      "required_for_freeze": true,
+      "summary": "SDK v1 已提供 validate、test、doctor、脱敏诊断和独立合同 Fixture。",
+      "evidence": [
+        "tcode_agent/plugin_sdk/testing.py",
+        "tcode_agent/plugins/api.py",
+        "tcode_agent/plugin_sdk/cli.py",
+        "tests/test_plugin_sdk_v1.py"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "final_legacy_cleanup",
+      "title": "最终旧路径清理",
+      "status": "pass",
+      "required_for_freeze": false,
+      "summary": "经用户明确接受提前执行风险，Legacy Service、Provider Preview 命名和 Tracker 旧 JSON 回灌已删除；运行时只保留当前原生路径。",
+      "evidence": [
+        "tcode_agent/runtime/service_providers.py",
+        "tcode_agent/runtime/provider_api.py",
+        "tcode_agent/runtime/shared_tracker.py",
+        "tests/test_stage4_protocol_contracts.py"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "isolated_community_worker",
+      "title": "未知社区插件隔离 Worker",
+      "status": "pass",
+      "required_for_freeze": true,
+      "summary": "未知代码默认进入独立容器，受控能力只能经 Host Broker 重新进入权限、Tool 与 Sandbox 管线。",
+      "evidence": [
+        "tcode_agent/plugins/isolation.py",
+        "tcode_agent/plugins/capability_broker.py",
+        "tcode_agent/plugin_sdk/worker.py",
+        "tests/test_plugin_container_broker.py"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "job_owner_cursor",
+      "title": "Job Owner、Cursor 与取消结算",
+      "status": "pass",
+      "required_for_freeze": false,
+      "summary": "TaskRuntime Job Provider 已统一 Owner、单调 Cursor、脱敏诊断和失败关闭的取消结算。",
+      "evidence": [
+        "tcode_agent/runtime/jobs.py",
+        "tcode_agent/server/job_runtime_api.py",
+        "tests/test_stage4_protocol_contracts.py"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "lifecycle_ownership",
+      "title": "生命周期、事务与精确所有权",
+      "status": "pass",
+      "required_for_freeze": true,
+      "summary": "实例 Scope、事务发布、失败回滚、精确 disposer 和循环测试已落地。",
+      "evidence": [
+        "tcode_agent/runtime/effects.py",
+        "tcode_agent/plugins/manager.py",
+        "tests/test_plugin_load_transaction.py"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "manifest_context_boundary",
+      "title": "Manifest、Context 与权限边界",
+      "status": "pass",
+      "required_for_freeze": true,
+      "summary": "Manifest v2 单轨、导入前校验、受控 Context 和 Host 授权边界已实现。",
+      "evidence": [
+        "tcode_agent/plugin_sdk/schema/plugin-manifest-v2.schema.json",
+        "tcode_agent/plugins/context.py",
+        "tests/test_plugin_manifest_v2.py"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "official_reference_coverage",
+      "title": "官方公共 SDK 参考插件覆盖",
+      "status": "pass",
+      "required_for_freeze": true,
+      "summary": "发现 4 个只使用公共 SDK 且声明 Contribution 的参考插件；目标至少 1 个，每个核心参考接口至少由 1 个参考插件使用。",
+      "evidence": [
+        "plugins/enzyme_entity_discovery_demo/plugin.json",
+        "plugins/enzyme_reaction_discovery/plugin.json",
+        "plugins/example_plugin/plugin.json",
+        "plugins/protein_research/plugin.json"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "prompt_production_contract",
+      "title": "Prompt 生产契约",
+      "status": "pass",
+      "required_for_freeze": true,
+      "summary": "通过准入的 Prompt contribution 已进入有预算、稳定排序的唯一生产组装管线。",
+      "evidence": [
+        "tcode_agent/prompt/registry.py",
+        "tcode_agent/prompt/pipeline.py",
+        "tcode_agent/harness/prompt_builder.py",
+        "tests/test_prompt_builder_context_budget.py"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "provider_compatibility_matrix",
+      "title": "Provider 兼容与暴露矩阵",
+      "status": "pass",
+      "required_for_freeze": true,
+      "summary": "SDK v1 冻结窄 Provider DTO/Protocol，8 类内部 Provider 仍保持宿主策略边界。",
+      "evidence": [
+        "tcode_agent/plugins/contracts/plugin_api_v1.json",
+        "tcode_agent/runtime/provider_api.py",
+        "tcode_agent/plugins/contracts/provider_api_internal_v1.json",
+        "tests/test_provider_api_internal.py"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "public_api_stability",
+      "title": "公共 API 稳定性",
+      "status": "pass",
+      "required_for_freeze": true,
+      "summary": "SDK v1 export、Manifest、Tool/Prompt/Event/Provider DTO 和精确签名快照已冻结。",
+      "evidence": [
+        "tcode_agent/plugin_sdk/__init__.py",
+        "tcode_agent/plugin_sdk/contracts.py",
+        "tcode_agent/plugins/contracts/plugin_api_v1.json",
+        "tests/test_plugin_sdk_v1.py"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "release_support_policy",
+      "title": "发行、支持与弃用政策",
+      "status": "pass",
+      "required_for_freeze": true,
+      "summary": "已明确 v1.x 语义化版本、安全修复、弃用和两个稳定发布观察政策。",
+      "evidence": [
+        "docs/plugin-sdk/README.md",
+        "docs/plugin-sdk/05-测试打包发布与安装.md",
+        "docs/plugin-sdk/06-故障排查与发布检查表.md"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "session_event_projection",
+      "title": "Session Event 与 Projection",
+      "status": "pass",
+      "required_for_freeze": false,
+      "summary": "Session Event v1 已成为追加式权威来源，SQLite 作为可重建 Projection，并具备重放、恢复和保留审计链的 Compaction。",
+      "evidence": [
+        "tcode_agent/session/events.py",
+        "tcode_agent/session/store_sqlite.py",
+        "tests/test_stage2_reliability.py"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "single_track_runtime",
+      "title": "Tool、Prompt、Event 单轨运行时",
+      "status": "pass",
+      "required_for_freeze": true,
+      "summary": "Tool、Prompt 与 Event 保持单轨，SDK v1 宿主准入在插件导入前完成。",
+      "evidence": [
+        "tcode_agent/runtime/plugin_admission.py",
+        "tcode_agent/runtime/tool_pipeline.py",
+        "tcode_agent/prompt/pipeline.py",
+        "tcode_agent/plugins/hooks.py",
+        "tests/test_plugin_context_v1.py"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "stable_release_observation",
+      "title": "两个稳定发布观察窗口",
+      "status": "blocked",
+      "required_for_freeze": false,
+      "summary": "真实两个稳定发布周期仍需经过实际时间和线上观察；本门禁不再阻塞已获明确授权的提前清理。",
+      "evidence": [
+        "docs/plugin-sdk/05-测试打包发布与安装.md",
+        "docs/plugin-sdk/06-故障排查与发布检查表.md"
+      ],
+      "blockers": [
+        "尚未经历两个真实稳定发布窗口，线上稳定性仍需独立观察"
+      ]
+    },
+    {
+      "id": "telemetry_redaction_backpressure",
+      "title": "Telemetry 脱敏与反压",
+      "status": "pass",
+      "required_for_freeze": false,
+      "summary": "所有遥测在 exporter 前统一脱敏，并通过有界非阻塞队列批量导出；队列满时只丢遥测，不拖慢任务。",
+      "evidence": [
+        "tcode_agent/runtime/telemetry.py",
+        "tcode_agent/runtime/artifacts.py",
+        "tests/test_stage2_reliability.py",
+        "tcode_agent/plugins/contracts/provider_api_internal_v1.json"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "tool_pipeline_single_track",
+      "title": "Tool Definition 与统一执行流水线",
+      "status": "pass",
+      "required_for_freeze": true,
+      "summary": "工具定义、参数验证、Policy、Permission、Sandbox、Body 与 Finalize 已收敛到唯一顺序管线。",
+      "evidence": [
+        "tcode_agent/runtime/tool_pipeline.py",
+        "tcode_agent/runtime/tool_arguments.py",
+        "tcode_agent/harness/tool_executor.py",
+        "tcode_agent/plugins/contributions.py",
+        "tests/test_plugin_sdk_v1.py",
+        "scripts/dsh.py"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "trusted_release_scope",
+      "title": "Trusted 首发范围与未知插件拒绝",
+      "status": "pass",
+      "required_for_freeze": true,
+      "summary": "官方路径或宿主精确授权才能进入主进程，Manifest 不能自授信任。",
+      "evidence": [
+        "tcode_agent/plugins/contracts/plugin_api_v1.json",
+        "tcode_agent/runtime/plugin_admission.py",
+        "tests/test_plugin_container_broker.py"
+      ],
+      "blockers": []
+    }
+  ]
+}

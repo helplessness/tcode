@@ -1,0 +1,13 @@
+.command-palette input[type="search"]:focus-visible,
+.command-palette button:focus-visible,
+.command-palette select:focus-visible { outline: 2px solid #8ed5ff; outline-offset: 2px; }
+.command-palette select { background: #172128; border: 1px solid #50606c; padding: 3px 6px; border-radius: 4px; }
+.command-palette input[type="checkbox"] { flex: none; margin-right: 5px; accent-color: #8ed5ff; }
+.command-palette>header button { padding: 4px 8px; font-size: 20px; }
+.command-palette-results button { align-items: flex-start; flex-direction: column; gap: 4px; }
+.command-palette-results b { min-width: 0; overflow-wrap: anywhere; }
+.command-palette-results span { font-size: 12px; color: #b1c0cb; overflow-wrap: anywhere; white-space: pre-wrap; }
+.command-palette-results button[data-selected=true] { background: #233643; }
+.command-palette>footer { color: #b1c0cb; line-height: 1.6; }
+.main-chat-transcript [data-search-message-ids] { scroll-margin-block: 8px; }
+.main-chat-transcript [data-search-message-ids]:focus { outline: 2px solid var(--tcode-primary, #8ed5ff); outline-offset: 4px; border-radius: 8px; }

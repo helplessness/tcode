@@ -1,0 +1,6 @@
+.research-record-details { max-height:360px; overflow:auto; overscroll-behavior:contain; color:var(--tcode-text); }
+.research-record-details dl>div { display:grid; grid-template-columns:minmax(100px,1fr) minmax(0,2fr); gap:16px; padding:10px 0; border-bottom:1px solid var(--tcode-border); font-size:13px; }
+.research-record-details dt { color:var(--tcode-text-muted); overflow-wrap:anywhere; }
+.research-record-details dd { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+.research-scroll-content { max-height:520px; overflow:auto; overscroll-behavior:contain; }
+@media(max-width:600px){.research-record-details dl>div { grid-template-columns:1fr; gap:4px; }}

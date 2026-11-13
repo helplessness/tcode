@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tcode.local/enzyme-reaction-discovery/reaction-analysis-v1.schema.json",
+  "type": "object",
+  "required": ["schema_version", "run_id", "evidence_ledger", "reaction_analysis"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "run_id": {"type": "string", "minLength": 1},
+    "evidence_ledger": {"type": "array", "items": {"$ref": "#/$defs/evidenceStatement"}},
+    "reaction_analysis": {
+      "type": "object",
+      "required": ["normalized_components", "net_changes", "component_interpretations", "assumptions", "warnings", "unresolved_questions", "validation_scope"],
+      "properties": {
+        "normalized_components": {"type": "object"},
+        "net_changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["statement_id", "event", "certainty", "basis"],
+            "properties": {
+              "statement_id": {"type": "string", "minLength": 1},
+              "event": {"type": "string", "minLength": 1, "maxLength": 1200},
+              "certainty": {"enum": ["observed", "inferred", "uncertain"]},
+              "basis": {"type": "string", "minLength": 1, "maxLength": 1200}
+            },
+            "additionalProperties": false
+          }
+        },
+        "component_interpretations": {"type": "array", "items": {"type": "object"}},
+        "assumptions": {"type": "array", "items": {"type": "string"}},
+        "warnings": {"type": "array", "items": {"type": "string"}},
+        "unresolved_questions": {"type": "array", "items": {"type": "string"}},
+        "validation_scope": {
+          "type": "object",
+          "required": ["text_checks_completed", "chemical_structure_validated", "atom_mapping_completed"],
+          "properties": {
+            "text_checks_completed": {"type": "boolean"},
+            "chemical_structure_validated": {"const": false},
+            "atom_mapping_completed": {"const": false}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "evidenceStatement": {
+      "type": "object",
+      "required": ["statement_id", "kind", "statement", "source_refs"],
+      "properties": {
+        "statement_id": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["fact", "inference", "hypothesis", "counterevidence", "unknown"]},
+        "statement": {"type": "string", "minLength": 1},
+        "source_refs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "card_id": {"type": "string"},
+        "field_path": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

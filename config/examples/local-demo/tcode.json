@@ -1,0 +1,18 @@
+{
+  "model": "demo/your-model-id",
+  "provider": {
+    "demo": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURLEnv": "TCODE_DEMO_BASE_URL",
+        "apiKeyEnv": "TCODE_DEMO_API_KEY",
+        "timeoutSeconds": 120
+      },
+      "models": {
+        "your-model-id": { "name": "My model" }
+      }
+    }
+  },
+  "plugins": [],
+  "runtime": { "llm_timeout_seconds": 120 }
+}

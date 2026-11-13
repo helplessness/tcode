@@ -1,0 +1,7 @@
+.dynamic-headers-editor { min-width: 0; margin-top: 12px; color: inherit; font-size: 14px; line-height: 1.6; }
+.dynamic-headers-editor > summary { cursor: pointer; padding: 8px 0; font-weight: 600; }
+.dynamic-headers-editor fieldset { min-width: 0; margin: 12px 0; padding: 12px; border: 1px solid var(--tcode-border, #d4dccf); border-radius: 8px; }
+.dynamic-headers-editor label { display: block; margin: 10px 0; }
+.dynamic-headers-editor input:not([type=checkbox]), .dynamic-headers-editor textarea { box-sizing: border-box; display: block; width: 100%; min-width: 0; }
+.dynamic-headers-editor textarea { min-height: 80px; resize: vertical; }
+.dynamic-headers-editor .dynamic-header-required { display: flex; align-items: flex-start; gap: 8px; }

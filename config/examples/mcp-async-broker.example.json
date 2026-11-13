@@ -1,0 +1,10 @@
+{
+  "job-protocol-mcp": {
+    "enabled": false,
+    "transport": "streamable-http",
+    "invocation_mode": "direct",
+    "url": "http://127.0.0.1:10121/mcp",
+    "connect_timeout": 10000,
+    "timeout": 300000
+  }
+}

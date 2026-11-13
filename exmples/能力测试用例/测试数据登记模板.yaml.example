@@ -1,0 +1,49 @@
+# 复制为 inputs/测试数据登记.local.yaml 后填写；本地登记文件不会进入 Git。
+schema_version: 1
+dataset_name: "请填写本轮数据集名称"
+prepared_at: "YYYY-MM-DD"
+
+image_tests:
+  - file: "T04-image-understanding/example.jpg"
+    expected_subject: "请填写主要主体"
+    expected_scene: "请填写主要场景"
+    facts_that_must_not_be_guessed: []
+
+pdf_tests:
+  - file: "T05-document-pdf/example.pdf"
+    kind: "text|scanned|mixed|large|corrupted"
+    expected_title: ""
+    facts_to_verify:
+      - question: "请填写需要核对的问题"
+        expected_answer: "请填写已知答案"
+        expected_page: null
+
+mcp_tests:
+  - test_id: "T06-or-T07"
+    server: ""
+    target_tool: ""
+    files: []
+    parameters: {}
+    expected_artifacts: []
+    expected_runtime_minutes: null
+    allow_cancel_test: false
+    allow_invalid_parameter_test: false
+
+paper_research_tests:
+  - question: ""
+    keywords: []
+    seed_papers: []
+    expected_key_points: []
+
+plugin_tests:
+  - path: "T08-plugin-workflow/example-plugin"
+    expected_tools: []
+    expected_workflows: []
+    trust_level: "community|official-controlled-host"
+
+stability_tests:
+  duration_minutes: 60
+  max_parallel_sessions: 2
+  max_parallel_jobs: 1
+  services_allowed_to_interrupt: []
+  cleanup_after_test: true

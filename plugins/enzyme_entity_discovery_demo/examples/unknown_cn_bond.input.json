@@ -1,0 +1,16 @@
+{
+  "reaction_name": "未收录的高精氨酸 C-N 成键目标反应",
+  "reactant_names": [
+    "pyruvate",
+    "L-homoarginine"
+  ],
+  "product_names": [
+    "N2-(2-carboxyethyl)-L-homoarginine"
+  ],
+  "natural_language_request": "请从本地实体事实和 Agent 自身知识推导可能的机制、催化能力与候选酶家族，并清楚区分已知事实和未验证预测。",
+  "constraints": [
+    "offline_only",
+    "do_not_parse_uploaded_documents",
+    "target_activity_must_remain_unvalidated"
+  ]
+}

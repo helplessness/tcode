@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "archive": "community-archive-test-plugin-0.1.0.zip",
+  "archive_sha256": "63287c8cdc3091df55a940efdc5ac06f10d8880e55675075cc50d30ef14e6de9",
+  "manifest": {
+    "name": "community-archive-test-plugin",
+    "version": "0.1.0",
+    "requested_trust": "isolated"
+  },
+  "config": {
+    "prefix": "ARCHIVE_TEST"
+  },
+  "execution_mode": "isolated-worker",
+  "tools": [
+    {
+      "name": "community_archive_echo",
+      "arguments": {"text": "hello"},
+      "expected_output": "ARCHIVE_TEST: hello"
+    },
+    {
+      "name": "community_archive_count",
+      "arguments": {
+        "text": "hello archive plugin",
+        "mode": "words"
+      },
+      "expected_output": "3"
+    }
+  ],
+  "workflow": {
+    "template_key": "community-archive-test-plugin.archive-review",
+    "stages": ["archive_echo", "archive_review"],
+    "review_gate_stage": "archive_review",
+    "requires_explicit_confirmation": true
+  },
+  "cycles": 3,
+  "cleanup_required": true
+}

@@ -1,0 +1,55 @@
+{
+  "name": "@tcode-ai/ag-ui-client",
+  "version": "0.0.2",
+  "description": "UI-agnostic AG-UI client for TCode Agent Gateway",
+  "keywords": [
+    "ag-ui",
+    "agent",
+    "copilotkit",
+    "tcode"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/helplessness/tcode.git",
+    "directory": "packages/tcode-agui-client"
+  },
+  "homepage": "https://github.com/helplessness/tcode#readme",
+  "bugs": {
+    "url": "https://github.com/helplessness/tcode/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "prepack": "npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "peerDependencies": {
+    "@ag-ui/client": "0.0.59",
+    "@ag-ui/core": "0.0.59"
+  },
+  "devDependencies": {
+    "@ag-ui/client": "0.0.59",
+    "@ag-ui/core": "0.0.59",
+    "typescript": "5.6.2",
+    "vitest": "3.2.6"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

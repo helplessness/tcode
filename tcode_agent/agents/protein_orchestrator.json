@@ -1,0 +1,27 @@
+{
+  "name": "protein_orchestrator",
+  "description": "蛋白质设计团队 Manager，调度 1 名常驻执行主管与 8 名固定专家 Worker 完成蛋白质设计工作流。",
+  "mode": "manager",
+  "hidden": true,
+  "native": true,
+  "prompt": "prompts/protein_orchestrator.md",
+  "permission": {
+    "*": "allow",
+    "question": "allow",
+    "task": "deny",
+    "ask_peer_question": "deny",
+    "answer_peer_question": "deny",
+    "todo_write": "deny",
+    "todo_read": "deny"
+  },
+  "allowed_subagents": [
+    "general",
+    "explore",
+    "critic",
+    "verifier"
+  ],
+  "options": {
+    "display_name": "蛋白质设计主管"
+  },
+  "steps": 120
+}

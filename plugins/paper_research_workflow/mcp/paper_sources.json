@@ -1,0 +1,20 @@
+[
+  {
+    "name": "paper-search-mcp",
+    "protocol": "unified-paper-search-v1",
+    "tools": ["search_papers", "resolve_paper"],
+    "url": "http://127.0.0.1:10104/mcp",
+    "transport": "streamable-http",
+    "timeout": 300000,
+    "enabled": false
+  },
+  {
+    "name": "paper-download-mcp",
+    "protocol": "unified-paper-download-v1",
+    "tools": ["resolve_paper_pdf", "download_paper", "batch_download_papers"],
+    "url": "http://127.0.0.1:10105/mcp",
+    "transport": "streamable-http",
+    "timeout": 300000,
+    "enabled": false
+  }
+]

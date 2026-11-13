@@ -1,0 +1,6 @@
+# Paper Research Workflow runtime dependencies
+
+aiohttp>=3.9.0
+pydantic>=2.6.0
+openai>=2.0.0
+PyMuPDF>=1.24.0
