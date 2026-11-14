@@ -8,7 +8,7 @@ TCode 目前处于开源 Alpha，面向本机和自托管研究，尚未验收�
 
 ## 快速开始
 
-**选择平台：** [Linux Web](#linux-web-发出第一条消息) · [macOS 桌面（Apple Silicon）](#macos启动桌面端) · [Windows Web（实验性）](docs/Windows-Web快速启动.md) · [详细部署](#安装与部署)
+**选择平台：** [Linux Web](#linux-web发出第一条消息) · [macOS 桌面（Apple Silicon）](#macos启动桌面端) · [Windows Web（实验性）](docs/Windows-Web快速启动.md) · [详细部署](#安装与部署)
 
 ![TCode 研究工作区：用虚构的酶活性读数演示对话、结果表格与后续验证建议](docs/screenshots/research-chat.png)
 
@@ -145,7 +145,7 @@ source .venv/bin/activate
 
 #### 2. 填写新生成的配置
 
-网页配置见[快速开始](#linux-web-发出第一条消息)，不需要先修改 JSON 或设置模型环境变量。网页设置也支持测试图片理解能力和选择默认图片模型。已有部署可继续用下面的文件配置；共享部署的网页配置须由实例管理员通过 HTTPS 操作。
+网页配置见[快速开始](#linux-web发出第一条消息)，不需要先修改 JSON 或设置模型环境变量。网页设置也支持测试图片理解能力和选择默认图片模型。已有部署可继续用下面的文件配置；共享部署的网页配置须由实例管理员通过 HTTPS 操作。
 
 安装结束后，`.tcode-local/` 已有全部 13 份本机配置。若已安装依赖但配置目录还不存在，可单独运行 `./scripts/init_local_config.sh`。首次聊天只需编辑 `.tcode-local/tcode.json`：把 `model` 中的 `your-model-id` 与 `provider.demo.models` 下的同名键都换成服务商实际提供的模型 ID。模型服务应支持 OpenAI-compatible Chat Completions；要使用工具时还需支持工具调用。
 
@@ -162,7 +162,7 @@ export TCODE_DEMO_API_KEY='replace-with-your-key'
 
 ##### 方式 A：本机最小体验（新用户推荐）
 
-使用[上方快速开始](#linux-web-发出第一条消息)中的启动命令。若选择文件配置，先在同一终端设置上面的模型环境变量，再启动；方式 A 不读取 `local.env`。命令中的 `workdirs/local` 是服务的运行数据目录，不是界面中的工作区名称。[健康检查](http://127.0.0.1:8080/api/health)只检查后端，不验证模型。桌面端和 Docker 的启动方式见[运行指南](docs/RUNNING.md)。
+使用[上方快速开始](#linux-web发出第一条消息)中的启动命令。若选择文件配置，先在同一终端设置上面的模型环境变量，再启动；方式 A 不读取 `local.env`。命令中的 `workdirs/local` 是服务的运行数据目录，不是界面中的工作区名称。[健康检查](http://127.0.0.1:8080/api/health)只检查后端，不验证模型。桌面端和 Docker 的启动方式见[运行指南](docs/RUNNING.md)。
 
 ##### 方式 B：按本机配置启动服务
 
