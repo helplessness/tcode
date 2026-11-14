@@ -1,6 +1,6 @@
 {
   "name": "@tcode-ai/ag-ui-client",
-  "version": "0.0.2",
+  "version": "0.0.3-alpha.1",
   "description": "UI-agnostic AG-UI client for TCode Agent Gateway",
   "keywords": [
     "ag-ui",

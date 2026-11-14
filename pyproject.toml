@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tcode-agent"
-version = "0.0.2"
+version = "0.0.3a1"
 description = "A local-first agent runtime with plugins, MCP, memory, research, and isolated execution."
 readme = "README.md"
 requires-python = ">=3.12"

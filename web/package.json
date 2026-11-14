@@ -1,6 +1,6 @@
 {
   "name": "tcode-agent-web",
-  "version": "0.0.2",
+  "version": "0.0.3-alpha.1",
   "description": "Web interface for Tcode Agent",
   "type": "module",
   "scripts": {

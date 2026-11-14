@@ -1,6 +1,6 @@
 {
   "name": "tcode-desktop",
-  "version": "0.0.2",
+  "version": "0.0.3-alpha.1",
   "private": true,
   "description": "TCode macOS development desktop",
   "main": "main.cjs",
