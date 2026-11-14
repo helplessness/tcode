@@ -2,9 +2,39 @@
 
 TCode 是一个可自托管的 AI 研究工作台。你可以从一个问题开始，把文献、工具调用、远程计算和分析结果留在同一个工作区，方便复查、继续或交给同事。蛋白质研究是其中一个应用场景，不是使用前提。
 
-这是首版开源 Alpha 的候选快照，面向本机和自托管研究，不代表生产多租户部署已经验收。仓库保留研究工具和插件代码，不附带私有配置、真实验收记录、未确认可分发的知识库或研究样本。依赖这些数据的插件需由部署方提供有权使用的数据，基础聊天不需要它们。
+TCode 目前处于开源 Alpha，面向本机和自托管研究，尚未验收生产多租户部署。仓库保留研究工具和插件代码，不附带私有配置、真实验收记录、未确认可分发的知识库或研究样本。依赖这些数据的插件需由部署方提供有权使用的数据，基础聊天不需要它们。
 
-`v0.0.2` 是固定的源码快照；`main` 包含其后的开发改动。复现问题时请注明使用的标签或提交，不要只看应用显示的版本号。
+`v0.0.2` 是固定的源码快照；下方指南对应 `main`。复现问题时请注明标签或提交，不要只看应用显示的版本号。
+
+## 快速开始
+
+**选择平台：** [Linux Web](#linux-web-发出第一条消息) · [macOS 桌面（Apple Silicon）](#macos启动桌面端) · [Windows Web（实验性）](docs/Windows-Web快速启动.md) · [详细部署](#安装与部署)
+
+![TCode 研究工作区：用虚构的酶活性读数演示对话、结果表格与后续验证建议](docs/screenshots/research-chat.png)
+
+*真实 Web 界面，使用隔离工作区、虚构数据和本地演示模型；不代表实际科研结果。*
+
+### Linux Web：发出第一条消息
+
+准备 **Git、Python 3.12（含 venv/pip）、Node.js 22.12+（含 npm）**，以及一个可访问的文本模型服务。基础聊天不需要 Docker、MCP 或 GPU。
+
+```bash
+git clone https://github.com/helplessness/tcode.git
+cd tcode
+./scripts/install_tcode.sh
+source .venv/bin/activate
+mkdir -p workdirs/local
+TCODE_PROJECT_ROOT="$PWD" \
+TCODE_CONFIG_ROOT="$PWD/.tcode-local" \
+TCODE_MCP_CONFIG="$PWD/.tcode-local/mcp.json" \
+tcode-server --local --host 127.0.0.1 --port 8080 --workdir "$PWD/workdirs/local"
+```
+
+1. 打开 [http://127.0.0.1:8080](http://127.0.0.1:8080)，进入 **设置 → 模型与执行 → Web 模型服务 → 添加聊天服务**。填服务名称、协议、接口地址、模型 ID 和服务所需的 API Key，点击 **保存服务**。OpenAI 兼容接口填服务商提供的基础地址（通常以 `/v1` 结尾），不要附加 `/chat/completions`。
+2. 在 **实例默认对话模型** 中选刚添加的模型；可点 **文本测试** 确认连接。
+3. 关闭设置，点 **新建任务**。在 **创建会话** 窗口选择工作目录；如果列表为空，在 **新增目录名** 填 `demo-workspace`，点 **新增目录**。再点 **创建会话**，发送「你好，请用一句话介绍你能做什么」。聊天区收到回复即跑通。
+
+`--local` 只用于回环地址上的个人试用，不需要登录，不要通过代理或隧道对外开放。按 `Ctrl+C` 停止；用同一运行目录重启可保留工作区和会话。要用文件配置、共享部署或启用隔离与异步服务，请看[详细部署](#安装与部署)。
 
 ## 为什么用 TCode？
 
@@ -22,7 +52,16 @@ TCode 是一个可自托管的 AI 研究工作台。你可以从一个问题开�
 
 想先看有哪些功能，见[功能进度](#功能进度)。
 
-## 快速开始
+<details>
+<summary>查看研究中心：假说、依据与待验证项</summary>
+
+![TCode 研究中心：并排查看演示会话、研究假说、证据缺口和下一步验证计划](docs/screenshots/research-hypothesis.png)
+
+此图来自启用了研究功能的演示实例；上方 `--local` 快速开始只验证基础聊天，不启用研究整理。
+
+</details>
+
+## 安装与部署
 
 从一个刚克隆的仓库开始，进入包含 `pyproject.toml` 的 TCode 根目录。不需要复制别人的配置、聊天记录或工作区。
 
@@ -106,7 +145,7 @@ source .venv/bin/activate
 
 #### 2. 填写新生成的配置
 
-如果想在网页配置模型，可以先按下面的「方式 A」启动，再打开 **设置 → 模型与执行 → Web 模型服务**。添加服务后可分别测试文本和图片能力，并选择默认模型。这样不需要先修改 JSON 或设置模型环境变量。已有部署也可继续用下面的文件配置；共享部署的网页配置须由实例管理员通过 HTTPS 操作。
+网页配置见[快速开始](#linux-web-发出第一条消息)，不需要先修改 JSON 或设置模型环境变量。网页设置也支持测试图片理解能力和选择默认图片模型。已有部署可继续用下面的文件配置；共享部署的网页配置须由实例管理员通过 HTTPS 操作。
 
 安装结束后，`.tcode-local/` 已有全部 13 份本机配置。若已安装依赖但配置目录还不存在，可单独运行 `./scripts/init_local_config.sh`。首次聊天只需编辑 `.tcode-local/tcode.json`：把 `model` 中的 `your-model-id` 与 `provider.demo.models` 下的同名键都换成服务商实际提供的模型 ID。模型服务应支持 OpenAI-compatible Chat Completions；要使用工具时还需支持工具调用。
 
@@ -123,16 +162,7 @@ export TCODE_DEMO_API_KEY='replace-with-your-key'
 
 ##### 方式 A：本机最小体验（新用户推荐）
 
-```bash
-mkdir -p workdirs/local
-TCODE_PROJECT_ROOT="$PWD" \
-TCODE_CONFIG_ROOT="$PWD/.tcode-local" \
-TCODE_MCP_CONFIG="$PWD/.tcode-local/mcp.json" \
-tcode-server --local \
-  --host 127.0.0.1 --port 8080 --workdir "$PWD/workdirs/local"
-```
-
-打开 [Web 界面](http://127.0.0.1:8080)，先选择一个工作区（也可在侧栏新建），再创建会话并发送一条消息。命令中的 `workdirs/local` 是服务的运行数据目录，不是界面中的工作区名称。可用 [健康检查](http://127.0.0.1:8080/api/health) 检查后端。按 `Ctrl+C` 停止；重启时重新激活 `.venv`、设置模型环境变量并使用同一个运行数据目录，即可保留工作区和会话。桌面端和 Docker 的启动方式见[运行指南](docs/RUNNING.md)。
+使用[上方快速开始](#linux-web-发出第一条消息)中的启动命令。若选择文件配置，先在同一终端设置上面的模型环境变量，再启动；方式 A 不读取 `local.env`。命令中的 `workdirs/local` 是服务的运行数据目录，不是界面中的工作区名称。[健康检查](http://127.0.0.1:8080/api/health)只检查后端，不验证模型。桌面端和 Docker 的启动方式见[运行指南](docs/RUNNING.md)。
 
 ##### 方式 B：按本机配置启动服务
 
