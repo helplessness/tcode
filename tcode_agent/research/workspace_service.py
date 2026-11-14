@@ -636,8 +636,11 @@ class ResearchWorkspaceService:
         rows = ResearchExperimentStore.list_experiments(project.research_id, **self.owner, workdir=self.workdir)
         selected, pagination = _page(rows, page=page, page_size=page_size)
         hypotheses = ResearchExperimentStore.list_hypotheses(project.research_id, **self.owner, workdir=self.workdir)
+        from .boltz_rounds import rounds_for
+        rounds = rounds_for(self.workdir, [item.experiment_id for item in selected])
         return {"schema": RESEARCH_WORKSPACE_SCHEMA, "action": "list_research_branches",
-                "project": self._project_summary(project), "items": [r.to_dict() for r in selected],
+                "project": self._project_summary(project), "items": [
+                    {**r.to_dict(), "protein_runs": rounds[r.experiment_id]} for r in selected],
                 "hypotheses": [h.to_dict() for h in hypotheses[:20]], "hypothesis_count": len(hypotheses),
                 "pagination": pagination, "message": "实验记录不代表计算已启动；冻结后可创建后续路线。"}
 

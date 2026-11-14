@@ -378,6 +378,13 @@ export type ResearchHypothesis = {
 };
 
 export type ResearchExperiment = {
+  protein_runs?: Array<{
+    run_id: string;
+    source_run_id: string;
+    lifecycle_status: string;
+    created_at: string;
+    outputs: Array<{ relative_path: string; artifact_url?: string }>;
+  }>;
   experiment_id: string;
   research_id: string;
   hypothesis_id: string;

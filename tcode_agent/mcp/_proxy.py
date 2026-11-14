@@ -424,6 +424,8 @@ def _simplified_submit_args(args: dict) -> tuple[Optional[dict], Optional[ToolRe
             "timeout_seconds",
             "retry_policy",
             "continuation_policy",
+            "_tcode_research_experiment",
+            "_tcode_boltz_from_run",
         ):
             if key in input_config:
                 merged[key] = input_config[key]
@@ -506,6 +508,8 @@ def _simplified_submit_args(args: dict) -> tuple[Optional[dict], Optional[ToolRe
         work.pop(key, None)
 
     call_values = work.pop('_tcode_context', None)
+    experiment_id = work.pop("_tcode_research_experiment", "")
+    source_run_id = work.pop("_tcode_boltz_from_run", "")
     # These built-in demo tools have no business parameter named arguments.
     demo_envelope = target_server == 'simple-demo-mcp' and target_tool in {'echo_text', 'sleep_then_echo'}
     if demo_envelope and 'arguments' in work and set(work) <= {'arguments', 'workspace_id'}:
@@ -522,6 +526,8 @@ def _simplified_submit_args(args: dict) -> tuple[Optional[dict], Optional[ToolRe
         "target_tool": target_tool,
         "target_args": work,
         "continuation_policy": continuation_policy,
+        "research_experiment_id": experiment_id,
+        "source_protein_run_id": source_run_id,
     }, None
 
 
@@ -736,6 +742,26 @@ async def _proxy_submit_job(
         dict(parsed.get("target_args") or {}),
         target_tool,
     )
+    experiment_id = parsed["research_experiment_id"]
+    source_run_id = parsed["source_protein_run_id"]
+    if experiment_id or source_run_id:
+        from ..research.boltz_rounds import BOLTZ, experiment_for, next_round
+        try:
+            if (target_server, target_tool) != BOLTZ or not isinstance(experiment_id, str) or not experiment_id.strip():
+                raise ValueError("仅 Boltz 支持此实验关联，请选择当前工作区的实验。")
+            experiment_for(context, experiment_id)
+            if source_run_id:
+                replacement_args = tool_args.get("input_config", tool_args)
+                if not isinstance(source_run_id, str) or not isinstance(replacement_args, dict) or set(replacement_args) != {"tools_input"} or not isinstance(replacement_args["tools_input"], str) or not replacement_args["tools_input"].strip():
+                    raise ValueError("下一轮只接受一个新的 Boltz 主输入文件（tools_input）。")
+                tool_args = _normalize_routed_tool_args(
+                    next_round(context, experiment_id, source_run_id, replacement_args["tools_input"]), target_tool)
+            context = copy.copy(context)
+            context.extra = {**(context.extra or {}), "boltz_research": {
+                "research_experiment_id": experiment_id, "source_protein_run_id": source_run_id,
+            }}
+        except (LookupError, ValueError, RuntimeError, OSError) as exc:
+            return ToolResult(title="Boltz 实验", output="", error=str(exc))
     from ._utils import _check_context_workspace_conflicts
     try:
         _check_context_workspace_conflicts(target_server, tool_args, context, tool_name=target_tool)
@@ -772,6 +798,12 @@ async def _proxy_submit_job(
     from .custom_targets import authorize_inputs
     if not await authorize_inputs(context, target_server, target_tool, tool_args):
         return ToolResult(title="输入文件传输", output="未获准读取输入文件，未上传或提交计算。", error="input_read_denied")
+
+    if source_run_id:
+        from ..governance.biosafety import evaluate_tool_call
+        safety = evaluate_tool_call(tool_name=f"mcp_{target_server}_{target_tool}", arguments=tool_args, context=context)
+        if not safety.allowed:
+            return ToolResult(title="Boltz 实验", output="", error=safety.reason)
 
     prepared = dict(self=self, context=context, target_server=target_server, target_tool=target_tool,
                     target_server_key=target_server_key, tool_args=tool_args, user_message=user_message,
@@ -851,6 +883,8 @@ async def _submit_authorized_job(self, context, target_server, target_tool, targ
             review_data_extra={
                 "review_decision": review_decision,
                 "proxy_source": "job_protocol_submit",
+                **({"boltz_research": context.extra["boltz_research"]}
+                   if (context.extra or {}).get("boltz_research") else {}),
                 **({"custom_mcp_read_grants": getattr(context, '_custom_mcp_read_grants', []),
                     "custom_mcp_read_bindings": copy.deepcopy(getattr(context, '_custom_mcp_read_bindings', []))}
                    if getattr(context, '_custom_mcp_targets', {}).get(target_server) else {}),

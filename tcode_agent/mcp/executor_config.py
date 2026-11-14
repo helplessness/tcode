@@ -112,6 +112,9 @@ def executor_config_candidates(
             if include_foreground:
                 candidates.append(base / "mcp.json")
 
+    if os.getenv("TCODE_DESKTOP_TEST_INSTANCE") == "1":
+        return _unique_paths(candidates)
+
     # 源码仓库的私有配置是显式候选项，但不能改变上面的模块常量；
     # 这样同一构建在开发机和干净环境中的默认值保持一致。
     candidates.append(LOCAL_CONFIG_ROOT / "mcp_exec_only.json")

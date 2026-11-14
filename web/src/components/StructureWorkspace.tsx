@@ -1,12 +1,14 @@
 import { For, Show, createEffect, createSignal, on, onCleanup, onMount, untrack } from 'solid-js';
 import { getInlineFileUrl, getJobArtifactDownloadUrl, searchWorkspaceFiles } from '../api/client';
+import { proteinRunArtifactUrl } from '../api/proteinRuns';
 import { sessionStore } from '../stores/session';
 import { composerDrafts, composerIdentity, composerKey } from '../stores/composer';
 import type { StructureRef } from '../stores/composer';
 import type { ViewerApi, ViewerWindow, ViewState, ViewCommand } from '../structure/types';
 import { preferenceKeys, readBooleanPreference, readPreference } from '../utils/userPreferences';
 
-export type StructureRequest = {path:string;workspaceId?:string;workdir?:string;jobId?:string;artifactRoot?:string;sessionId?:string};
+export type StructureRequest = {path:string;workspaceId?:string;workdir?:string;jobId?:string;artifactRoot?:string;sessionId?:string;proteinRunId?:string};
+export const isStructurePath = (path: string) => /\.(pdb|cif|mmcif|sdf|mol2)$/i.test(path);
 export default function StructureWorkspace(props: { workspaceId: string; workdir?: string; request?: StructureRequest; active: boolean; onReveal: () => void; onAsk: (text: string) => void; onPin: (ref: StructureRef) => void }) {
   const session = sessionStore.currentSessionId() || '', workspace = props.workspaceId;
   const viewerId = crypto.randomUUID();
@@ -86,7 +88,9 @@ export default function StructureWorkspace(props: { workspaceId: string; workdir
     setLoading(true); setError(''); setNotice('');
     fileController = new AbortController();
     try {
-      const url = input.jobId ? getJobArtifactDownloadUrl(input.jobId, { path: input.path, root: input.artifactRoot, inline: true }) : getInlineFileUrl(input.path, props.workdir, workspace);
+      const url = input.proteinRunId
+        ? proteinRunArtifactUrl(`/api/protein-runs/${encodeURIComponent(input.proteinRunId)}/artifacts/${input.path.split('/').map(encodeURIComponent).join('/')}`, workspace)
+        : input.jobId ? getJobArtifactDownloadUrl(input.jobId, { path: input.path, root: input.artifactRoot, inline: true }) : getInlineFileUrl(input.path, props.workdir, workspace);
       const response = await fetch(url, { signal: fileController.signal });
       if (!response.ok) throw new Error(`读取结构失败 (${response.status})`);
       if (Number(response.headers.get('Content-Length')) > 50 * 1024 * 1024) throw new Error('交互查看支持 50 MB 以内的结构文件');

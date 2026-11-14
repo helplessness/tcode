@@ -4057,6 +4057,8 @@ async def _enqueue_approved_proxy_review(
             enqueue_symphony_local_issue,
             validate_routed_request,
         )
+        if isinstance(review_data.get("boltz_research"), dict):
+            context.extra["boltz_research"] = review_data["boltz_research"]
 
         if "custom_mcp_read_grants" in review_data:
             from ..mcp.custom_targets import restore_review_inputs

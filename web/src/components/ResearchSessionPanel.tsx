@@ -1,6 +1,8 @@
 import { researchStatusLabel, researchFieldLabel, researchValueText, userFacingTitle, toolDisplayLabel } from '../utils/userFacingLabels';
 import { continuationNotice, continuationBudgetExhausted, formatKnownCost } from '../utils/runBudget';
 import ResearchRecordDetails from './ResearchRecordDetails';
+import { proteinRunArtifactUrl } from '../api/proteinRuns';
+import { isStructurePath } from './StructureWorkspace';
 import { confirmAction } from './FeedbackDialog';
 import { For, Show, createEffect, createMemo, createSignal, on } from 'solid-js';
 import {
@@ -49,7 +51,7 @@ const SnapshotSummary = (props: { experiment: ResearchExperiment }) => {
   </Show>;
 };
 
-export default function ResearchSessionPanel(props: { tab: ResearchSessionTab; researchId: string; workspaceId?: string; readOnly?: boolean; onNavigateTab?: (tab: ResearchSessionTab) => void; onChanged?: () => void }) {
+export default function ResearchSessionPanel(props: { tab: ResearchSessionTab; researchId: string; workspaceId?: string; readOnly?: boolean; onNavigateTab?: (tab: ResearchSessionTab) => void; onChanged?: () => void; onOpenStructure?: () => void }) {
   const [provenance, setProvenance] = createSignal<ResearchProjectProvenance | null>(null);
   const [checkpoint, setCheckpoint] = createSignal<ResearchCheckpoint | null>(null);
   const [continuation, setContinuation] = createSignal<ResearchContinuation | null>(null);
@@ -314,8 +316,32 @@ export default function ResearchSessionPanel(props: { tab: ResearchSessionTab; r
           <div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><h3 class="text-sm font-semibold">{item.title}</h3><p class="mt-1 text-xs">{researchStatusLabel(item.status)} · 假说第 {item.hypothesis_revision} 版 · {item.frozen_at ? '已冻结，继续需新建路线' : '可整理记录'}<Show when={item.decision}> · {researchStatusLabel(item.decision)}</Show></p></div>
             <div class="flex flex-wrap gap-2"><button type="button" class={buttonClass} disabled={props.readOnly} onClick={() => talkAboutResearch(`请查看实验“${item.title}”。${item.frozen_at ? '我想基于它尝试另一条路线，请询问本次改动，展示新记录的创建预览。' : '请帮我整理结果或关联已有计算运行，先展示对应操作预览，不要直接冻结。'}`)}>{item.frozen_at ? '对话中尝试另一条路线' : '对话中整理这次尝试'}</button>
             <Show when={item.source_experiment_id}><button class={buttonClass} onClick={() => runReproductionComparison(item)}>原始/复现差异</button></Show><Show when={item.frozen_at}><button class={buttonClass} disabled={props.readOnly} onClick={() => openExperimentForm(item)}>手动创建后续记录</button></Show></div></div>
-          <p class="mt-3 text-xs leading-6">验证：{hypothesisById().get(item.hypothesis_id)?.statement || '查看对应假说版本'}<br/>本次改变与目的：{item.reason || '尚未记录，可在对话中补充说明'}<br/>基于：{item.parent_experiment_id ? experiments().find(e => e.experiment_id === item.parent_experiment_id)?.title || '历史实验' : '首个尝试 / 独立路线'}<br/>计算：{item.workflow_run_id ? '已关联运行；实际执行状态以运行详情为准' : '未关联运行；该记录不能证明计算已启动'}</p>
+          <p class="mt-3 text-xs leading-6">验证：{hypothesisById().get(item.hypothesis_id)?.statement || '查看对应假说版本'}<br/>本次改变与目的：{item.reason || '尚未记录，可在对话中补充说明'}<br/>基于：{item.parent_experiment_id ? experiments().find(e => e.experiment_id === item.parent_experiment_id)?.title || '历史实验' : '首个尝试 / 独立路线'}<br/>计算：{item.workflow_run_id || item.protein_runs?.length ? '已关联运行；实际执行状态以运行详情为准' : '未关联运行；该记录不能证明计算已启动'}</p>
           <Show when={item.result_summary}><p class="mt-2 rounded-lg bg-[#171c20] p-2 text-xs">结果与理由：{item.result_summary}</p></Show>
+          <Show when={item.protein_runs?.length}>
+            <details class="mt-3 text-xs"><summary>Boltz 计算轮次（{item.protein_runs?.length}）</summary>
+              <p>预测是计算证据，不代表假说或湿实验已验证。</p>
+              <button type="button" class={buttonClass} onClick={() => void loadExperiments().catch(() => setNotice('暂时无法刷新实验运行。'))}>刷新运行状态</button>
+              <For each={item.protein_runs}>{run => <div class="mt-2 space-y-1">
+                <p>{researchStatusLabel(run.lifecycle_status)} · {new Date(run.created_at).toLocaleString()} · 已回传 {run.outputs.length} 个产物{run.source_run_id ? ' · 基于上一轮换输入' : ''}</p>
+                <For each={run.outputs}>{file => <Show when={file.artifact_url}>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <a class="break-all underline" href={proteinRunArtifactUrl(file.artifact_url!, props.workspaceId)}>{file.relative_path}</a>
+                    <Show when={isStructurePath(file.relative_path)}>
+                      <button type="button" class={buttonClass}
+                        aria-label={`三维查看 ${file.relative_path.split('/').pop()}`}
+                        onClick={() => { props.onOpenStructure?.(); window.dispatchEvent(new CustomEvent('tcode-open-structure', {
+                          detail: { path: file.relative_path, workspaceId: props.workspaceId, proteinRunId: run.run_id },
+                        })); }}>三维查看</button>
+                    </Show>
+                  </div>
+                </Show>}</For>
+                <Show when={!item.frozen_at && !props.readOnly && run.lifecycle_status === 'completed'}>
+                  <button type="button" class={buttonClass} onClick={() => talkAboutResearch(`基于实验“${item.title}”的 Boltz 运行 ${run.run_id} 准备下一轮。请等我上传或指定新主输入文件，仅替换 tools_input；先确认，不要直接提交。`)}>对话中换文件继续</button>
+                </Show>
+              </div>}</For>
+            </details>
+          </Show>
           <details class="mt-3 text-xs"><summary>输入、产物、指标与高级操作</summary><p class="mt-2">输入引用 {item.input_artifacts?.length || 0} · 输出产物 {item.output_artifacts?.length || 0}</p><ResearchRecordDetails value={{输入:item.input_artifacts || [],产物:item.output_artifacts || [],指标:item.metrics || {}}}/><SnapshotSummary experiment={item}/>
             <Show when={!item.frozen_at}><p class="mt-3">以下操作均会完成并冻结记录；不会启动计算。</p><div class="mt-2 flex flex-wrap gap-2"><For each={['recommended', 'retained', 'rejected', 'merged']}>{decision => <button type="button" class={buttonClass} disabled={props.readOnly || saving()} onClick={() => finishExperiment(item, decision)}>完成并冻结 · {researchStatusLabel(decision)}</button>}</For></div></Show>
           </details>

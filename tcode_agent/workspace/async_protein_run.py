@@ -504,8 +504,14 @@ def ensure_for_submission(
     whose input snapshots survive the submitting agent.
     """
 
-    if not should_track_server(server_name):
+    research = _context_extra(context).get("boltz_research") or {}
+    if not should_track_server(server_name) and not research:
         return {}
+    if research:
+        from ..research.boltz_rounds import BOLTZ, experiment_for
+        if (server_name, tool_name) != BOLTZ:
+            raise ValueError("实验关联只支持 Boltz。")
+        experiment_for(context, research["research_experiment_id"])
     workspace = _existing_workspace(context, task_id=identifier)
     created = workspace is None
     if workspace is None:
@@ -529,6 +535,7 @@ def ensure_for_submission(
                 "deliverable": "Collected MCP result and registered output artifacts",
                 "stop_when": "The external job reaches a terminal state",
                 "allowed_tools": ["job-protocol-mcp", server_name],
+                **research,
             },
         )
     link = _link(workspace, created=created)

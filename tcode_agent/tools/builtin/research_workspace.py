@@ -124,6 +124,13 @@ Creation only makes a planned record and prepares an execution location. It does
 NOT submit computation. To actually run, use the separate existing workflow/job
 submission flow, confirm inputs/resources with the user, then associate its run
 via attach_workflow. Never interpret approval of creation as approval to run.
+For an explicitly requested Boltz experiment, list_research_branches shows
+associated Protein Runs. In the existing Job Protocol submit input_config add
+_tcode_research_experiment with the experiment ID. For a new round based on a
+completed run in that experiment, add _tcode_boltz_from_run with its run ID and
+pass only the new tools_input (plus target_server and target_tool). The server
+copies remaining parameters from the source and runs normal submission checks.
+Confirm the intended replacement before submission; never reuse approval.
 Completion freezes the record; merged means a research decision, NOT Git merge.
 Hypothesis creation never implies approval. All proposed writes require the next
 explicit user decision through research_action_commit.

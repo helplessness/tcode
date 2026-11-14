@@ -635,7 +635,8 @@ def write_manifest(workspace: Any, *, outputs: Optional[list[dict[str, Any]]] = 
         },
         "contract": {
             key: contract.get(key)
-            for key in ("goal", "deliverable", "stop_when", "allowed_tools")
+            for key in ("goal", "deliverable", "stop_when", "allowed_tools",
+                        "research_experiment_id", "source_protein_run_id")
             if key in contract
         },
         "biosafety": biosafety,

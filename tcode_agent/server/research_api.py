@@ -2368,13 +2368,16 @@ async def set_research_hypothesis_status(hypothesis_id: str, payload: Hypothesis
 
 @router.get("/projects/{research_id}/experiments")
 async def list_research_experiments(research_id: str, request: Request):
+    from ..research.boltz_rounds import rounds_for
     context = _workspace_context(request)
     items = await asyncio.to_thread(
         ResearchExperimentStore.list_experiments,
         research_id,
         **_experiment_owner(context),
     )
-    return {"count": len(items), "experiments": [item.to_dict() for item in items]}
+    rounds = await asyncio.to_thread(rounds_for, _workspace_path(context), [item.experiment_id for item in items])
+    return {"count": len(items), "experiments": [
+        {**item.to_dict(), "protein_runs": rounds[item.experiment_id]} for item in items]}
 
 
 @router.get("/projects/{research_id}/experiment-runs")

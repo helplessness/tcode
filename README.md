@@ -247,6 +247,8 @@ export TCODE_BRAVE_SEARCH_API_KEY='replace-with-your-key'
 
 ## 进一步阅读
 
+**Boltz 计算实验**：在研究课题中选定一个未冻结的实验，在聊天中上传输入并明确要求「运行 Boltz，并记录到这个实验」。提交仍走现有权限和审核。回到实验记录，展开「Boltz 计算轮次」刷新状态并读取已回传产物。要换文件，可点「对话中换文件继续」并提供新的主输入；其余参数从上一条已完成的运行继承，新运行单独记录。未指定实验的普通提交不变。结构预测不是湿实验验证。
+
 源码仓库自带的产品技能在 [`.tcode/skills/`](.tcode/skills/)，不需要安装 Claude；`.claude/skills/` 仍可被 BenchThread 识别。技能提供用法和操作指导，不等于已连接相应的模型或 MCP 服务。沙箱挂载与新增项目技能的说明见[配置指南](docs/CONFIGURATION.md#产品技能与沙箱挂载)。
 
 - [文档目录](docs/README.md)：Windows Web、Linux Web、macOS 桌面与 Docker 的运行入口。

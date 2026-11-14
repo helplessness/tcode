@@ -921,7 +921,7 @@ export default function ResearchStatePanel(props: Props) {
       </Show>
       </div>
       <Show when={moduleTab()}>{active => <ResearchDialog title={active() === 'hypotheses' ? '研究假说' : active() === 'experiments' ? '实验与分支' : '持续研究设置'} onClose={() => {setModuleTab(undefined); void refreshModules();}}>
-        <ResearchSessionPanel tab={active()} researchId={researchId()} workspaceId={workspaceId()} readOnly={selectedProject()?.status === 'archived'} onNavigateTab={setModuleTab} onChanged={() => {void refreshModules();}} />
+        <ResearchSessionPanel tab={active()} researchId={researchId()} workspaceId={workspaceId()} readOnly={selectedProject()?.status === 'archived'} onNavigateTab={setModuleTab} onChanged={() => {void refreshModules();}} onOpenStructure={() => setModuleTab(undefined)} />
       </ResearchDialog>}</Show>
       <Show when={evidenceAction()}>{action => <ResearchDialog title={action().kind === 'create' ? '记录研究结论' : action().kind === 'challenge' ? '用新记录挑战结论' : action().kind === 'resolve' ? '核对并解决冲突' : '重新打开冲突'} busy={Boolean(busy())} onClose={() => setEvidenceAction(undefined)}>
         <p class="text-sm">选择作为依据的研究记录，并说明你的判断。系统会保留准确来源，原有记录不会被覆盖。</p>
