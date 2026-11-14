@@ -66,9 +66,9 @@ tcode-server = "tcode_agent.server.launcher:main"
 tcode-plugin = "tcode_agent.plugin_sdk.cli:main"
 
 [project.urls]
-Documentation = "https://github.com/helplessness/tcode#readme"
-Issues = "https://github.com/helplessness/tcode/issues"
-Source = "https://github.com/helplessness/tcode"
+Documentation = "https://github.com/helplessness/benchthread#readme"
+Issues = "https://github.com/helplessness/benchthread/issues"
+Source = "https://github.com/helplessness/benchthread"
 
 [tool.setuptools.packages.find]
 include = ["tcode_agent*"]

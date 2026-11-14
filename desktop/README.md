@@ -1,4 +1,6 @@
-# TCode Desktop：macOS 开发版
+# BenchThread Desktop：macOS 开发版
+
+当前开发版的应用界面仍显示 TCode；下文的启动器名称和数据目录按实际名称保留。
 
 当前交付包含可运行的桌面宿主、桌面专用布局和部分原生文件/通知交互。任务协作、工作流、定时任务、文献 Wiki、本体知识和插件复用现有业务组件；这不等于这些功能的远程服务已在本机全部配置完成。
 
@@ -49,7 +51,7 @@ npm --prefix desktop run dev:test
 
 ### 远程服务配置（正式实例）
 
-客户端不启动 Sandbox Runner，也不要求 Docker。公开桌面包包含 TCode 自带的通用 Job Protocol，不打包私有 TMCP；实际计算服务和计算沙箱仍可部署在远端。
+客户端不启动 Sandbox Runner，也不要求 Docker。公开桌面包包含 BenchThread 自带的通用 Job Protocol，不打包私有 TMCP；实际计算服务和计算沙箱仍可部署在远端。
 
 - `.tcode-local/desktop-mcp.json`：已有外部 Job Protocol 地址则复用。没有外部地址时，启用通用异步 MCP 后重启，或设置 `TCODE_MANAGED_JOB_PROTOCOL=1`，即自动启动本机网关。无异步配置不启动。旧 TMCP 任务继续依赖原服务；不自动迁移或重投。可用 `TCODE_DESKTOP_MCP_CONFIG` 指定其他文件。
 - `.tcode-local/desktop.env`：配置 `TCODE_DESKTOP_ARTIFACT_SERVICE_URL` 为远程文件服务地址，以及相应的 `TMCP_ARTIFACT_API_TOKEN`。模板为 `config/templates/desktop.env.example`，可继续引用本机 `local.env` 的模型和登录配置。

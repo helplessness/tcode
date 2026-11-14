@@ -1,6 +1,6 @@
-# TCode Python Plugin SDK v1 开发文档
+# BenchThread Python Plugin SDK v1 开发文档
 
-本目录面向准备为 TCode 开发插件的 Python 开发者。它只描述当前可用的 Plugin SDK v1，不包含 DSH 改造历史，也不兼容 DeepSeek Harness 的 Manifest、SDK 或社区插件。
+本目录面向准备为 BenchThread 开发插件的 Python 开发者。它只描述当前可用的 Plugin SDK v1，不包含 DSH 改造历史，也不兼容 DeepSeek Harness 的 Manifest、SDK 或社区插件。
 
 ## 当前版本
 
@@ -41,13 +41,13 @@
 
 ## 命令入口
 
-在 TCode 仓库根目录中可以使用：
+在 BenchThread 仓库根目录中可以使用：
 
 ```bash
 python scripts/plugin.py --help
 ```
 
-如果当前 Python 环境已经安装或可以导入 TCode，则也可以使用：
+如果当前 Python 环境可以导入 BenchThread 的 Python 模块 `tcode_agent`，则也可以使用：
 
 ```bash
 python -m tcode_agent.plugin_sdk --help
@@ -64,4 +64,4 @@ python -m tcode_agent.plugin_sdk --help
 
 `community_smoke_plugin` 不在官方插件信任清单中，是验证复制、登记、Docker 挂载、Tool/Workflow 加载和卸载的首选样例。具体装载命令见该 Fixture 的 `README.md`。
 
-Paper Research 是 TCode 默认官方领域插件，依赖尚未向社区开放的能力，不应作为社区插件模板复制。原 Protein Design 插件已删除；通用 `protein_orchestrator` 和蛋白工作流能力仍属于核心系统，不是社区插件模板。
+Paper Research 是 BenchThread 默认官方领域插件，依赖尚未向社区开放的能力，不应作为社区插件模板复制。原 Protein Design 插件已删除；通用 `protein_orchestrator` 和蛋白工作流能力仍属于核心系统，不是社区插件模板。

@@ -25,6 +25,6 @@
 - [`examples/`](examples/README.md)：普通 MCP、第三方异步与可选蛋白部署示例，不会由初始化脚本复制。字段讲解统一见 `docs/配置字段说明.md`。
 - `workdir_template/`：新建用户 Workspace 时使用的安全默认值。
 - `tcode.schema.json`：编辑器校验 Schema，不含部署值，也不需要复制。
-- `biosafety_policy.json`：TCode 的默认生物安全策略；新 Workspace 会获得独立副本。
+- `biosafety_policy.json`：BenchThread 的默认生物安全策略；新 Workspace 会获得独立副本。
 
 完整的初始化步骤和字段说明见 [`docs/CONFIGURATION.md`](../docs/CONFIGURATION.md)。

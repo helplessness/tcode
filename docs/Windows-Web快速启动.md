@@ -4,7 +4,7 @@
 
 ## 1. 首次准备
 
-安装 Python 3.12（含 pip 和 Python Launcher）与 Node.js 22.12+（含 npm），在 TCode 仓库根目录打开 PowerShell：
+安装 Python 3.12（含 pip 和 Python Launcher）与 Node.js 22.12+（含 npm），在 BenchThread 仓库根目录打开 PowerShell：
 
 ```powershell
 py -3.12 -m venv .venv
@@ -62,13 +62,13 @@ $env:TCODE_MCP_CONFIG = Join-Path $env:TCODE_CONFIG_ROOT 'mcp.json'
 
 ## 4. 可选：让自定义异步 MCP 收发文件
 
-要上传 Windows 本机文件，在 TCode Web 的虚拟环境里再安装当前仓库的文件 SDK；仅连接文本工具不需要：
+要上传 Windows 本机文件，在 BenchThread Web 的虚拟环境里再安装当前仓库的文件 SDK；仅连接文本工具不需要：
 
 ```powershell
 & .\.venv\Scripts\python.exe -m pip install ./packages/artifact-sdk
 ```
 
-双方还需能访问同一个 Artifact HTTP 服务，并分别注入所需凭据（TCode 可用 `TMCP_ARTIFACT_SERVICE_URL` 和 `TMCP_ARTIFACT_API_TOKEN`）。在“添加 MCP”选择“异步执行（通过 Job Protocol）”，再配置“输入文件传输”和声明的文件字段。远端必须支持接收文件引用；仅填写远端路径不会自动接通传输。
+双方还需能访问同一个 Artifact HTTP 服务，并分别注入所需凭据（BenchThread 可用 `TMCP_ARTIFACT_SERVICE_URL` 和 `TMCP_ARTIFACT_API_TOKEN`）。在“添加 MCP”选择“异步执行（通过 Job Protocol）”，再配置“输入文件传输”和声明的文件字段。远端必须支持接收文件引用；仅填写远端路径不会自动接通传输。
 
 上传源须在本地固定 NTFS 卷上；不支持 UNC、网络盘或经目录联接绕行的路径。每个文件或目录参数按自己的读取授权核对；发现对象不匹配、目录成员发生变化或缺少 SDK 时，不会绕过检查入队。原生文件测试见 [Artifact SDK 的 Windows 说明](../packages/artifact-sdk/README.md#windows手动安装与验证不依赖-ci)。
 

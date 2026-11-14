@@ -1,7 +1,7 @@
 # 新增 Harness Adapter
 
-本文说明如何在 TCode 中增加一个本地 CLI Harness。第三方开发者优先使用 Runtime
-Profile 或独立 Python Provider；只有由 TCode 官方共同维护的适配器才放入内置目录。
+本文说明如何在 BenchThread 中增加一个本地 CLI Harness。第三方开发者优先使用 Runtime
+Profile 或独立 Python Provider；只有由 BenchThread 官方共同维护的适配器才放入内置目录。
 三条路径都复用传输、进程、Session、交接和事件协议公共层。
 
 ## 仓库外接入方式
@@ -71,7 +71,7 @@ Provider 实现 `get_runtime_definition()` 和 `create_backend(context)`。如�
 conformance 覆盖自己的 Adapter，还应实现 `create_fixture_backend(context)`。完整可运行
 项目见 `examples/harness-adapter`。
 
-发现 entry point 时 TCode 只读取分发 metadata，不导入代码。管理员执行 `enable` 后，
+发现 entry point 时 BenchThread 只读取分发 metadata，不导入代码。管理员执行 `enable` 后，
 信任记录才会写入配置文件；服务重启后加载 Provider。公开服务应设置
 `TCODE_HARNESS_SETTINGS_PATH`，把该文件放在 Agent 无权写入的管理员配置目录。
 Runtime ID 冲突会保留来源诊断并拒绝后发现的定义。
@@ -168,11 +168,11 @@ fixture 测试，公开服务能力还需要真实进程验证。
 
 `guidanceMode` 决定平台如何把运行中指导投递给该 Harness：
 
-- `restart_turn`：Adapter 已验证取消，并能在同一 Harness 中恢复原生 Session；TCode
+- `restart_turn`：Adapter 已验证取消，并能在同一 Harness 中恢复原生 Session；BenchThread
   取消当前 Run 后自动在相同 runtime/model 上续跑。
 - `queue_only`：默认值；当前 Run 完成后再把指导作为下一轮消息执行。
 - `unsupported`：明确拒绝 Guidance。
-- `in_turn`：需要 TCode GuidancePort、turn owner、safe point 和 completion fence 的完整
+- `in_turn`：需要 BenchThread GuidancePort、turn owner、safe point 和 completion fence 的完整
   合同；普通外部 Adapter 不能只靠能力声明获得该语义。
 
 平台统一实现路由快照、切换锁、Run 取消和续跑。新增 Adapter 不应复制这部分代码。
@@ -279,11 +279,11 @@ ACP Harness 默认复用：
 
 非 ACP Harness 必须在 README 中明确能否恢复。未完成真实恢复测试前，设置
 `resume=False`。`permissionAuthority=runtime` 的 Harness 不能直接用于公开服务；只有经过
-TCode 或 shared 权限合同验证后才能设置为 `tcode` 或 `shared`。
+BenchThread 或 shared 权限合同验证后才能设置为 `tcode` 或 `shared`。
 
 ## 第七步：插件投递边界
 
-当前外部 Harness Adapter 会接收 Harness 交接上下文，但 TCode 平台插件快照尚未投递。
+当前外部 Harness Adapter 会接收 Harness 交接上下文，但 BenchThread 平台插件快照尚未投递。
 新增 Adapter 不得自行读取全部插件目录或主服务密钥。统一插件投递层完成后，Adapter 只
 声明并消费以下经过准入的能力：
 
@@ -293,7 +293,7 @@ TCode 或 shared 权限合同验证后才能设置为 `tcode` 或 `shared`。
 - 平台 Tool Bridge；
 - 不支持能力的明确降级信息。
 
-Workflow、Subagent 生命周期、Owner 隔离和 Job Protocol 仍由 TCode Platform 管理。
+Workflow、Subagent 生命周期、Owner 隔离和 Job Protocol 仍由 BenchThread Platform 管理。
 
 ## 第八步：测试
 
@@ -309,7 +309,7 @@ Workflow、Subagent 生命周期、Owner 隔离和 Job Protocol 仍由 TCode Pla
 8. 权限请求持久化和解决；
 9. 取消后进程组退出；
 10. handoff 只投递一次；
-11. TCode v2 sequence 连续且只有一个终态；
+11. BenchThread v2 sequence 连续且只有一个终态；
 12. Runtime 列表和 AG-UI Gateway 可见性。
 13. `guidanceMode` 与真实取消/恢复能力一致；`restart_turn` 必须验证指导后仍使用相同
     runtime、model 和 Session 路由。
@@ -335,7 +335,7 @@ git diff --check
 
 第三方 Adapter 满足以下条件才算接入完成：
 
-- 独立分发包或 Profile 无需修改 TCode 主仓库即可发现；
+- 独立分发包或 Profile 无需修改 BenchThread 主仓库即可发现；
 - 默认状态不能执行，管理员显式 `enable` 后才允许加载；
 - `inspect` 能返回来源、版本、Definition digest、信任和兼容状态；
 - `doctor` 能探测真实可执行文件；

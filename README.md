@@ -168,7 +168,7 @@ export TCODE_DEMO_API_KEY='replace-with-your-key'
 
 ##### 方式 B：按本机配置启动服务
 
-已有部署继续使用原启动命令，不要加 `--local`。桌面和单机 Web 启用通用异步 MCP 后重启，可自动启动内置 Job Protocol；已有外部网关优先，旧任务不会自动改投。启用方式见[第三方异步 MCP 指南](docs/服务隔离/第三方MCP插件接入与运行.md#1-先确认-tcode-侧的服务就绪)。
+已有部署继续使用原启动命令，不要加 `--local`。桌面和单机 Web 启用通用异步 MCP 后重启，可自动启动内置 Job Protocol；已有外部网关优先，旧任务不会自动改投。启用方式见[第三方异步 MCP 指南](docs/服务隔离/第三方MCP插件接入与运行.md#1-先确认-benchthread-侧的服务就绪)。
 
 使用高级功能前先准备对应服务：Web 浏览器需要 Sandbox Runner 和 Playwright 镜像；隔离执行需要支持的桌面隔离后端或 Linux 沙箱；远程计算需要已启用的 Job Protocol 和已注册的执行端；远程文件传输还需要 Artifact 服务和工具绑定。缺少这些服务不妨碍基础聊天。
 

@@ -10,12 +10,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/helplessness/tcode.git",
+    "url": "git+https://github.com/helplessness/benchthread.git",
     "directory": "packages/tcode-agui-client"
   },
-  "homepage": "https://github.com/helplessness/tcode#readme",
+  "homepage": "https://github.com/helplessness/benchthread#readme",
   "bugs": {
-    "url": "https://github.com/helplessness/tcode/issues"
+    "url": "https://github.com/helplessness/benchthread/issues"
   },
   "type": "module",
   "sideEffects": false,

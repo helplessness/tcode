@@ -28,8 +28,8 @@
 
 ### 产品技能与沙箱挂载
 
-- 源码仓库自带的产品技能位于 `.tcode/skills/<名称>/SKILL.md`。TCode 仍识别 `.claude/skills/`；已有自定义技能不用搬，开发辅助技能也保留原位。直接从非 editable 安装启动源码仓库的 Web 时，按 README 设置 `TCODE_PROJECT_ROOT`，让加载器能找到该仓库。
-- Linux Sandbox Runner 模板列出新旧两个技能根。升级后如手工维护挂载白名单，将项目内的 `.tcode/skills` 加到 `TCODE_SANDBOX_RUNNER_ALLOWED_MOUNT_ROOTS`，仅在该目录由部署管理员维护时才纳入 `TCODE_SANDBOX_RUNNER_TRUSTED_MOUNT_ROOTS`。旧配置如果已列出同一 TCode 项目的 `.claude/skills`，Runner 会沿用该项配置兼容新路径；不会扩大到整个 `.tcode/` 或其他工作区。技能脚本仍只读挂载。不要把用户可写的工作区或个人技能目录列为可信根。
+- 源码仓库自带的产品技能位于 `.tcode/skills/<名称>/SKILL.md`。BenchThread 仍识别 `.claude/skills/`；已有自定义技能不用搬，开发辅助技能也保留原位。直接从非 editable 安装启动源码仓库的 Web 时，按 README 设置 `TCODE_PROJECT_ROOT`，让加载器能找到该仓库。
+- Linux Sandbox Runner 模板列出新旧两个技能根。升级后如手工维护挂载白名单，将项目内的 `.tcode/skills` 加到 `TCODE_SANDBOX_RUNNER_ALLOWED_MOUNT_ROOTS`，仅在该目录由部署管理员维护时才纳入 `TCODE_SANDBOX_RUNNER_TRUSTED_MOUNT_ROOTS`。旧配置如果已列出同一 BenchThread 项目的 `.claude/skills`，Runner 会沿用该项配置兼容新路径；不会扩大到整个 `.tcode/` 或其他工作区。技能脚本仍只读挂载。不要把用户可写的工作区或个人技能目录列为可信根。
 - `.tcode/` 的运行数据和本机安装的技能仍默认被 Git 忽略。只有确认要随源码交付的具体技能文件才显式加入版本控制。macOS 冻结后端仍只随包附带 `anatomy`、`docx` 和 `pdf`，统一从 `.tcode/skills/` 打包。
 
 ### 生效与本机数据

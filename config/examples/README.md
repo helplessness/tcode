@@ -14,4 +14,4 @@
 - **自建异步工具**：用 [`mcp-async-broker.example.json`](mcp-async-broker.example.json) 配置前台的任务代理，并复用[第三方 MCP 示例](../../examples/third_party_mcp/README.md)中的 `async-plugin/`（声明后台目标）与 `remote_server.py`（实现远端服务）。本机 Job Protocol 启动后再启用代理条目。第三方服务实现提交、状态查询、结果回收和取消，并用 `request_id` 去重、持久化 `job_id` 和状态。只填 MCP URL 不会自动获得异步恢复；涉及文件时再配置 Artifact。
 - **已有 TMCP / 蛋白部署**：[`mcp-tmcp-frontend.example.json`](mcp-tmcp-frontend.example.json) 保留任务代理和轻量检索示例，[`mcp-protein-executor.example.json`](mcp-protein-executor.example.json) 保留后台蛋白计算目标示例。把需要的条目合并到对应前台或执行清单，替换地址后再启用。任务代理不要放入执行清单。
 
-前台示例包含 Job Protocol、文献搜索、文献下载和轻量诊断；后台示例包含 Simulation、Boltz、GNINA、LigandMPNN、PLACER、PLIP、RFdiffusion、EvolvePro、突变评分、Homology、Pythia、FoldX，以及用于测试的 Simple Demo。**这些是可接入的示例，不是随 TCode 安装的计算服务**。示例不会在首次启动时自动连接，也不要整份覆盖已有本机配置。
+前台示例包含 Job Protocol、文献搜索、文献下载和轻量诊断；后台示例包含 Simulation、Boltz、GNINA、LigandMPNN、PLACER、PLIP、RFdiffusion、EvolvePro、突变评分、Homology、Pythia、FoldX，以及用于测试的 Simple Demo。**这些是可接入的示例，不是随 BenchThread 安装的计算服务**。示例不会在首次启动时自动连接，也不要整份覆盖已有本机配置。

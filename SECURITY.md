@@ -2,7 +2,7 @@
 
 ## 报告漏洞
 
-请通过 [GitHub Security Advisories](https://github.com/helplessness/tcode/security/advisories) 的 **Report a vulnerability** 私下报告。如果按钮尚未启用，可以开一个只请求安全联系方式的 Issue，不要贴漏洞细节、利用代码、凭据、真实研究数据或未脱敏日志。
+请通过 [GitHub Security Advisories](https://github.com/helplessness/benchthread/security/advisories) 的 **Report a vulnerability** 私下报告。如果按钮尚未启用，可以开一个只请求安全联系方式的 Issue，不要贴漏洞细节、利用代码、凭据、真实研究数据或未脱敏日志。
 
 报告请包含受影响的版本或提交、平台和启动方式、必要的权限或配置、最小复现步骤与影响。请用无敏感数据的示例，并在修复或缓解方案协调前避免公开复现细节。
 

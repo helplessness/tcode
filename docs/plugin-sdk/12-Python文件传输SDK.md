@@ -1,10 +1,10 @@
 # 第三方 MCP 的独立 Python 文件 SDK
 
-SDK 与 TCode 在同一仓库维护，位于 `packages/artifact-sdk`；可单独安装、打包为 wheel 交付。当前未发布到 PyPI。完整安装、API、限制与契约测试说明见 [SDK 开发文档](../../packages/artifact-sdk/README.md)。
+SDK 与 BenchThread 在同一仓库维护，位于 `packages/artifact-sdk`；可单独安装、打包为 wheel 交付。当前未发布到 PyPI。完整安装、API、限制与契约测试说明见 [SDK 开发文档](../../packages/artifact-sdk/README.md)。
 
 ## 职责边界
 
-- **TCode／本地 Job Protocol**：现有文件字段声明、读取权限、审核、上传、持久队列、任务状态、产物落地与异步恢复。本次不改这些实现。
+- **BenchThread／本地 Job Protocol**：现有文件字段声明、读取权限、审核、上传、持久队列、任务状态、产物落地与异步恢复。本次不改这些实现。
 - **文件 SDK**：将已有 ArtifactRef／BundleRef 下载为远端私有目录中的文件，或将计算输出上传为引用。继续使用既有 `/api/v1/artifacts` 和 `/api/v1/bundles` HTTP 接口。
 - **第三方 MCP**：调用业务程序，按已有 blocking 或 remote-job 契约返回结果；需要远端幂等性与恢复时保存 request_id、job_id 和实际状态。SDK 不替代这部分。
 
@@ -25,12 +25,12 @@ SDK 与 TCode 在同一仓库维护，位于 `packages/artifact-sdk`；可单独
 
 传输异常会失败并保留可诊断状态，不自动重试状态不明的写请求，更不会重新提交计算。输入下载失败可能留下不完整目录，输出上传失败可能留下远端草稿包；不得将它们报告为完整结果。清理与重试文件操作由应用在私有任务范围内决定，不影响已排队任务。
 
-原示例的环境变量、ArtifactIO 类名和主要方法保留；旧无 service_id 的引用继续使用默认服务。独立部署由“复制三个源码文件”改为“安装小 SDK wheel＋示例源码”，不是安装整个 TCode。既有已部署服务不会因仓库 SDK 提取而被自动升级。
+原示例的环境变量、ArtifactIO 类名和主要方法保留；旧无 service_id 的引用继续使用默认服务。独立部署由“复制三个源码文件”改为“安装小 SDK wheel＋示例源码”，不是安装整个 BenchThread。既有已部署服务不会因仓库 SDK 提取而被自动升级。
 
 ## 本次验证（2026-10-27）
 
 - 独立 SDK 契约 24 项、真实 FastMCP in-process 示例 1 项通过。包括临时本机 HTTP 的实际 multipart 往返、文件／目录字节与 SHA-256、配额、路径穿越、符号链接／源对象替换拒绝、服务与凭据隔离、重定向拒绝、未完成 Bundle 及写请求状态不明不自动重试。
-- wheel 与 sdist 构建成功。在全新虚拟环境安装 wheel 后，从仓库外以 Python isolated 模式导入 SDK 成功；该环境没有 TCode／TMCP，最小运行依赖仅 httpx。
+- wheel 与 sdist 构建成功。在全新虚拟环境安装 wheel 后，从仓库外以 Python isolated 模式导入 SDK 成功；该环境没有 BenchThread／TMCP，最小运行依赖仅 httpx。
 - 复用当前 TMCP Artifact FastAPI 应用与原 remote_server.py，在临时存储和 in-process MCP／HTTP 测试传输中完成合成文件上传→远端物化→报告目录回传→字节核对。相同 request_id 重复提交返回相同远端 Job ID；重建原服务对象后查询并收集已有 SQLite 持久结果，不重新上传、不重复执行。未连接正式 Artifact／MCP 服务。
 - 宿主文件传输、插件异步目标、普通模式工具安全、目标模式、Protein Run、异步回传／恢复等相关回归 394 项通过，存在依赖弃用警告；没有跳过失败用例。未修改宿主权限、队列、任务状态机或恢复入口。
 - 未发布 PyPI，未重启桌面、未提交蛋白／GPU 计算。本地契约与 in-process 验证不等于公网部署或真实桌面端的本轮人工验收。

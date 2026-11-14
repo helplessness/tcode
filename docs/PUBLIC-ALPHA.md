@@ -1,6 +1,6 @@
 # 首版开源 Alpha：范围与验证
 
-本快照包含 TCode 主体、Web 和 macOS 桌面源码、Windows Web 启动指南、公开配置模板、插件/Artifact SDK、最小 MCP 示例以及公开的基础回归测试。Windows Web 属于实验性支持，尚未完成 Windows 实机验收，不包含 Windows 桌面版。
+本快照包含 BenchThread 主体、Web 和 macOS 桌面源码、Windows Web 启动指南、公开配置模板、插件/Artifact SDK、最小 MCP 示例以及公开的基础回归测试。Windows Web 属于实验性支持，尚未完成 Windows 实机验收，不包含 Windows 桌面版。
 
 本快照不附带私有 Git 历史、账号和本机配置、会话与运行产物。未确认可分发的酶知识库、文献来源快照、基准样本、真实验收报告和私有 Workflow 模板不随源码分发。酶研究插件保留实现，默认不启用；依赖数据的功能须另行配置授权数据源。项目 MIT 许可不改变第三方组件或数据的原有使用条件；见[第三方来源与许可证](../THIRD_PARTY_NOTICES.md)。
 

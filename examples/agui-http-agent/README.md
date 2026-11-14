@@ -1,10 +1,10 @@
 # 标准 AG-UI HttpAgent 示例
 
-这个最小客户端只使用官方 `@ag-ui/client`，不依赖 TCode Web、CopilotKit 或
+这个最小客户端只使用官方 `@ag-ui/client`，不依赖 BenchThread Web、CopilotKit 或
 `@tcode-ai/ag-ui-client`。它也不发送 `forwardedProps.tcode`，用于验证第三方标准
-AG-UI 客户端能够直接运行 TCode 默认 Agent。
+AG-UI 客户端能够直接运行 BenchThread 默认 Agent。
 
-先启动启用了 AG-UI 的 TCode：
+先启动启用了 AG-UI 的 BenchThread：
 
 ```bash
 TCODE_AGUI_ENABLED=1 ./scripts/start_web.sh --port 5555 --host 127.0.0.1 --workdir "$PWD"

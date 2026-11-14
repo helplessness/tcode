@@ -1,10 +1,10 @@
-# TCode Agent Web UI
+# BenchThread Agent Web UI
 
-TCode 的现代化 Web 界面，使用 SolidJS 构建。
+BenchThread 的现代化 Web 界面，使用 SolidJS 构建。
 
 ## 特性
 
-- 🎨 **深色主题** - 与 TCode TUI 一致的深色终端风格界面
+- 🎨 **深色主题** - 与 BenchThread TUI 一致的深色终端风格界面
 - 💬 **实时聊天** - WebSocket 支持，流式输出
 - 🔌 **MCP 集成** - 自动显示 MCP 服务器状态和工具数量
 - 📊 **会话管理** - 多会话支持，左侧边栏切换
@@ -116,7 +116,7 @@ npm run preview
 
 ## 截图
 
-界面采用与 TCode TUI 一致的深色主题：
+界面采用与 BenchThread TUI 一致的深色主题：
 
 - 左侧边栏：会话列表 + MCP 状态 + 使用统计
 - 中间：聊天对话区域

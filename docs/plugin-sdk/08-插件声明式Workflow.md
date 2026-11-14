@@ -1,6 +1,6 @@
 # 插件声明式 Workflow
 
-SDK `1.2.0` 起，插件可以在包内携带声明式 Workflow。Workflow JSON 和 Markdown Prompt 由 Host 在插件入口导入前校验，运行时仍由 TCode 核心 Workflow 引擎执行；插件不能借此注入 Python 回调、自动启动任务或绕过宿主安全管线。
+SDK `1.2.0` 起，插件可以在包内携带声明式 Workflow。Workflow JSON 和 Markdown Prompt 由 Host 在插件入口导入前校验，运行时仍由 BenchThread 核心 Workflow 引擎执行；插件不能借此注入 Python 回调、自动启动任务或绕过宿主安全管线。
 
 ## 1. 适用场景
 

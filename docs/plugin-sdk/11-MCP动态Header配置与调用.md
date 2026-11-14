@@ -14,7 +14,7 @@
 
 1. 进入“设置 → MCP 服务”，添加或编辑服务。
 2. 展开“高级设置”。
-3. 固定值和环境变量继续使用原有请求头入口。环境变量格式为 `${ENV_NAME}`，可填写 `Bearer ${MY_TOKEN}`；变量必须存在于 TCode 后端环境中。
+3. 固定值和环境变量继续使用原有请求头入口。环境变量格式为 `${ENV_NAME}`，可填写 `Bearer ${MY_TOKEN}`；变量必须存在于 BenchThread 后端环境中。
 4. 展开“本次调用变量 Header”，点击“添加动态请求头”。
 5. 填写 Header 名称、业务变量名和业务含义，例如 `X-Project-ID`、`project_id`、“本次操作所属项目编号，用于选择项目数据”。
 6. 可填写提取说明，例如“从用户明确指定的项目中提取”。默认必填、最大 128 字符；长度可在高级详情中调整为 1..4096。
@@ -62,7 +62,7 @@
 
 ## 4. Agent 和远端各自收到什么
 
-TCode 在直连工具的宿主 Schema 中加入 `_tcode_context`，保留原有业务字段。例如：
+BenchThread 在直连工具的宿主 Schema 中加入 `_tcode_context`，保留原有业务字段。例如：
 
 ```json
 {
@@ -73,9 +73,9 @@ TCode 在直连工具的宿主 Schema 中加入 `_tcode_context`，保留原有�
 
 变量的业务含义、提取说明、必填要求和长度限制会提供给 Agent。Token 和固定认证 Header 不提供给模型。
 
-TCode 校验后，远端 HTTP 收到 `X-Project-ID: PPK2`，远端工具 arguments 仍然是 `{"query":"查询结果"}`。宿主字段不混入工具参数，也不被当成本地输入文件上传。
+BenchThread 校验后，远端 HTTP 收到 `X-Project-ID: PPK2`，远端工具 arguments 仍然是 `{"query":"查询结果"}`。宿主字段不混入工具参数，也不被当成本地输入文件上传。
 
-异步工具仍先 `describe_target_tool`。TCode 会在返回中增加 `call_context_schema` 和填写说明，即使 `detail=compact` 也能了解要求。然后使用现有 `submit_job` 简化格式：
+异步工具仍先 `describe_target_tool`。BenchThread 会在返回中增加 `call_context_schema` 和填写说明，即使 `detail=compact` 也能了解要求。然后使用现有 `submit_job` 简化格式：
 
 ```json
 {
@@ -103,11 +103,11 @@ TCode 校验后，远端 HTTP 收到 `X-Project-ID: PPK2`，远端工具 argumen
 
 ## 6. 必须同步升级的组件
 
-常规动态 Header 需要更新并重启 TCode 后端和界面。异步支持还需要同步更新相邻 TMCP 代码并重启**用户本地 Job Protocol**；领域 MCP 只需能读取所配置的 Header，一般不必改工具参数。
+常规动态 Header 需要更新并重启 BenchThread 后端和界面。异步支持还需要同步更新相邻 TMCP 代码并重启**用户本地 Job Protocol**；领域 MCP 只需能读取所配置的 Header，一般不必改工具参数。
 
 本次没有新增端口、环境变量或独立提取服务。沿用现有桌面托管或手动 Job Protocol 启动方式，不要同时启动两份占用同一端口的网关。
 
-为避免旧网关静默丢弃上下文，新 TCode 会检查 Job Protocol 的动态上下文能力；异步目标注册也必须回传已确认的动态规则。未支持时拒绝提交／启用并提示同步更新，不自动降级为无 Header 调用。
+为避免旧网关静默丢弃上下文，新 BenchThread 会检查 Job Protocol 的动态上下文能力；异步目标注册也必须回传已确认的动态规则。未支持时拒绝提交／启用并提示同步更新，不自动降级为无 Header 调用。
 
 ## 7. 安全与兼容边界
 
@@ -135,7 +135,7 @@ TCode 校验后，远端 HTTP 收到 `X-Project-ID: PPK2`，远端工具 argumen
 
 后续已在原账号、原数据目录的正常桌面再验收通过，见同一验收文档第 9 节。用户授权的精确回环地址例外仅在该轮测试临时使用，测试后代码和配置已完整恢复、重新启动正常桌面，远端暂停保持开启；这不是新增的常驻配置能力。
 
-可在 TCode 根目录执行：
+可在 BenchThread 根目录执行：
 
 ```bash
 PYTHONPATH=.. .desktop-venv/bin/python -m pytest tests/test_mcp_dynamic_headers.py -q

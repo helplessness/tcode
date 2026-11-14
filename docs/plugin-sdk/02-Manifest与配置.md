@@ -1,6 +1,6 @@
 # Manifest 与配置
 
-每个插件包根目录必须包含 `plugin.json`。TCode 只支持 Manifest v2，不维护旧格式兼容层。
+每个插件包根目录必须包含 `plugin.json`。BenchThread 只支持 Manifest v2，不维护旧格式兼容层。
 
 ## 1. 完整示例
 
